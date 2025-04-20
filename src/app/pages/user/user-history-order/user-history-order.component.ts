@@ -3,6 +3,8 @@ import { OrdersService } from 'src/app/services/orders.service';
 import { LoginService } from 'src/app/services/login.service';
 import Swal from 'sweetalert2';
 import { combineLatest } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { PaymentComponent } from '../../../components/modal/payment/payment.component';
 
 @Component({
   selector: 'app-user-history-order',
@@ -19,6 +21,7 @@ export class UserHistoryOrderComponent implements OnInit {
   constructor(
     private ordersService: OrdersService,
     private loginService: LoginService,
+    private dialog: MatDialog
   ) {}
 
   prevPage1(): void {
@@ -44,6 +47,25 @@ export class UserHistoryOrderComponent implements OnInit {
     const startIndex = (this.currentPage1 - 1) * this.rowsPerPage1;
     const endIndex = startIndex + this.rowsPerPage1;
     return this.orders.slice(startIndex, endIndex);
+  }
+
+  openPaymentModal(orderId: string) {
+    const dialogRef = this.dialog.open(PaymentComponent, {
+      width: '500px',
+      data: { orderId },
+    });
+
+    dialogRef.afterClosed().subscribe(
+      (result) => {
+        if (result) {
+          console.log('Payment modal closed with result:', result);
+          // Add any additional logic if needed
+        }
+      },
+      (error) => {
+        console.error('Error closing payment modal:', error);
+      }
+    );
   }
 
   ngOnInit(): void {

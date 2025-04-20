@@ -1,0 +1,57 @@
+<mat-card style="padding: 15px;">
+    <div class="container" style="max-width: 100%;">
+        <h1>Lista de Cotizaciones</h1>
+        <button routerLink="/admin/addcotizacion" mat-raised-button style="background-color: #00CED1; color: white;">Nueva Cotización</button>
+    </div>
+    <div class="filter-container">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <div class="search-bar-container">
+        <input type="text" [(ngModel)]="searchTerm1" class="search-bar-input" placeholder="Buscar por cliente" />
+        <i class="fas fa-search search-icon"></i>
+    </div>
+    </div>
+    <table class="table-container">
+        <tr>
+            <th>N°</th>
+            <th>Cliente</th>
+            <th>Divisa</th>
+            <th>Tipo de Pago</th>
+            <th>Plazo de Entrega</th>
+            <th>Validez de Oferta</th>
+            <th>Total</th>
+            <th>Operaciones</th>
+        </tr>
+        <tr *ngFor="let e of displayedCotizaciones(); let i = index" mat-subheader>
+            <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
+            <td>{{ e.user.nombre }}</td>
+            <td>{{ e.divisa === 'DOLAR' ? 'Dolar' : 'Soles' }}</td>
+            <td>{{ e.tipoPago === 'CONTADO' ? 'Contado' : 'Credito' }}</td>
+            <td>{{ convertirFecha(e.plazoEntrega) }}</td>
+            <td>{{ convertirFecha(e.validezOferta) }}</td>
+            <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
+            <td>
+                <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono">
+                    <i [routerLink]="'/admin/detallecotizacion/'+e.cotizacionId" class="fas fa-info-circle"></i>
+                </div>
+                <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
+                    <i [routerLink]="'/admin/actualizarcotizacion/'+e.cotizacionId" class="fas fa-edit"></i>
+                </div>
+                <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="eliminarCotizacion(e.cotizacionId)">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <div style="padding-left: 5px; padding-right: 5px;" class="descargar-icono" (click)="ola('nose')">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div class="pagination">
+        <button (click)="prevPage1()" [disabled]="currentPage1 === 1">
+            <i class="fa fa-chevron-left"></i> Anterior
+        </button>
+        <button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
+            Siguiente <i class="fa fa-chevron-right"></i>
+        </button>
+    </div>
+</mat-card>

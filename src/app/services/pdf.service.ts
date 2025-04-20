@@ -2,8 +2,6 @@
 import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { NumerosALetras } from 'src/app/services/numeroaletras.service';
-import { formatDate } from '@angular/common'; // Import Angular's formatDate function
 
 @Injectable({
   providedIn: 'root'
@@ -115,5 +113,79 @@ export class PdfService {
 
     // Save the PDF
     doc.save('factura.pdf');
+  }
+
+  generatePdfCotizacion(cotizacionData: any) {
+    const doc = new jsPDF();
+    console.log(cotizacionData);
+
+    if (cotizacionData.length === 0) {
+      console.error('Cotizacion data is empty');
+      return;
+    }
+
+    // Add current date
+    const currentDate = new Date().toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setFontSize(12);
+    doc.text(`Fecha: ${currentDate}`, 10, 10, { align: 'left' });
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Cotización', pageWidth / 2, 20, { align: 'center' });
+
+    // Add client details
+    let y = 30;
+    doc.setFontSize(14);
+    doc.text('Detalles del Cliente:', 10, y);
+    y += 10;
+    doc.setFontSize(12);
+    doc.text(`Nombre del Cliente: Yo`, 10, y);
+    y += 10;
+    doc.text(`DNI/RUC: 76588310`, 10, y);
+    y += 10;
+    doc.text(`Dirección: Ca. Los Alarifes 1080`, 10, y);
+    y += 10;
+
+    // Add cotización details
+    doc.setFontSize(14);
+    doc.text('Detalles de la Cotización:', 10, y);
+    y += 5;
+
+    // const cotizacionDetails = cotizacionData.items.map((item: any) => [
+    //   item.producto,
+    //   item.cantidad,
+    //   parseFloat(item.precioUnitario).toFixed(2),
+    //   parseFloat(item.total).toFixed(2)
+    // ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Producto', 'Cantidad', 'Precio Unitario', 'Total']],
+      // body: cotizacionDetails,
+      theme: 'grid',
+      styles: {
+        fontSize: 10,
+        halign: 'center'
+      },
+      headStyles: {
+        fillColor: [0, 206, 209],
+        textColor: [255, 255, 255]
+      }
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 10;
+
+    // Add total
+    doc.setFontSize(12);
+    doc.text(`Total: S/. 800`, 10, y);
+
+    // Save the PDF
+    doc.save(`cotizacion.pdf`);
   }
 }

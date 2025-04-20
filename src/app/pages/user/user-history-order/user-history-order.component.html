@@ -1,43 +1,43 @@
 <mat-card style="padding: 15px;">
-    <div class="container" style="max-width: 100%;">
-        <h1>Historial de Pedidos</h1>
-    </div>
-    <div class="filter-container">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    </div>
-    <table class="table-container">
-        <tr>
-            <th>N°</th>
-            <th>Número de pedido</th>
-            <th>Dirección</th>
-            <th>Hora y Fecha</th>
-            <th>Precio</th>
-            <th>Estado</th>
-            <th>Operaciones</th>
-        </tr>
-        <tr *ngFor="let e of displayedOrders(); let i = index" mat-subheader>
-            <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
-            <td>{{ e.orderId }}</td>
-            <td>{{ e.streetAddress }}</td>
-            <td>{{ e.createdAt | date:'dd-MM-yyyy HH:mm:ss' }}</td>
-            <td>{{ e.preciocli ? (e.preciocli | currency:'S/. ':'symbol':'1.2-2') : '-' }}</td>
-            <td>{{ e.status }}</td>
-            <td>
-                <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono">
-                    <i [routerLink]="'/user/detalle-pedido/'+e.orderId" class="fas fa-info-circle"></i>
-                </div>
-                <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Aceptado'">
-                    <i [routerLink]="'/user/pagar-solicitud/'+e.orderId" class="fas fa-credit-card"></i>
-                </div>
-            </td>
-        </tr>
-    </table>
-    <div class="pagination">
-        <button (click)="prevPage1()" [disabled]="currentPage1 === 1">
-            <i class="fa fa-chevron-left"></i> Anterior
-        </button>
-        <button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
-            Siguiente <i class="fa fa-chevron-right"></i>
-        </button>
-    </div>
+  <div class="container" style="max-width: 100%;">
+      <h1>Historial de Pedidos</h1>
+  </div>
+  <div class="filter-container">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  </div>
+  <table class="table-container">
+      <tr>
+          <th>N°</th>
+          <th>Número de pedido</th>
+          <th>Dirección</th>
+          <th>Hora y Fecha</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          <th>Operaciones</th>
+      </tr>
+      <tr *ngFor="let e of displayedOrders(); let i = index" mat-subheader>
+          <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
+          <td>{{ e.orderId }}</td>
+          <td>{{ e.streetAddress }}</td>
+          <td>{{ e.createdAt | date:'dd-MM-yyyy HH:mm:ss' }}</td>
+          <td>{{ e.preciocli ? (e.preciocli | currency:'S/. ':'symbol':'1.2-2') : '-' }}</td>
+          <td>{{ e.status }}</td>
+          <td>
+              <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono">
+                  <i [routerLink]="'/user/detalle-pedido/'+e.orderId" class="fas fa-info-circle"></i>
+              </div>
+              <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Aceptado'">
+                  <i (click)="openPaymentModal(e.orderId)" class="fas fa-credit-card"></i>
+              </div>
+          </td>
+      </tr>
+  </table>
+  <div class="pagination">
+      <button (click)="prevPage1()" [disabled]="currentPage1 === 1">
+          <i class="fa fa-chevron-left"></i> Anterior
+      </button>
+      <button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
+          Siguiente <i class="fa fa-chevron-right"></i>
+      </button>
+  </div>
 </mat-card>
