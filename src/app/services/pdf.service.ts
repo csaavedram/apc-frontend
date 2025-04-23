@@ -117,75 +117,131 @@ export class PdfService {
 
   generatePdfCotizacion(cotizacionData: any) {
     const doc = new jsPDF();
-    console.log(cotizacionData);
 
-    if (cotizacionData.length === 0) {
-      console.error('Cotizacion data is empty');
-      return;
-    }
 
-    // Add current date
-    const currentDate = new Date().toLocaleDateString('es-PE', {
+
+    // Variables for dynamic data
+    const fecha = new Date().toLocaleDateString('es-PE', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
+    const clienteNombre = cotizacionData.clienteNombre || 'Nombre del Cliente';
+    const clienteRuc = cotizacionData.clienteRuc || '00000000';
+    const clienteDireccion = cotizacionData.clienteDireccion || 'Dirección del Cliente';
+    const items = cotizacionData.items || [];
+    const formaPago = cotizacionData.formaPago || 'CONTADO';
+    const plazoEntrega = cotizacionData.plazoEntrega || '05 DÍAS';
+    const validezOferta = cotizacionData.validezOferta || '06 DÍAS';
+    const total = items.reduce((sum: number, item: any) => sum + item.total, 0);
 
-    const pageWidth = doc.internal.pageSize.getWidth();
+    // Add logo
+    doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20);
+
+    // Add header
     doc.setFontSize(12);
-    doc.text(`Fecha: ${currentDate}`, 10, 10, { align: 'left' });
-
-    // Add title
-    doc.setFontSize(18);
-    doc.text('Cotización', pageWidth / 2, 20, { align: 'center' });
-
-    // Add client details
-    let y = 30;
-    doc.setFontSize(14);
-    doc.text('Detalles del Cliente:', 10, y);
-    y += 10;
+    doc.text(`Lima, ${fecha}`, 10, 35);
     doc.setFontSize(12);
-    doc.text(`Nombre del Cliente: Yo`, 10, y);
-    y += 10;
-    doc.text(`DNI/RUC: 76588310`, 10, y);
-    y += 10;
-    doc.text(`Dirección: Ca. Los Alarifes 1080`, 10, y);
-    y += 10;
+    doc.text('Señores:', 10, 40);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`INSTITUTO DE GINECOLOGIA GARLL E.I.R.L.`, 10, 50);
+    doc.setFont('helvetica', 'normal');
+    doc.text(clienteNombre, 10, 55);
+    doc.setTextColor(0, 0, 0); // Blue color for "Presente.-"
+    doc.text('Presente', 10, 60);
+    doc.setTextColor(0, 0, 0); // Reset to black
 
-    // Add cotización details
-    doc.setFontSize(14);
-    doc.text('Detalles de la Cotización:', 10, y);
-    y += 5;
+    // Add introductory text
+    doc.setFontSize(12);
+    doc.text(
+      'De nuestra más cordial consideración:\n',
+      10,
+      70
+    );
+    doc.text(
+      'Es sumamente grato dirigirnos a ustedes, para saludarlos muy cordialmente, asimismo',
+      10,
+      75
+    );
+    doc.text(
+      'remito por medio de la presente nuestra propuesta del siguiente equipamiento:',
+      10,
+      80
+    );
 
-    // const cotizacionDetails = cotizacionData.items.map((item: any) => [
-    //   item.producto,
-    //   item.cantidad,
-    //   parseFloat(item.precioUnitario).toFixed(2),
-    //   parseFloat(item.total).toFixed(2)
-    // ]);
+    // Add table
+  // const tableData = items.map((item: any, index: number) => [
+  //   index + 1,
+  //   item.descripcion || 'Descripción no disponible',
+  //   item.cantidad || '0',
+  //   `S/. ${item.precioUnitario?.toFixed(2) || '0.00'}`,
+  //   `S/. ${item.total?.toFixed(2) || '0.00'}`,
+  // ]);
+  const tableData = [
+    [1, 'SABANILLA BLANCA', 1, 'S/. 129.00', 'S/. 129.00'],
+    [2, 'GUANTES DE LÁTEX', 2, 'S/. 50.00', 'S/. 100.00'],
+    [3, 'ALCOHOL EN GEL', 3, 'S/. 25.00', 'S/. 75.00'],
+  ];
 
     autoTable(doc, {
-      startY: y,
-      head: [['Producto', 'Cantidad', 'Precio Unitario', 'Total']],
-      // body: cotizacionDetails,
+
+      startY: 90,
+      head: [['ITEM', 'DESCRIPCIÓN', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL']],
+      body: tableData,
       theme: 'grid',
       styles: {
         fontSize: 10,
-        halign: 'center'
+        halign: 'center',
+        valign: 'middle',
+        cellPadding: 3,
       },
       headStyles: {
-        fillColor: [0, 206, 209],
-        textColor: [255, 255, 255]
-      }
+        fillColor: [0, 206, 209], // Cyan color
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+      },
+
+        columnStyles: {
+        1: { halign: 'center' }, // Descripción alineada a la izquierda
+      },
     });
 
-    y = (doc as any).lastAutoTable.finalY + 10;
-
-    // Add total
+    // Add footer details
+    let y = (doc as any).lastAutoTable.finalY + 40;
     doc.setFontSize(12);
-    doc.text(`Total: S/. 800`, 10, y);
+    doc.text(`PRECIOS INC. I.G.V. : SOLES`, 10, y);
+    y += 5;
+    doc.text(`FORMA DE PAGO      : ${formaPago}`, 10, y);
+    y += 5;
+    doc.text(`PLAZO DE ENTREGA   : ${plazoEntrega}`, 10, y);
+    y += 5;
+    doc.text(`VALIDEZ DE OFERTA  : ${validezOferta}`, 10, y);
+
+    // Add closing text
+    y += 10;
+    doc.text(
+      'Agradeciendo anticipadamente la atención que le brinde la presente, es oportuno',
+      10,
+      y
+    );
+    y += 5;
+    doc.text(
+      'testimoniarle los sentimientos de consideración y estima personal.',
+      10,
+      y + 5
+    );
+    y += 15;
+    doc.text('Atentamente,', 10, y);
+
+    // Add signature
+    y += 20;
+    doc.addImage('../../../assets/logo.png', 'PNG', 10, y, 50, 20);
+    y += 25;
+    doc.setFontSize(10);
+    doc.text('DPTO. COMERCIAL', 10, y);
 
     // Save the PDF
-    doc.save(`cotizacion.pdf`);
+    doc.save('cotizacion.pdf');
   }
 }

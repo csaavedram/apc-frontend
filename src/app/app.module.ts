@@ -89,6 +89,7 @@ import { AddServicioComponent } from './pages/admin/add-servicio/add-servicio.co
 import { ActualizarServicioComponent } from './pages/admin/actualizar-servicio/actualizar-servicio.component';
 import { MantenimientoComponent } from './pages/mantenimiento/mantenimiento.component';
 import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-pedido.component';
+import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
 
 
 @NgModule({ declarations: [

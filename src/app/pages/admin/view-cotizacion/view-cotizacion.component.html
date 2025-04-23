@@ -31,13 +31,10 @@
             <td>{{ convertirFecha(e.validezOferta) }}</td>
             <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
             <td>
-                <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono">
-                    <i [routerLink]="'/admin/detallecotizacion/'+e.cotizacionId" class="fas fa-info-circle"></i>
-                </div>
                 <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
-                    <i [routerLink]="'/admin/actualizarcotizacion/'+e.cotizacionId" class="fas fa-edit"></i>
+                    <i [routerLink]="'/admin/actualizarcotizacion/'+e.quotationId" class="fas fa-edit"></i>
                 </div>
-                <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="eliminarCotizacion(e.cotizacionId)">
+                <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="eliminarCotizacion(e.quotationId)">
                     <i class="fas fa-trash-alt"></i>
                 </div>
                 <div style="padding-left: 5px; padding-right: 5px;" class="descargar-icono" (click)="ola('nose')">

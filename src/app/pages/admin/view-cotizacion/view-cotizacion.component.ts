@@ -8,6 +8,7 @@ import { PdfService } from 'src/app/services/pdf.service';
 import { QuotationService } from 'src/app/services/quotation.service';
 import { convertirFechaISOaDate } from '../../../utils'
 import Swal from 'sweetalert2';
+import { QuotationDetailsService } from 'src/app/services/quotation-details.service';
 
 @Component({
   selector: 'app-view-cotizacion',
@@ -31,6 +32,7 @@ export class ViewCotizacionComponent implements OnInit {
 
   constructor(
     private quotationService: QuotationService,
+    private quotationDetailsService: QuotationDetailsService,
     private pdfService: PdfService
   ) {}
 
@@ -76,7 +78,7 @@ export class ViewCotizacionComponent implements OnInit {
   eliminarCotizacion(cotizacionId: any): void {
     Swal.fire({
       title: 'Eliminar cotización',
-      text: '¿Estás seguro de eliminar la cotización de la lista?',
+      text: '¿Estás seguro de eliminar la cotización y sus detalles?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -85,21 +87,39 @@ export class ViewCotizacionComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.quotationService.eliminarQuotation(cotizacionId).subscribe(
-          (data) => {
-            this.cotizaciones = this.cotizaciones.filter((cotizacion: any) => cotizacion.cotizacionId !== cotizacionId);
-            Swal.fire('Cotización eliminada', 'La cotización ha sido eliminada de la base de datos', 'success');
-            this.calculateTotalPages1();
+        // Step 1: List and delete all details of the quotation
+        this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacionId).subscribe(
+          (detalles: any) => {
+            const deleteDetailPromises = detalles.map((detalle: any) =>
+              this.quotationDetailsService.eliminarQuotationDetail(detalle.quotationdetailsId).toPromise()
+            );
+
+            Promise.all(deleteDetailPromises)
+              .then(() => {
+                // Step 2: Delete the quotation after all details are deleted
+                this.quotationService.eliminarQuotation(cotizacionId).subscribe(
+                  () => {
+                    Swal.fire('Cotización eliminada', 'La cotización y sus detalles han sido eliminados de la base de datos', 'success');
+                    this.listarCotizaciones();
+                  },
+                  (error) => {
+                    Swal.fire('Error', 'Error al eliminar la cotización de la base de datos', 'error');
+                  }
+                );
+              })
+              .catch((error) => {
+                Swal.fire('Error', 'Error al eliminar los detalles de la cotización', 'error');
+              });
           },
           (error) => {
-            Swal.fire('Error', 'Error al eliminar la cotización de la base de datos', 'error');
+            Swal.fire('Error', 'Error al obtener los detalles de la cotización', 'error');
           }
         );
       }
     });
   }
 
-  ngOnInit(): void {
+  listarCotizaciones() {
     this.quotationService.listarQuotations().subscribe(
       (cotizaciones: any) => {
         console.log(cotizaciones);
@@ -111,5 +131,9 @@ export class ViewCotizacionComponent implements OnInit {
         Swal.fire('Error', 'Error al cargar los datos', 'error');
       }
     );
+  }
+
+  ngOnInit(): void {
+    this.listarCotizaciones();
   }
 }

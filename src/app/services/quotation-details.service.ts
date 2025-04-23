@@ -29,8 +29,8 @@ export class QuotationDetailsService {
     return this.http.put(`${baserUrl}/quotationdetails/`, quotationdetails);
   }
 
-  public listarQuotationsDetailsByQuotation(quotationDetailsId:any){
-    return this.http.get(`${baserUrl}/quotationdetails/quotation/${quotationDetailsId}`);
+  public listarQuotationsDetailsByQuotation(quotationId:any){
+    return this.http.get(`${baserUrl}/quotationdetails/quotation/${quotationId}`);
   }
 
 }

@@ -13,10 +13,10 @@ import { ViewProductoComponent } from './pages/admin/view-producto/view-producto
 import { AddProductoComponent } from './pages/admin/add-producto/add-producto.component';
 import { DetalleProductoComponent } from './pages/admin/detalle-producto/detalle-producto.component';
 import { ActualizarProductoComponent } from './pages/admin/actualizar-producto/actualizar-producto.component';
-import { UserDashboardComponent } from './pages/user/user-dashboard/user-dashboard.component';	
+import { UserDashboardComponent } from './pages/user/user-dashboard/user-dashboard.component';
 import { ListaProductosComponent } from './pages/catalogo/lista-productos/lista-productos.component';
 import { ViewCategoriaComponent } from './pages/admin/view-categoria/view-categoria.component';
-import { AddCategoriaComponent } from './pages/admin/add-categoria/add-categoria.component';	
+import { AddCategoriaComponent } from './pages/admin/add-categoria/add-categoria.component';
 import { ActualizarCategoriaComponent } from './pages/admin/actualizar-categoria/actualizar-categoria.component';
 import { ViewUsuarioComponent } from './pages/admin/view-usuario/view-usuario.component';
 import { DetalleProductoCatalogoComponent } from './pages/catalogo/detalle-producto/detalle-producto.component';
@@ -52,7 +52,9 @@ import { ViewServicioComponent } from './pages/admin/view-servicio/view-servicio
 import { ActualizarServicioComponent } from './pages/admin/actualizar-servicio/actualizar-servicio.component';
 import { MantenimientoComponent } from './pages/mantenimiento/mantenimiento.component';
 import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-pedido.component';
-
+import { ViewCotizacionComponent } from './pages/admin/view-cotizacion/view-cotizacion.component';
+import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
+import { ActualizarCotizacionComponent } from './pages/admin/actualizar-cotizacion/actualizar-cotizacion.component';
 
 
 const routes: Routes = [
@@ -82,7 +84,7 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'detalleproducto/:productoId', 
+    path: 'detalleproducto/:productoId',
     component: DetalleProductoCatalogoComponent,
     pathMatch: 'full'
   },
@@ -230,6 +232,18 @@ const routes: Routes = [
       {
         path: 'atenderpedido/:orderId',
         component: AtenderPedidoComponent
+      },
+      {
+        path: 'cotizaciones',
+        component: ViewCotizacionComponent
+      },
+      {
+        path: 'addcotizacion',
+        component: AddCotizacionComponent
+      },
+      {
+        path: 'actualizarcotizacion/:cotizacionId',
+        component: ActualizarCotizacionComponent
       },
     ]
   },
