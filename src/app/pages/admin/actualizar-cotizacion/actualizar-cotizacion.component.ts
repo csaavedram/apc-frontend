@@ -61,7 +61,7 @@ export class ActualizarCotizacionComponent {
   selectedServiceType = { type: '', price: 0 };
   skuChanged: boolean = false;
   items: any[] = [];
-  usuario = { id: '', nombre: '', apellido: '', dni: '' };
+  usuario = { id: '', nombre: '', apellido: '', ruc: '' };
   cotizacionId: any = null;
   nombreCompleto: string = '';
 
@@ -98,7 +98,7 @@ export class ActualizarCotizacionComponent {
           id: cotizacion.user.id,
           nombre: cotizacion.user.nombre,
           apellido: cotizacion.user.apellido,
-          dni: cotizacion.user.dni
+          ruc: cotizacion.user.ruc
         };
 
         // Dynamically update nombreCompleto
@@ -550,22 +550,22 @@ export class ActualizarCotizacionComponent {
     return currentDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
   }
 
-  buscarUsuarioPorDniORuc(): void {
-    const dniOrRuc = this.cotizacionData.numeroDocumento;
+  buscarUsuarioPorRuc(): void {
+    const ruc = this.cotizacionData.numeroDocumento;
 
-    if (!dniOrRuc || dniOrRuc.trim() === '') {
-      Swal.fire('Error', 'Debe ingresar un DNI o RUC válido', 'error');
+    if (!ruc.trim()) {
+      Swal.fire('Error', 'Debe ingresar un RUC válido', 'error');
       return;
     }
 
-    this.userService.obtenerUsuarioPorNumeroDocumento(dniOrRuc).subscribe(
+    this.userService.obtenerUsuarioPorRuc(ruc).subscribe(
       (usuario: any) => {
         if (usuario) {
           this.usuario = {
             id: usuario.id,
             nombre: usuario.nombre,
             apellido: usuario.apellido,
-            dni: usuario.dni // Ensure the DNI is included
+            ruc: usuario.ruc
           };
 
           // Dynamically update nombreCompleto
@@ -574,7 +574,7 @@ export class ActualizarCotizacionComponent {
           Swal.fire('No encontrado', 'No se encontró un usuario con el DNI o RUC ingresado', 'error');
         }
       },
-      (error) => {
+      (error: any) => {
         console.error('Error al buscar usuario:', error);
         Swal.fire('Error', 'Ocurrió un error al buscar el usuario', 'error');
       }

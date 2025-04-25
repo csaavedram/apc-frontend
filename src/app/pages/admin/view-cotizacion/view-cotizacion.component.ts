@@ -66,9 +66,16 @@ export class ViewCotizacionComponent implements OnInit {
   }
 
   filteredCotizaciones(): any[] {
-    return this.cotizaciones.filter((cotizacion: any) =>
-      cotizacion.user.nombre.toLowerCase().includes(this.searchTerm1.toLowerCase())
-    );
+    console.log(this.cotizaciones);
+    return this.cotizaciones.filter((cotizacion: any) => {
+      const user = cotizacion.user || {};
+      const nombre = user.nombre || '';
+      const razonSocial = user.razonSocial || '';
+      return (
+        nombre.toLowerCase().includes(this.searchTerm1.toLowerCase()) ||
+        razonSocial.toLowerCase().includes(this.searchTerm1.toLowerCase())
+      );
+    });
   }
 
   ola(prueba: string) {

@@ -33,4 +33,7 @@ export class QuotationService {
     return this.http.get(`${baserUrl}/quotation/user/${userId}`);
   }
 
+  public listarQuotationsByProvider(providerId:any){
+    return this.http.get(`${baserUrl}/quotation/proveedor/${providerId}`);
+  }
 }

@@ -24,7 +24,7 @@
         </tr>
         <tr *ngFor="let e of displayedCotizaciones(); let i = index" mat-subheader>
             <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
-            <td>{{ e.user.nombre }}</td>
+            <td>{{ (e.user.apellido ? e.user.apellido + ', ' : '') + (e.user.nombre || e.user.razonSocial || 'Sin información') }}</td>
             <td>{{ e.divisa === 'DOLAR' ? 'Dolar' : 'Soles' }}</td>
             <td>{{ e.tipoPago === 'CONTADO' ? 'Contado' : 'Credito' }}</td>
             <td>{{ convertirFecha(e.plazoEntrega) }}</td>

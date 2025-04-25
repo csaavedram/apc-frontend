@@ -10,18 +10,60 @@
       <div class="col-md-6">
         <form novalidate>
 
-          <!-- Fields for users -->
-          <div class="row mt-4">
+          <div class="radio-group my-3">
+            <mat-radio-group [(ngModel)]="tipoBusqueda" name="tipoBusqueda" (change)="onTipoBusquedaChange()">
+              <mat-radio-button class="custom-radio" value="ruc" style="margin-right: 20px">RUC</mat-radio-button>
+              <mat-radio-button class="custom-radio" value="razon_social">Razon Social</mat-radio-button>
+            </mat-radio-group>
+          </div>
+
+          <!-- Fields for provideer -->
+          <div class="row">
             <div class="col-10">
               <mat-form-field appearance="fill" class="w-100">
-                <mat-label>Ingrese el Nro. de Documento</mat-label>
-                <input [(ngModel)]="cotizacionData.usuarioId" name="usuarioId" type="text" placeholder="Digite el Nro. de Documento" matInput />
+                <mat-label>
+                  {{ tipoBusqueda === 'ruc'
+                  ? 'Ingrese el RUC del cliente o empresa'
+                  : 'Ingrese la razon social de la empresa' }}
+                </mat-label>
+                <input [(ngModel)]="usuarioInput" name="usuarioId" type="text" placeholder="Digite el RUC de la empresa o razón social" matInput (input)="onUsuarioInputChange()" />
               </mat-form-field>
+              <div *ngIf="tipoBusqueda === 'razon_social' && filteredSuggestions.length > 0" class="autocomplete-dropdown" style="position: absolute; z-index: 1000; background: white; border: 1px solid #ccc; width: 100%; max-height: 150px; overflow-y: auto; max-width: 520px; margin-top: -20px">
+                <div *ngFor="let suggestion of filteredSuggestions" class="autocomplete-item" (click)="selectSuggestion(suggestion)" style="padding: 8px; cursor: pointer;">
+                  {{ suggestion }}
+                </div>
+              </div>
 
-              <mat-form-field appearance="fill" class="w-100">
-                <mat-label>Nombre de Cliente</mat-label>
-                <input [value]="nombreCompleto" name="nombre" type="text" matInput readonly disabled="true" />
-              </mat-form-field>
+              @if (tipoBusqueda === 'ruc') {
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Nombre del Cliente o Empresa</mat-label>
+                  <input [ngModel]="usuario.tipoUsuario === 'persona_natural' ? nombreCompleto : usuario.razonSocial" name="nombreCompleto" type="text" placeholder="Digite el nombre completo" matInput disabled="true"/>
+                </mat-form-field>
+              }
+            </div>
+            <div class="col-2">
+              @if (tipoBusqueda === 'ruc') {
+                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2 px-2" (click)="tipoBusqueda === 'ruc' ? buscarClientePorRuc() : buscarClientePorRazonSocial()">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <i class="fa-solid fa-magnifying-glass fs-6" style="color: #ffffff;"></i>
+                    <span style="color: #ffffff;">Buscar</span>
+                  </div>
+                </button>
+              }
+              @if (this.usuario.razonSocial !== '' && this.tipoBusqueda === 'razon_social') {
+                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2 px-2" (click)="eliminarCliente()">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <i class="fa-solid fa-trash fs-6" style="color: #ffffff;"></i>
+                    <span style="color: #ffffff;">Borrar</span>
+                  </div>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Fields for users -->
+          <div class="row">
+            <div class="col-10">
 
               <div class="row">
                 <div class="col-md-6">
@@ -65,12 +107,6 @@
             </div>
             <div class="col-2">
               <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 5px;">
-                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2 px-2" (click)="buscarUsuarioPorDniORuc()">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <i class="fa-solid fa-magnifying-glass fs-6" style="color: #ffffff;"></i>
-                    <span style="color: #ffffff;">Buscar</span>
-                  </div>
-                </button>
               </div>
             </div>
           </div>
@@ -105,57 +141,61 @@
             </div>
           </div>
 
-          <div *ngIf="selectedProduct">
-            <mat-form-field appearance="fill" class="w-100">
-              <mat-label>Precio unitario</mat-label>
-              <input type="number" [(ngModel)]="selectedProduct.precio" [ngModelOptions]="{standalone: true}" matInput
-                readonly disabled="true" />
-            </mat-form-field>
+          <div *ngIf="selectedProduct" class="row">
+            <div class="col-10">
+              <mat-form-field appearance="fill" class="w-100">
+                <mat-label>Precio unitario</mat-label>
+                <input type="number" [(ngModel)]="selectedProduct.precio" [ngModelOptions]="{standalone: true}" matInput
+                  readonly disabled="true" />
+              </mat-form-field>
 
-            <mat-form-field appearance="fill" class="w-100">
-              <mat-label>Nuevo precio</mat-label>
-              <input #newPriceInput type="number" [(ngModel)]="selectedProduct.newPrice" name="newPrice"
-                placeholder="Ingrese el nuevo precio" matInput />
-            </mat-form-field>
+              <mat-form-field appearance="fill" class="w-100">
+                <mat-label>Nuevo precio</mat-label>
+                <input #newPriceInput type="number" [(ngModel)]="selectedProduct.newPrice" name="newPrice"
+                  placeholder="Ingrese el nuevo precio" matInput />
+              </mat-form-field>
 
-            <mat-form-field appearance="fill" class="w-100">
-              <mat-label>Cantidad</mat-label>
-              <input #cantidadInput type="number" [(ngModel)]="selectedProduct.cantidad" name="cantidad"
-                placeholder="Ingrese la cantidad" matInput />
-            </mat-form-field>
+              <mat-form-field appearance="fill" class="w-100">
+                <mat-label>Cantidad</mat-label>
+                <input #cantidadInput type="number" [(ngModel)]="selectedProduct.cantidad" name="cantidad"
+                  placeholder="Ingrese la cantidad" matInput />
+              </mat-form-field>
 
-            <p *ngIf="selectedProduct.newPrice && selectedProduct.cantidad">
-              IGV (18%): S/. {{ (selectedProduct.newPrice * selectedProduct.cantidad * 0.18).toFixed(2) }}
-            </p>
+              <p *ngIf="selectedProduct.newPrice && selectedProduct.cantidad">
+                IGV (18%): S/. {{ (selectedProduct.newPrice * selectedProduct.cantidad * 0.18).toFixed(2) }}
+              </p>
 
-            <div class="d-flex justify-content-end mt-1">
-              <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
-                (click)="agregarDetalleCotizacion(+newPriceInput.value, +cantidadInput.value)">
-                + Agregar detalle de bien
-              </button>
+              <div class="d-flex justify-content-end mt-1">
+                <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+                  (click)="agregarDetalleCotizacion(+newPriceInput.value, +cantidadInput.value)">
+                  + Agregar detalle de bien
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- Fields for services -->
-          <div *ngIf="cotizacionData.tipo === 'servicio'">
-            <mat-form-field appearance="fill" class="w-100">
-              <mat-label>Tipo de Servicio</mat-label>
-              <mat-select [(ngModel)]="selectedServiceType.type" name="serviceType">
-                <mat-option [value]="'Mantenimiento Correctivo'">Mantenimiento Correctivo</mat-option>
-                <mat-option [value]="'Mantenimiento Preventivo'">Mantenimiento Preventivo</mat-option>
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field appearance="fill" class="w-100">
-              <mat-label>Precio</mat-label>
-              <input #servicePriceInput type="number" [(ngModel)]="selectedServiceType.price" name="servicePrice"
-                placeholder="Ingrese el precio" matInput />
-            </mat-form-field>
+          <div *ngIf="cotizacionData.tipo === 'servicio'" class="row">
+            <div class="col-10">
+              <mat-form-field appearance="fill" class="w-100">
+                <mat-label>Tipo de Servicio</mat-label>
+                <mat-select [(ngModel)]="selectedServiceType.type" name="serviceType">
+                  <mat-option [value]="'Mantenimiento Correctivo'">Mantenimiento Correctivo</mat-option>
+                  <mat-option [value]="'Mantenimiento Preventivo'">Mantenimiento Preventivo</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="fill" class="w-100">
+                <mat-label>Precio</mat-label>
+                <input #servicePriceInput type="number" [(ngModel)]="selectedServiceType.price" name="servicePrice"
+                  placeholder="Ingrese el precio" matInput />
+              </mat-form-field>
 
-            <div class="d-flex justify-content-end mt-1">
-              <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
-                (click)="agregarDetalleServicio(+servicePriceInput.value)">
-                + Agregar detalle de servicio
-              </button>
+              <div class="d-flex justify-content-end mt-1">
+                <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+                  (click)="agregarDetalleServicio(+servicePriceInput.value)">
+                  + Agregar detalle de servicio
+                </button>
+              </div>
             </div>
           </div>
 

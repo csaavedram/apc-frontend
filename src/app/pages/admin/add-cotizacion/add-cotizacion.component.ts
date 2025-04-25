@@ -5,19 +5,18 @@ import { MatButton } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterModule } from '@angular/router';
-import Swal from 'sweetalert2';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { ProductoService } from 'src/app/services/producto.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatRadioModule } from '@angular/material/radio';
-import { ServicioService } from 'src/app/services/servicio.service';
 import { UserService } from 'src/app/services/user.service';
 import { QuotationService } from 'src/app/services/quotation.service';
 import { QuotationDetailsService } from 'src/app/services/quotation-details.service';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-add-cotizacion',
@@ -49,7 +48,16 @@ export class AddCotizacionComponent {
     userId: null,
     tipo: 'bien',
     productoId: null,
-    usuarioId: ''
+    usuarioId: '',
+  };
+
+  usuario = {
+    id: '',
+    nombre: '',
+    apellido: '',
+    razonSocial: '',
+    ruc: '',
+    tipoUsuario: ''
   };
 
   productos: any[] = [];
@@ -60,20 +68,44 @@ export class AddCotizacionComponent {
   selectedServiceType = { type: '', price: 0 };
   skuChanged: boolean = false;
   items: any[] = [];
-  usuario = { id: '', nombre: '', apellido: '' };
+  tipoBusqueda = 'ruc';
+  listaUsuarios: any[] = [];
+  usuarioInput: string = ''; // Input value
+  suggestions: string[] = []; // Full list of suggestions
+  filteredSuggestions: string[] = []; // Filtered suggestions to display
 
   constructor(
     private snack: MatSnackBar,
     private productoService: ProductoService,
-    private servicioService: ServicioService,
     private quotationService: QuotationService,
+    private usuarioService: UserService,
     private quotationDetailsService: QuotationDetailsService,
     private userService: UserService,
     private router: Router
   ) {}
 
+  onUsuarioInputChange(): void {
+    const input = this.usuarioInput.trim().toLowerCase();
+    if (this.tipoBusqueda === 'razon_social' && input.length > 0) {
+      this.filteredSuggestions = this.listaUsuarios
+        .filter(usuario => usuario.razonSocial?.toLowerCase().includes(input))
+        .map(usuario => usuario.razonSocial);
+    } else {
+      this.filteredSuggestions = [];
+    }
+  }
+
+  selectSuggestion(suggestion: string): void {
+    this.usuarioInput = suggestion;
+    this.usuario = this.listaUsuarios.find(
+      usuario => usuario.razonSocial?.toLowerCase() === suggestion.toLowerCase()
+    );
+    this.filteredSuggestions = [];
+  }
+
   ngOnInit(): void {
     this.listarProductos();
+    this.listarUsuarios();
   }
 
   listarProductos(): void {
@@ -91,6 +123,21 @@ export class AddCotizacionComponent {
     );
   }
 
+  listarUsuarios(): void {
+    this.userService.listarUsuarios().subscribe(
+      (usuarios: any) => {
+        this.listaUsuarios = usuarios;
+        console.log('Lista de usuarios:', this.listaUsuarios);
+      },
+      (error) => {
+        console.error('Error al listar usuarios:', error);
+        this.snack.open('Error al listar usuarios', '', {
+          duration: 3000
+        });
+      }
+    );
+  }
+
   actualizarItems(): void {
     if (this.cotizacionData.tipo === 'bien') {
       this.items = this.productos;
@@ -101,7 +148,6 @@ export class AddCotizacionComponent {
   }
 
   onTipoChange(): void {
-    // Preserve divisa and tipoPago
     const preservedDivisa = this.cotizacionData.divisa;
     const preservedTipoPago = this.cotizacionData.tipoPago;
 
@@ -110,7 +156,6 @@ export class AddCotizacionComponent {
 
     this.actualizarItems();
 
-    // Restore divisa and tipoPago
     this.cotizacionData.divisa = preservedDivisa;
     this.cotizacionData.tipoPago = preservedTipoPago;
 
@@ -434,18 +479,18 @@ export class AddCotizacionComponent {
 
   getCurrentDate(): string {
     const currentDate = new Date();
-    return currentDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    return currentDate.toISOString().split('T')[0];
   }
 
-  buscarUsuarioPorDniORuc(): void {
-    const dniOrRuc = this.cotizacionData.usuarioId;
+  buscarClientePorRuc(): void {
+    const ruc = this.usuarioInput;
 
-    if (!dniOrRuc || dniOrRuc.trim() === '') {
-      Swal.fire('Error', 'Debe ingresar un DNI o RUC válido', 'error');
+    if (!ruc.trim()) {
+      Swal.fire('Error', 'Debe ingresar un RUC válido', 'error');
       return;
     }
 
-    this.userService.obtenerUsuarioPorNumeroDocumento(dniOrRuc).subscribe(
+    this.userService.obtenerUsuarioPorRuc(ruc).subscribe(
       (usuario: any) => {
         if (usuario) {
           this.usuario = usuario;
@@ -453,11 +498,32 @@ export class AddCotizacionComponent {
           Swal.fire('No encontrado', 'No se encontró un usuario con el DNI o RUC ingresado', 'error');
         }
       },
-      (error) => {
+      (error: any) => {
+        console.log(error)
         console.error('Error al buscar usuario:', error);
         Swal.fire('Error', 'Ocurrió un error al buscar el usuario', 'error');
       }
     );
+  }
+
+  buscarClientePorRazonSocial(): void {
+    const razonSocial = this.usuarioInput;
+
+    if (!razonSocial.trim()) {
+      Swal.fire('Error', 'Debe ingresar una razón social válida', 'error');
+      return;
+    }
+
+    const usuarioEncontrado = this.listaUsuarios.find(
+      (usuario) => usuario.razonSocial?.toLowerCase() === razonSocial.toLowerCase()
+    );
+
+    if (usuarioEncontrado) {
+      this.usuario = usuarioEncontrado;
+      Swal.fire('Éxito', 'Empresa encontrada', 'success');
+    } else {
+      Swal.fire('No encontrado', 'No se encontró un usuario con la razón social ingresada', 'error');
+    }
   }
 
   get nombreCompleto(): string {
@@ -476,5 +542,42 @@ export class AddCotizacionComponent {
 
   calcularTotal(): number {
     return this.calcularOpGravadas() + this.calcularIgv();
+  }
+
+  onTipoBusquedaChange(): void {
+    this.usuarioInput = '';
+    if (this.tipoBusqueda === 'ruc') {
+      this.cotizacionData.usuarioId = '';
+      this.usuario = {
+        id: '',
+        nombre: '',
+        apellido: '',
+        razonSocial: '',
+        ruc: '',
+        tipoUsuario: ''
+      };
+    } else {
+      this.usuario = {
+        id: '',
+        nombre: '',
+        apellido: '',
+        razonSocial: '',
+        ruc: '',
+        tipoUsuario: ''
+      };
+    }
+  }
+
+  eliminarCliente(): void {
+    this.usuario = {
+      id: '',
+      nombre: '',
+      apellido: '',
+      razonSocial: '',
+      ruc: '',
+      tipoUsuario: ''
+    };
+    this.usuarioInput = '';
+    this.filteredSuggestions = [];
   }
 }

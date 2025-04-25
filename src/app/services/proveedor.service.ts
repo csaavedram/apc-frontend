@@ -23,8 +23,16 @@ export class ProveedorService {
   public obtenerProveedor(proveedorId:any){
     return this.http.get(`${baserUrl}/proveedores/${proveedorId}`);
   }
-  
+
   public actualizarProveedor(proveedor:any){
     return this.http.put(`${baserUrl}/proveedores/`, proveedor);
+  }
+
+  public obtenerProveedorPorRuc(ruc:any){
+    return this.http.get(`${baserUrl}/proveedores/ruc/${ruc}`);
+  }
+
+  public obtenerProveedorPorRazonSocial(razonSocial:any){
+    return this.http.get(`${baserUrl}/proveedores/razonSocial/${razonSocial}`);
   }
 }
