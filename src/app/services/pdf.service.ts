@@ -1,14 +1,25 @@
 // pdf-service.ts
 import { Injectable } from '@angular/core';
+import { da } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { QuotationService } from 'src/app/services/quotation.service';
+import { UserService } from 'src/app/services/user.service';
+import { QuotationDetailsService } from 'src/app/services/quotation-details.service';
+import { UpperCasePipe } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PdfService {
 
-  constructor() { }
+  constructor(
+    private quotationService: QuotationService,
+    private userService: UserService,
+    private quotationDetailsService: QuotationDetailsService,
+  ) {
+    
+   }
 
   generatePdf(orderData: any) {
     const doc = new jsPDF();
@@ -115,8 +126,50 @@ export class PdfService {
     doc.save('factura.pdf');
   }
 
-  generatePdfCotizacion(cotizacionData: any) {
-    const doc = new jsPDF();
+  generatePdfCotizacion(cotizacionId: any) {
+    console.log('Cotizacion ID:', cotizacionId);
+    this.quotationService.obtenerQuotation(cotizacionId).subscribe((cotizacionData: any) => {
+      console.log('Cotizacion Data:', cotizacionData);
+  const cotizacioDetails = {
+    TipoPago: cotizacionData.tipoPago,
+    PlazoEn: new Date(cotizacionData.plazoEntrega).toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }),
+    ValidezO: new Date(cotizacionData.validezOferta).toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }),
+    TotalIGV: cotizacionData.total,
+  }
+  const userDetails = {
+   id :cotizacionData.user.id, // Asegúrate de que este campo exista en la respuesta
+   nombre:  cotizacionData.user.nombre, // Asegúrate de que este campo exista en la respuesta
+   apellido:  cotizacionData.user.apellido, // Asegúrate de que este campo exista en la respuesta
+   ruc: cotizacionData.user.ruc, // Asegúrate de que este campo exista en la respuesta   
+   tipoUsuario : cotizacionData.user.tipoUsuario, // Asegúrate de que este campo exista en la respuesta
+  }
+  const razonsocial = cotizacionData.user.razonSocial; // Asegúrate de que este campo exista en la respuesta
+  const fullName= `${userDetails.nombre} ${userDetails.apellido}`;
+  console.log('User Details:', userDetails); 
+   this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacionId).subscribe((quotationDetailsData: any) => {
+    console.log('Quotation Details Data:', quotationDetailsData);
+     // Mapear los datos de cada objeto en el array
+  const cotizacionesDe = quotationDetailsData.map((item: any,index:number) => [
+    index +1,
+    item.product?.nombreProducto || item.serviceType, // DESCRIPCIÓN: Tipo de servicio o producto
+    item.cantidad, // CANT: Cantidad
+  `S/. ${parseFloat(item.unitPrice).toFixed(2)}`, // PRECIO UNITARIO: Formateado como moneda
+  `S/. ${parseFloat(item.totalPrice).toFixed(2)}` // PRECIO TOTAL: Formateado como moneda
+  ]);
+ 
+  console.log('Cotizaciones De:', cotizacionesDe);
+ 
+
+    // Create PDF document
+  const doc = new jsPDF();
 
 
 
@@ -126,14 +179,7 @@ export class PdfService {
       month: 'long',
       day: 'numeric',
     });
-    const clienteNombre = cotizacionData.clienteNombre || 'Nombre del Cliente';
-    const clienteRuc = cotizacionData.clienteRuc || '00000000';
-    const clienteDireccion = cotizacionData.clienteDireccion || 'Dirección del Cliente';
-    const items = cotizacionData.items || [];
-    const formaPago = cotizacionData.formaPago || 'CONTADO';
-    const plazoEntrega = cotizacionData.plazoEntrega || '05 DÍAS';
-    const validezOferta = cotizacionData.validezOferta || '06 DÍAS';
-    const total = items.reduce((sum: number, item: any) => sum + item.total, 0);
+    const año = new Date().getFullYear();
 
     // Add logo
     doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20);
@@ -141,16 +187,17 @@ export class PdfService {
     // Add header
     doc.setFontSize(12);
     doc.text(`Lima, ${fecha}`, 10, 35);
+    doc.text(`COT Nº ${cotizacionId} / ${año}`, 150, 35);
     doc.setFontSize(12);
     doc.text('Señores:', 10, 40);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(`INSTITUTO DE GINECOLOGIA GARLL E.I.R.L.`, 10, 50);
+    doc.text(`${razonsocial.toUpperCase()}`, 10, 50);
     doc.setFont('helvetica', 'normal');
-    doc.text(clienteNombre, 10, 55);
     doc.setTextColor(0, 0, 0); // Blue color for "Presente.-"
-    doc.text('Presente', 10, 60);
-    doc.setTextColor(0, 0, 0); // Reset to black
+    if (userDetails.tipoUsuario !== 'cliente_empresa') {
+      doc.text(`Presente: ${fullName}`, 10, 55);
+    }
 
     // Add introductory text
     doc.setFontSize(12);
@@ -178,17 +225,13 @@ export class PdfService {
   //   `S/. ${item.precioUnitario?.toFixed(2) || '0.00'}`,
   //   `S/. ${item.total?.toFixed(2) || '0.00'}`,
   // ]);
-  const tableData = [
-    [1, 'SABANILLA BLANCA', 1, 'S/. 129.00', 'S/. 129.00'],
-    [2, 'GUANTES DE LÁTEX', 2, 'S/. 50.00', 'S/. 100.00'],
-    [3, 'ALCOHOL EN GEL', 3, 'S/. 25.00', 'S/. 75.00'],
-  ];
+  
 
     autoTable(doc, {
 
       startY: 90,
       head: [['ITEM', 'DESCRIPCIÓN', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL']],
-      body: tableData,
+      body: cotizacionesDe,
       theme: 'grid',
       styles: {
         fontSize: 10,
@@ -210,13 +253,13 @@ export class PdfService {
     // Add footer details
     let y = (doc as any).lastAutoTable.finalY + 40;
     doc.setFontSize(12);
-    doc.text(`PRECIOS INC. I.G.V. : SOLES`, 10, y);
+    doc.text(`PRECIOS INC. I.G.V. : ${cotizacioDetails.TotalIGV} SOLES`, 10, y);
     y += 5;
-    doc.text(`FORMA DE PAGO      : ${formaPago}`, 10, y);
+    doc.text(`FORMA DE PAGO      : ${cotizacioDetails.TipoPago}`, 10, y);
     y += 5;
-    doc.text(`PLAZO DE ENTREGA   : ${plazoEntrega}`, 10, y);
+    doc.text(`PLAZO DE ENTREGA   : ${cotizacioDetails.PlazoEn}`, 10, y);
     y += 5;
-    doc.text(`VALIDEZ DE OFERTA  : ${validezOferta}`, 10, y);
+    doc.text(`VALIDEZ DE OFERTA  : ${cotizacioDetails.ValidezO}`, 10, y);
 
     // Add closing text
     y += 10;
@@ -236,12 +279,13 @@ export class PdfService {
 
     // Add signature
     y += 20;
-    doc.addImage('../../../assets/logo.png', 'PNG', 10, y, 50, 20);
+    doc.addImage('../../../assets/firma.png', 'PNG', 10, y, 50, 50);
     y += 25;
-    doc.setFontSize(10);
-    doc.text('DPTO. COMERCIAL', 10, y);
+    
 
     // Save the PDF
     doc.save('cotizacion.pdf');
   }
+
+  );} );} 
 }
