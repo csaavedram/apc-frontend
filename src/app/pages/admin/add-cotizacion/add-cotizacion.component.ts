@@ -70,15 +70,14 @@ export class AddCotizacionComponent {
   items: any[] = [];
   tipoBusqueda = 'ruc';
   listaUsuarios: any[] = [];
-  usuarioInput: string = ''; // Input value
-  suggestions: string[] = []; // Full list of suggestions
-  filteredSuggestions: string[] = []; // Filtered suggestions to display
+  usuarioInput: string = '';
+  suggestions: string[] = [];
+  filteredSuggestions: string[] = [];
 
   constructor(
     private snack: MatSnackBar,
     private productoService: ProductoService,
     private quotationService: QuotationService,
-    private usuarioService: UserService,
     private quotationDetailsService: QuotationDetailsService,
     private userService: UserService,
     private router: Router
@@ -144,7 +143,6 @@ export class AddCotizacionComponent {
     } else {
       this.items = this.servicios;
     }
-    console.log('Items filtrados:', this.items);
   }
 
   onTipoChange(): void {
@@ -158,8 +156,6 @@ export class AddCotizacionComponent {
 
     this.cotizacionData.divisa = preservedDivisa;
     this.cotizacionData.tipoPago = preservedTipoPago;
-
-    console.log('Divisa y Tipo de Pago preservados:', this.cotizacionData.divisa, this.cotizacionData.tipoPago);
   }
 
   buscarProductoPorSku(): void {
@@ -341,6 +337,11 @@ export class AddCotizacionComponent {
       return;
     }
 
+    if (price < 0) {
+      Swal.fire('Error', 'El precio no puede ser menor a 0', 'error');
+      return;
+    }
+
     const detalle = {
       serviceType: this.selectedServiceType.type,
       price
@@ -420,6 +421,7 @@ export class AddCotizacionComponent {
       user: {
         id: this.usuario.id,
       },
+      estado: 'Creado'
     };
 
     this.quotationService.agregarQuotation(cotizacionPayload).subscribe(
@@ -452,7 +454,7 @@ export class AddCotizacionComponent {
           const detalleServicioPayload = {
             cantidad: 1,
             totalPrice: detalle.price,
-            unitPrice: null,
+            unitPrice: detalle.price,
             newPrice: null,
             serviceType: detalle.serviceType,
             product: null,
@@ -531,17 +533,20 @@ export class AddCotizacionComponent {
   }
 
   calcularOpGravadas(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.totalPrice, 0);
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.price, 0);
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.82, 0); // 82% of new price for products
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.price * 0.82, 0); // 82% of total price for services
     return totalProductos + totalServicios;
   }
 
   calcularIgv(): number {
-    return this.calcularOpGravadas() * 0.18;
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.18, 0); // 18% of new price for products
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.price * 0.18, 0); // 18% of total price for services
+    return totalProductos + totalServicios;
   }
 
   calcularTotal(): number {
-    return this.calcularOpGravadas() + this.calcularIgv();
+    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
+           this.detalleServicios.reduce((sum, detalle) => sum + detalle.price, 0); // Total is the sum of all new prices
   }
 
   onTipoBusquedaChange(): void {
@@ -579,5 +584,45 @@ export class AddCotizacionComponent {
     };
     this.usuarioInput = '';
     this.filteredSuggestions = [];
+  }
+
+  actualizarCantidad(index: number, nuevaCantidad: number): void {
+    const detalle = this.detalleProductos[index];
+    const producto = this.productos.find((p) => p.productoId === detalle.productoId);
+
+    if (!producto) {
+      this.snack.open('Producto no encontrado en el inventario', '', {
+        duration: 3000,
+        panelClass: ['snackbar-error']
+      });
+      return;
+    }
+
+    if (nuevaCantidad < 1) {
+      this.snack.open('La cantidad no puede ser menor a 1', '', {
+        duration: 3000,
+        panelClass: ['snackbar-error']
+      });
+      detalle.cantidad = 1; // Reset to minimum valid quantity
+      return;
+    }
+
+    if (nuevaCantidad > producto.stock) {
+      this.snack.open(`La cantidad no puede ser mayor al stock disponible (${producto.stock})`, '', {
+        duration: 3000,
+        panelClass: ['snackbar-error']
+      });
+      detalle.cantidad = producto.stock; // Reset to maximum valid quantity
+      return;
+    }
+
+    detalle.cantidad = nuevaCantidad;
+    detalle.totalPrice = detalle.newPrice * nuevaCantidad;
+    detalle.igv = detalle.totalPrice * 0.18;
+
+    this.snack.open('Cantidad actualizada correctamente', '', {
+      duration: 3000,
+      panelClass: ['snackbar-success']
+    });
   }
 }

@@ -20,6 +20,7 @@
             <th>Plazo de Entrega</th>
             <th>Validez de Oferta</th>
             <th>Total</th>
+            <th>Estado</th>
             <th>Operaciones</th>
         </tr>
         <tr *ngFor="let e of displayedCotizaciones(); let i = index" mat-subheader>
@@ -30,13 +31,16 @@
             <td>{{ convertirFecha(e.plazoEntrega) }}</td>
             <td>{{ convertirFecha(e.validezOferta) }}</td>
             <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
+            <td>{{ e.estado }}</td>
             <td>
-                <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
+                @if(e.estado !== 'Cancelado') {
+                  <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
                     <i [routerLink]="'/admin/actualizarcotizacion/'+e.quotationId" class="fas fa-edit"></i>
-                </div>
-                <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="eliminarCotizacion(e.quotationId)">
-                    <i class="fas fa-trash-alt"></i>
-                </div>
+                  </div>
+                  <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="cancelarCotizacion(e.quotationId)">
+                      <i class="fas fa-times"></i>
+                  </div>
+                }
                 <div style="padding-left: 5px; padding-right: 5px;" class="descargar-icono" (click)="ola('nose')">
                     <i class="fa-solid fa-file-pdf"></i>
                 </div>
