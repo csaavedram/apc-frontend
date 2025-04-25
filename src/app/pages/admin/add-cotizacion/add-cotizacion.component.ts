@@ -283,54 +283,6 @@ export class AddCotizacionComponent {
     this.cotizacionData.productoId = null;
   }
 
-  incrementarCantidad(index: number): void {
-    const detalle = this.detalleProductos[index];
-    const producto = this.productos.find((p) => p.productoId === detalle.productoId);
-
-    if (!producto) {
-      console.error('Producto no encontrado:', detalle.productoId);
-      this.snack.open('Producto no encontrado en el inventario', '', {
-        duration: 3000,
-      });
-      return;
-    }
-
-    if (detalle.cantidad + 1> producto.stock) {
-      this.snack.open(`No se puede agregar más. Stock disponible: ${producto.stock}`, '', {
-        duration: 3000,
-      });
-      return;
-    }
-
-    detalle.cantidad++;
-    detalle.totalPrice = detalle.newPrice * detalle.cantidad;
-    detalle.igv = detalle.totalPrice * 0.18;
-  }
-
-  disminuirCantidad(index: number): void {
-    const detalle = this.detalleProductos[index];
-    const producto = this.productos.find((p) => p.productoId === detalle.productoId);
-
-    if (!producto) {
-      console.error('Producto no encontrado:', detalle.productoId);
-      this.snack.open('Producto no encontrado en el inventario', '', {
-        duration: 3000,
-      });
-      return;
-    }
-
-    if (detalle.cantidad - 1 <= 0) {
-      this.snack.open('La cantidad no puede ser menor a 1', '', {
-        duration: 3000,
-      });
-      return;
-    }
-
-    detalle.cantidad--;
-    detalle.totalPrice = detalle.newPrice * detalle.cantidad;
-    detalle.igv = detalle.totalPrice * 0.18;
-  }
-
   agregarDetalleServicio(price: number): void {
     if (!this.selectedServiceType.type) {
       Swal.fire('Error', 'Debe seleccionar un tipo de servicio', 'error');
