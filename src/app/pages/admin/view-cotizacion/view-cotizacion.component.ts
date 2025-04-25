@@ -78,8 +78,8 @@ export class ViewCotizacionComponent implements OnInit {
     });
   }
 
-  ola(prueba: string) {
-    this.pdfService.generatePdfCotizacion(prueba)
+  vercotizacionPDF(cotizacionId: any) {
+    this.pdfService.generatePdfCotizacion(cotizacionId);
   }
 
   cancelarCotizacion(cotizacionId: any): void {
