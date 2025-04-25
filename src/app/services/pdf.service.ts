@@ -189,37 +189,35 @@ export class PdfService {
           TotalIGV: cotizacionData.total,
         };
         const userDetails = {
-          id: cotizacionData.user.id, // Asegúrate de que este campo exista en la respuesta
-          nombre: cotizacionData.user.nombre, // Asegúrate de que este campo exista en la respuesta
-          apellido: cotizacionData.user.apellido, // Asegúrate de que este campo exista en la respuesta
-          ruc: cotizacionData.user.ruc, // Asegúrate de que este campo exista en la respuesta
-          tipoUsuario: cotizacionData.user.tipoUsuario, // Asegúrate de que este campo exista en la respuesta
+          id: cotizacionData.user.id,
+          nombre: cotizacionData.user.nombre,
+          apellido: cotizacionData.user.apellido,
+          ruc: cotizacionData.user.ruc,
+          tipoUsuario: cotizacionData.user.tipoUsuario,
         };
         const razonsocial = cotizacionData.user.razonSocial;
-        const ruc = cotizacionData.user.ruc;
         const fullName = `${userDetails.nombre} ${userDetails.apellido}`;
+        const ruc = cotizacionData.user.ruc;
+
         console.log('User Details:', userDetails);
         this.quotationDetailsService
           .listarQuotationsDetailsByQuotation(cotizacionId)
           .subscribe((quotationDetailsData: any) => {
             console.log('Quotation Details Data:', quotationDetailsData);
-            // Mapear los datos de cada objeto en el array
             const cotizacionesDe = quotationDetailsData.map(
               (item: any, index: number) => [
                 index + 1,
-                item.product?.nombreProducto || item.serviceType, // DESCRIPCIÓN: Tipo de servicio o producto
-                item.cantidad, // CANT: Cantidad
-                `S/. ${parseFloat(item.unitPrice).toFixed(2)}`, // PRECIO UNITARIO: Formateado como moneda
-                `S/. ${parseFloat(item.totalPrice).toFixed(2)}`, // PRECIO TOTAL: Formateado como moneda
+                item.product?.nombreProducto || item.serviceType,
+                item.cantidad,
+                `S/. ${parseFloat(item.unitPrice).toFixed(2)}`,
+                `S/. ${parseFloat(item.totalPrice).toFixed(2)}`,
               ]
             );
 
             console.log('Cotizaciones De:', cotizacionesDe);
 
-            // Create PDF document
             const doc = new jsPDF();
 
-            // Variables for dynamic data
             const fecha = new Date().toLocaleDateString('es-PE', {
               year: 'numeric',
               month: 'long',
@@ -227,20 +225,16 @@ export class PdfService {
             });
             const año = new Date().getFullYear();
 
-            // Add logo
             doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20);
 
-            // Add header
             doc.setFontSize(12);
             doc.text(`Lima, ${fecha}`, 10, 35);
             doc.text(`COT Nº ${cotizacionId} / ${año}`, 150, 35);
             doc.setFontSize(12);
-            doc.text('Señores:', 10, 40);
+            doc.text('Señores:', 10, 45);
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`${razonsocial.toUpperCase()}`, 10, 50);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0, 0, 0);
             doc.text(`RUC: ${ruc.toUpperCase()}`, 10, 55);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
@@ -248,7 +242,6 @@ export class PdfService {
               doc.text(`Presente: ${fullName}`, 10, 60);
             }
 
-            // Add introductory text
             doc.setFontSize(12);
             doc.text('De nuestra más cordial consideración:\n', 10, 70);
             doc.text(
@@ -262,25 +255,10 @@ export class PdfService {
               80
             );
 
-            // Add table
-            // const tableData = items.map((item: any, index: number) => [
-            //   index + 1,
-            //   item.descripcion || 'Descripción no disponible',
-            //   item.cantidad || '0',
-            //   `S/. ${item.precioUnitario?.toFixed(2) || '0.00'}`,
-            //   `S/. ${item.total?.toFixed(2) || '0.00'}`,
-            // ]);
-
             autoTable(doc, {
               startY: 90,
               head: [
-                [
-                  'ITEM',
-                  'DESCRIPCIÓN',
-                  'CANT',
-                  'PRECIO UNITARIO',
-                  'PRECIO TOTAL',
-                ],
+                ['ITEM', 'DESCRIPCIÓN', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL'],
               ],
               body: cotizacionesDe,
               theme: 'grid',
@@ -291,40 +269,34 @@ export class PdfService {
                 cellPadding: 3,
               },
               headStyles: {
-                fillColor: [0, 206, 209], // Cyan color
+                fillColor: [0, 206, 209],
                 textColor: [255, 255, 255],
                 fontStyle: 'bold',
               },
-
               columnStyles: {
-                1: { halign: 'center' }, // Descripción alineada a la izquierda
+                1: { halign: 'center' },
               },
             });
 
-            // Add footer details
-            let y = (doc as any).lastAutoTable.finalY + 40;
+            const fixedY = 160;
+
+            doc.setFont('helvetica', 'bold');
+            let y = fixedY;
+
             doc.setFontSize(12);
-            doc.text(
-              `PRECIOS INC. I.G.V. : ${cotizacioDetails.TotalIGV} SOLES`,
-              10,
-              y
-            );
+            doc.text('CONDICIONES GENERALES(S.E.U.O):', 10, y);
+            const textWidth = doc.getTextWidth('CONDICIONES GENERALES(S.E.U.O):');
+            doc.line(10, y + 1, 10 + textWidth, y + 1);
+            y += 8;
+            doc.text(`PRECIOS INC. I.G.V. : ${cotizacioDetails.TotalIGV} SOLES`, 10, y);
             y += 5;
-            doc.text(
-              `FORMA DE PAGO      : ${cotizacioDetails.TipoPago}`,
-              10,
-              y
-            );
+            doc.text(`FORMA DE PAGO      : ${cotizacioDetails.TipoPago}`, 10, y);
             y += 5;
             doc.text(`PLAZO DE ENTREGA   : ${cotizacioDetails.PlazoEn}`, 10, y);
             y += 5;
-            doc.text(
-              `VALIDEZ DE OFERTA  : ${cotizacioDetails.ValidezO}`,
-              10,
-              y
-            );
+            doc.text(`VALIDEZ DE OFERTA  : ${cotizacioDetails.ValidezO}`, 10, y);
 
-            // Add closing text
+            doc.setFont('helvetica', 'normal');
             y += 10;
             doc.text(
               'Agradeciendo anticipadamente la atención que le brinde la presente, es oportuno',
@@ -340,12 +312,30 @@ export class PdfService {
             y += 15;
             doc.text('Atentamente,', 10, y);
 
-            // Add signature
-            y += 20;
+            y += 10;
             doc.addImage('../../../assets/firma.png', 'PNG', 10, y, 50, 50);
             y += 25;
 
-            // Save the PDF
+            const pageCount = doc.getNumberOfPages();
+
+            for (let i = 1; i <= pageCount; i++) {
+              doc.setPage(i);
+              doc.setFontSize(10);
+              doc.setTextColor(0, 0, 0);
+              doc.line(10, 280, 200, 280);
+              doc.text(
+                'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+                30,
+                285,
+                { align: 'left' }
+              );
+              doc.text(
+                'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+                60,
+                290,
+                { align: 'left' }
+              );
+            }
             doc.save('cotizacion.pdf');
           });
       });

@@ -12,7 +12,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { ProductoService } from 'src/app/services/producto.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatRadioModule } from '@angular/material/radio';
-import { ServicioService } from 'src/app/services/servicio.service';
 import { UserService } from 'src/app/services/user.service';
 import { QuotationService } from 'src/app/services/quotation.service';
 import { QuotationDetailsService } from 'src/app/services/quotation-details.service';
@@ -50,7 +49,8 @@ export class ActualizarCotizacionComponent {
     tipo: 'bien',
     productoId: null,
     usuarioId: '',
-    ruc: ''
+    ruc: '',
+    estado: '',
   };
 
   usuario = {
@@ -123,7 +123,8 @@ export class ActualizarCotizacionComponent {
           tipo: 'bien',
           productoId: null,
           usuarioId: cotizacion.user.id,
-          ruc: cotizacion.user.ruc
+          ruc: cotizacion.user.ruc,
+          estado: cotizacion.estado
         };
 
         this.usuarioInput = cotizacion.user.ruc;
@@ -156,7 +157,8 @@ export class ActualizarCotizacionComponent {
 
             this.detalleServicios = detalles.filter((detalle: any) => detalle.serviceType !== null).map((detalle: any) => ({
               serviceType: detalle.serviceType,
-              totalPrice: detalle.totalPrice
+              totalPrice: detalle.totalPrice,
+              unitPrice: detalle.unitPrice,
             }));
           },
           (error) => {
@@ -407,6 +409,7 @@ export class ActualizarCotizacionComponent {
     const detalle = {
       serviceType: this.selectedServiceType.type,
       totalPrice: price,
+      unitPrice: price,
     };
 
     this.detalleServicios.push(detalle);
@@ -484,6 +487,7 @@ export class ActualizarCotizacionComponent {
       user: {
         id: this.usuario.id,
       },
+      estado: this.cotizacionData.estado,
     };
 
     // Update the quotation
@@ -554,6 +558,8 @@ export class ActualizarCotizacionComponent {
         if (JSON.stringify(original) !== JSON.stringify(current)) {
           console.log('Original:', original);
           console.log('Current:', current);
+
+          console.log(current)
 
           const updatePayload = {
             quotationdetailsId: original.quotationdetailsId, // Use the ID from the original detail
