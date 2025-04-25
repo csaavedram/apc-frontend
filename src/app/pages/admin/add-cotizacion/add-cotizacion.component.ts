@@ -320,7 +320,7 @@ export class AddCotizacionComponent {
 
   guardarInformacion(): void {
     if (this.usuario.id === '') {
-      this.snack.open('Debe buscar un usuario por DNI o RUC antes de guardar la cotización', '', {
+      this.snack.open('Debe buscar un cliente o empresa por RUC antes de guardar la cotización', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
       });
@@ -449,7 +449,7 @@ export class AddCotizacionComponent {
         if (usuario) {
           this.usuario = usuario;
         } else {
-          Swal.fire('No encontrado', 'No se encontró un usuario con el DNI o RUC ingresado', 'error');
+          Swal.fire('No encontrado', 'No se encontró un cliente o empresa por RUC ingresado', 'error');
         }
       },
       (error: any) => {
