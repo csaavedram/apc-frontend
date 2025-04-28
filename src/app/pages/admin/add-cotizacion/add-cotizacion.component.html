@@ -17,7 +17,7 @@
             </mat-radio-group>
           </div>
 
-          <!-- Fields for provideer -->
+          <!-- Fields for users -->
           <div class="row">
             <div class="col-10">
               <mat-form-field appearance="fill" class="w-100">
@@ -61,7 +61,7 @@
             </div>
           </div>
 
-          <!-- Fields for users -->
+          <!-- Fields for quotations -->
           <div class="row">
             <div class="col-10">
 
@@ -161,9 +161,12 @@
                   placeholder="Ingrese la cantidad" matInput />
               </mat-form-field>
 
-              <p *ngIf="selectedProduct.newPrice && selectedProduct.cantidad">
-                IGV (18%): S/. {{ (selectedProduct.newPrice * selectedProduct.cantidad * 0.18).toFixed(2) }}
-              </p>
+              <div class="d-flex justify-content-between align-items-center">
+                <p>Stock disponible: {{ selectedProduct.stock }}</p>
+                <p *ngIf="selectedProduct.newPrice && selectedProduct.cantidad">
+                  IGV (18%): S/. {{ (selectedProduct.newPrice * selectedProduct.cantidad * 0.18).toFixed(2) }}
+                </p>
+              </div>
 
               <div class="d-flex justify-content-end mt-1">
                 <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
@@ -225,9 +228,7 @@
                 <td>{{ detalle.nombreProducto }}</td>
                 <td>
                   <div class="d-flex justify-content-center align-items-center">
-                    <button class="btn btn-sm btn-light mx-1" (click)="disminuirCantidad(i)">-</button>
-                    <span class="mx-2">{{ detalle.cantidad }}</span>
-                    <button class="btn btn-sm btn-light mx-1" (click)="incrementarCantidad(i)">+</button>
+                    <input type="number" [(ngModel)]="detalle.cantidad" (change)="actualizarCantidad(i, detalle.cantidad)" class="form-control text-center" style="width: 60px;" />
                   </div>
                 </td>
                 <td>S/. {{ detalle.unitPrice }}</td>

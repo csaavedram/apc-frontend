@@ -82,44 +82,26 @@ export class ViewCotizacionComponent implements OnInit {
     this.pdfService.generatePdfCotizacion(cotizacionId);
   }
 
-  eliminarCotizacion(cotizacionId: any): void {
+  cancelarCotizacion(cotizacionId: any): void {
     Swal.fire({
-      title: 'Eliminar cotización',
-      text: '¿Estás seguro de eliminar la cotización y sus detalles?',
+      title: 'Cancelar cotización',
+      text: '¿Estás seguro de cancelar esta cotización?',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Cancelar cotización',
+      cancelButtonText: 'Volver'
     }).then((result) => {
       if (result.isConfirmed) {
-        // Step 1: List and delete all details of the quotation
-        this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacionId).subscribe(
-          (detalles: any) => {
-            const deleteDetailPromises = detalles.map((detalle: any) =>
-              this.quotationDetailsService.eliminarQuotationDetail(detalle.quotationdetailsId).toPromise()
-            );
-
-            Promise.all(deleteDetailPromises)
-              .then(() => {
-                // Step 2: Delete the quotation after all details are deleted
-                this.quotationService.eliminarQuotation(cotizacionId).subscribe(
-                  () => {
-                    Swal.fire('Cotización eliminada', 'La cotización y sus detalles han sido eliminados de la base de datos', 'success');
-                    this.listarCotizaciones();
-                  },
-                  (error) => {
-                    Swal.fire('Error', 'Error al eliminar la cotización de la base de datos', 'error');
-                  }
-                );
-              })
-              .catch((error) => {
-                Swal.fire('Error', 'Error al eliminar los detalles de la cotización', 'error');
-              });
+        this.quotationService.cancelarCotizacion(cotizacionId).subscribe(
+          () => {
+            Swal.fire('Cotización cancelada', 'La cotización ha sido cancelada con éxito', 'success');
+            this.listarCotizaciones();
           },
           (error) => {
-            Swal.fire('Error', 'Error al obtener los detalles de la cotización', 'error');
+            console.log(error)
+            Swal.fire('Error', 'Ocurrió un error al cancelar la cotización', 'error');
           }
         );
       }
