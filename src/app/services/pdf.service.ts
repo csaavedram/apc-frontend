@@ -200,6 +200,8 @@ export class PdfService {
         const ruc = cotizacionData.user.ruc;
 
         console.log('User Details:', userDetails);
+        console.log('Razon Social:', userDetails.tipoUsuario );
+        console.log('Full Name:', fullName);
         this.quotationDetailsService
           .listarQuotationsDetailsByQuotation(cotizacionId)
           .subscribe((quotationDetailsData: any) => {
@@ -234,29 +236,40 @@ export class PdfService {
             doc.text('Señores:', 10, 45);
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text(`${razonsocial.toUpperCase()}`, 10, 50);
+            if (userDetails.tipoUsuario == 'cliente_empresa') {
+              doc.text(`${razonsocial.toUpperCase()}`, 10, 50);
+            }
+            else{
+              doc.text(`Presente: ${fullName}`, 10, 60);
+            }
             doc.text(`RUC: ${ruc.toUpperCase()}`, 10, 55);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
-            if (userDetails.tipoUsuario !== 'cliente_empresa') {
-              doc.text(`Presente: ${fullName}`, 10, 60);
-            }
-
+            
             doc.setFontSize(12);
             doc.text('De nuestra más cordial consideración:\n', 10, 70);
             doc.text(
               'Es sumamente grato dirigirnos a ustedes, para saludarlos muy cordialmente, asimismo',
               10,
-              75
+              80
             );
             doc.text(
               'remito por medio de la presente nuestra propuesta del siguiente equipamiento:',
               10,
-              80
+              85
             );
 
+            //prueba para poner varios items en cotizacion y ver si se ve bien
+            // const cotizacionesPRQUEBA = Array.from({ length: 30 }, (_, index) => [
+            //   index + 1, // ITEM
+            //   `Producto ${index + 1}`, // DESCRIPCIÓN
+            //   Math.floor(Math.random() * 10) + 1, // CANT
+            //   `S/. ${(Math.random() * 100).toFixed(2)}`, // PRECIO UNITARIO
+            //   `S/. ${(Math.random() * 1000).toFixed(2)}`, // PRECIO TOTAL
+            // ]);
+            
             autoTable(doc, {
-              startY: 90,
+              startY: 95,
               head: [
                 ['ITEM', 'DESCRIPCIÓN', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL'],
               ],
@@ -277,12 +290,19 @@ export class PdfService {
                 1: { halign: 'center' },
               },
             });
-
-            const fixedY = 160;
+            const finalY = (doc as any).lastAutoTable.finalY;
+            // Define el límite inferior de la página (por ejemplo, 280 para evitar el pie de página)
+            const pageHeight = doc.internal.pageSize.height;
+            const marginBottom = 20; // Espacio reservado para el pie de página
 
             doc.setFont('helvetica', 'bold');
-            let y = fixedY;
-
+            let y = finalY + 10;
+            console.log('Final Y:', finalY);
+                        // Verifica si hay suficiente espacio para el texto adicional
+            if (y + 50 > pageHeight - marginBottom) { // Ajusta "50" según el contenido que planeas agregar
+              doc.addPage(); // Agrega una nueva página si no hay suficiente espacio
+              y = 10; // Reinicia la posición vertical en la nueva página
+            }
             doc.setFontSize(12);
             doc.text('CONDICIONES GENERALES(S.E.U.O):', 10, y);
             const textWidth = doc.getTextWidth('CONDICIONES GENERALES(S.E.U.O):');
@@ -341,5 +361,5 @@ export class PdfService {
       });
   }
 
-  );} );} 
+  
 }
