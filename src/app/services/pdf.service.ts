@@ -245,7 +245,7 @@ export class PdfService {
             doc.text(`RUC: ${ruc.toUpperCase()}`, 10, 55);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
-            
+
             doc.setFontSize(12);
             doc.text('De nuestra más cordial consideración:\n', 10, 70);
             doc.text(
@@ -267,7 +267,7 @@ export class PdfService {
             //   `S/. ${(Math.random() * 100).toFixed(2)}`, // PRECIO UNITARIO
             //   `S/. ${(Math.random() * 1000).toFixed(2)}`, // PRECIO TOTAL
             // ]);
-            
+
             autoTable(doc, {
               startY: 95,
               head: [
@@ -289,20 +289,43 @@ export class PdfService {
               columnStyles: {
                 1: { halign: 'center' },
               },
+              didDrawPage: (data) => {
+                // Ensure footer is added to every page
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.line(10, 280, 200, 280);
+                doc.text(
+                  'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+                  30,
+                  285,
+                  { align: 'left' }
+                );
+                doc.text(
+                  'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+                  60,
+                  290,
+                  { align: 'left' }
+                );
+              },
             });
-            const finalY = (doc as any).lastAutoTable.finalY;
-            // Define el límite inferior de la página (por ejemplo, 280 para evitar el pie de página)
-            const pageHeight = doc.internal.pageSize.height;
-            const marginBottom = 20; // Espacio reservado para el pie de página
 
-            doc.setFont('helvetica', 'bold');
+            const finalY = (doc as any).lastAutoTable.finalY;
+            const pageHeight = doc.internal.pageSize.height;
+            const marginBottom = 20; // Space reserved for the footer
+            const remainingSpace = pageHeight - finalY - marginBottom;
+            const additionalContentHeight = 50; // Approximate height of the content below the table
+
             let y = finalY + 10;
-            console.log('Final Y:', finalY);
-                        // Verifica si hay suficiente espacio para el texto adicional
-            if (y + 50 > pageHeight - marginBottom) { // Ajusta "50" según el contenido que planeas agregar
-              doc.addPage(); // Agrega una nueva página si no hay suficiente espacio
-              y = 10; // Reinicia la posición vertical en la nueva página
+
+            // Check if there is enough space for the additional content
+            if (remainingSpace < additionalContentHeight) {
+              doc.addPage(); // Add a new page if not enough space
+              y = 20; // Reset vertical position for the new page
             }
+
+            // Add additional content below the table
+            doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
             doc.text('CONDICIONES GENERALES(S.E.U.O):', 10, y);
             const textWidth = doc.getTextWidth('CONDICIONES GENERALES(S.E.U.O):');
@@ -356,10 +379,8 @@ export class PdfService {
                 { align: 'left' }
               );
             }
-            doc.save('cotizacion.pdf');
+            doc.save(`cotizacion-${cotizacionId}.pdf`);
           });
       });
   }
-
-  
 }

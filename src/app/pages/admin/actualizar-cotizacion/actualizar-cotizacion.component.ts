@@ -146,6 +146,7 @@ export class ActualizarCotizacionComponent {
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(this.cotizacionId).subscribe(
           (detalles: any) => {
             this.detalleProductos = detalles.filter((detalle: any) => detalle.product !== null).map((detalle: any) => ({
+              quotationdetailsId: detalle.quotationdetailsId,
               productoId: detalle.product.productoId,
               nombreProducto: detalle.product.nombreProducto,
               cantidad: detalle.cantidad,
@@ -156,6 +157,7 @@ export class ActualizarCotizacionComponent {
             }));
 
             this.detalleServicios = detalles.filter((detalle: any) => detalle.serviceType !== null).map((detalle: any) => ({
+              quotationdetailsId: detalle.quotationdetailsId, // Incluye el ID del detalle
               serviceType: detalle.serviceType,
               totalPrice: detalle.totalPrice,
               unitPrice: detalle.unitPrice,
@@ -331,7 +333,6 @@ export class ActualizarCotizacionComponent {
       });
     } else {
       const igv = newPrice * 0.18; // Correctly calculate IGV as 18% of the new price
-      const totalPrice = newPrice + igv; // Total is the new price plus IGV
 
       const detalle = {
         productoId: this.selectedProduct.productoId,
@@ -339,7 +340,7 @@ export class ActualizarCotizacionComponent {
         cantidad,
         unitPrice: this.selectedProduct.precio,
         newPrice,
-        totalPrice: totalPrice * cantidad, // Multiply by quantity for total
+        totalPrice: newPrice * cantidad, // Multiply by quantity for total
         igv: igv * cantidad // Multiply by quantity for total IGV
       };
 
@@ -423,7 +424,9 @@ export class ActualizarCotizacionComponent {
   }
 
   eliminarDetalleServicio(index: number): void {
+    console.log('Before deleting service:', this.detalleServicios);
     this.detalleServicios.splice(index, 1);
+    console.log('After deleting service:', this.detalleServicios);
     Swal.fire('Eliminado', 'El detalle del servicio ha sido eliminado', 'success');
   }
 
@@ -546,24 +549,33 @@ export class ActualizarCotizacionComponent {
     updateFn: (detail: any) => any,
     deleteFn: (detailId: any) => any
   ): void {
-    const originalMap = new Map(originalDetails.map((d) => [d[key] || d.product?.productoId || d.serviceType, d]));
+    console.log('Original details:', originalDetails);
+    console.log('Current details:', currentDetails);
 
-    // Add or update current details
+    // Crear un mapa de los detalles originales usando quotationdetailsId como clave
+    const originalMap = new Map(originalDetails.map((d) => {
+      const mapKey = d.quotationdetailsId; // Usar quotationdetailsId como clave principal
+      console.log(`Original map key: ${mapKey}`, d);
+      return [mapKey, d];
+    }));
+
+    // Procesar los detalles actuales
     currentDetails.forEach((current) => {
-      const mapKey = current[key] || current.productoId || current.serviceType;
+      const mapKey = current.quotationdetailsId; // Usar quotationdetailsId como clave principal
+      console.log(`Current map key: ${mapKey}`, current);
+
       const original = originalMap.get(mapKey);
 
       if (original) {
-        // Update if there are changes
+        console.log(`Updating detail: ${mapKey}`);
+        // Actualizar si hay cambios
         if (JSON.stringify(original) !== JSON.stringify(current)) {
           console.log('Original:', original);
           console.log('Current:', current);
 
-          console.log(current)
-
           const updatePayload = {
-            quotationdetailsId: original.quotationdetailsId, // Use the ID from the original detail
-            cantidad: current.cantidad || (current.serviceType ? 1 : null), // Default to 1 for services
+            quotationdetailsId: original.quotationdetailsId,
+            cantidad: current.cantidad || (current.serviceType ? 1 : null),
             totalPrice: current.totalPrice,
             unitPrice: current.unitPrice,
             newPrice: current.newPrice,
@@ -578,11 +590,11 @@ export class ActualizarCotizacionComponent {
             (error: any) => console.error('Error al actualizar detalle:', error)
           );
         }
-        originalMap.delete(mapKey);
+        originalMap.delete(mapKey); // Eliminar del mapa para evitar duplicados
       } else {
-        // Add new detail
+        console.log(`Adding new detail: ${mapKey}`);
         const addPayload = {
-          cantidad: current.cantidad || (current.serviceType ? 1 : null), // Default to 1 for services
+          cantidad: current.cantidad || (current.serviceType ? 1 : null),
           totalPrice: current.totalPrice,
           unitPrice: current.unitPrice,
           newPrice: current.newPrice,
@@ -599,11 +611,12 @@ export class ActualizarCotizacionComponent {
       }
     });
 
-    // Delete removed details
+    // Eliminar los detalles que no están en los detalles actuales
     originalMap.forEach((original) => {
+      console.log(`Deleting detail: ${original.quotationdetailsId}`, original);
       deleteFn(original.quotationdetailsId).subscribe(
-        () => console.log(`Detalle eliminado: ${original[key] || original.product?.productoId || original.serviceType}`),
-        (error: any) => console.error('Error al eliminar detalle:', error)
+        () => console.log(`Detail deleted successfully: ${original.quotationdetailsId}`),
+        (error: any) => console.error('Error deleting detail:', error)
       );
     });
   }
