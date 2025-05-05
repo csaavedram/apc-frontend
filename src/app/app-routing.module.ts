@@ -55,6 +55,7 @@ import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-ped
 import { ViewCotizacionComponent } from './pages/admin/view-cotizacion/view-cotizacion.component';
 import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
 import { ActualizarCotizacionComponent } from './pages/admin/actualizar-cotizacion/actualizar-cotizacion.component';
+import { NewPriceComponent } from './components/modal/new-price/new-price.component';
 
 
 const routes: Routes = [
@@ -244,6 +245,10 @@ const routes: Routes = [
       {
         path: 'actualizarcotizacion/:cotizacionId',
         component: ActualizarCotizacionComponent
+      },
+      {
+        path: 'newPrice/:orderId', 
+        component: NewPriceComponent
       },
     ]
   },

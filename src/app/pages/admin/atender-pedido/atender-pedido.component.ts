@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
+import { NewPriceComponent } from 'src/app/components/modal/new-price/new-price.component';
 import { InventarioService } from 'src/app/services/inventario.service';
 import { OrdersService } from 'src/app/services/orders.service';
 import { OrdersDetailsService } from 'src/app/services/ordersdetails.service';
@@ -19,7 +21,8 @@ export class AtenderPedidoComponent implements OnInit {
     private orderDetailsService: OrdersDetailsService,
     private inventarioService: InventarioService,
     private productoService: ProductoService,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog // Import MatDialog
   ) { }
 
   orderId = 0;
@@ -31,6 +34,7 @@ export class AtenderPedidoComponent implements OnInit {
 
   ngOnInit(): void {
     this.orderId = this.route.snapshot.params['orderId'];
+    console.log('Order ID:', this.orderId); // Agrega este log para verificar el valor
     this.ordersService.obtenerOrder(this.orderId).subscribe(
       (data) => {
         this.orders = data;
@@ -144,7 +148,8 @@ export class AtenderPedidoComponent implements OnInit {
       (data) => {
         this.orders = data;
         Swal.fire('Solicitud Aceptada', 'La solicitud ha sido aceptada correctamente', 'success');
-        this.volverAProductos();
+       // this.volverAProductos();
+       this.openProductDetailsModal(); // Abre el modal para ingresar el nuevo precio
       },
       (error) => {
         Swal.fire('Error en el sistema', 'No se ha podido actualizar la información del producto', 'error');
@@ -156,5 +161,16 @@ export class AtenderPedidoComponent implements OnInit {
   getCurrentDate(): string {
     const currentDate = new Date();
     return currentDate.toISOString();
+  }
+  public openProductDetailsModal() {
+    if (!this.orderId) {
+      console.error('orderId is undefined');
+      return;
+    }
+  
+    this.dialog.open(NewPriceComponent, {
+      width: '600px',
+      data: { orderId: this.orderId } // Pasa el orderId al modal
+    });
   }
 }

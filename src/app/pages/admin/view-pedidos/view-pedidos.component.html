@@ -27,13 +27,13 @@
             <td>{{ e.status }}</td>
             <td>
                 <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono">
-                    <i [routerLink]="'/admin/detalle-pedido/'+e.orderId" class="fas fa-info-circle"></i>
+                    <i [routerLink]="'/admin/detalle-pedido/'+e.orderId" class="fa-solid fa-eye"></i>
                 </div>
                 <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status !== 'Entregado' && e.status !== 'Solicitado' && e.status !== 'Rechazado' && e.status !== 'Aceptado'">
                     <i [routerLink]="'/admin/actualizar-pedido/'+e.orderId" class="fas fa-edit"></i>
                 </div>
                 <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Solicitado'">
-                    <i [routerLink]="'/admin/atenderpedido/'+e.orderId" class="fas fa-circle-exclamation"></i>
+                    <i [routerLink]="'/admin/atenderpedido/'+e.orderId" class="fa-solid fa-check-double"></i>
                 </div>
             </td>
         </tr>
