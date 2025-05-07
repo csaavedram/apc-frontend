@@ -90,7 +90,6 @@ import { ActualizarServicioComponent } from './pages/admin/actualizar-servicio/a
 import { MantenimientoComponent } from './pages/mantenimiento/mantenimiento.component';
 import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-pedido.component';
 import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
-import { NewPriceComponent } from './components/modal/new-price/new-price.component';
 
 
 @NgModule({ declarations: [
@@ -154,7 +153,7 @@ import { NewPriceComponent } from './components/modal/new-price/new-price.compon
         ActualizarServicioComponent,
         MantenimientoComponent,
         AtenderPedidoComponent,
-        NewPriceComponent,
+     
     ],
     exports: [MatToolbarModule, MatButtonModule, MatIconModule, MatExpansionModule],
     bootstrap: [AppComponent], imports: [BrowserModule,

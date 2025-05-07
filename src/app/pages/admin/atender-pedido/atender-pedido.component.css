@@ -20,6 +20,7 @@
   .container {
     display: flex;
     justify-content: space-between;
+    
     padding-top: 10px;
     padding-bottom: 20px;
   
@@ -50,4 +51,17 @@
     color: #103061;
     text-decoration: underline;
     cursor: pointer;
+  }
+  .table-container td {
+   
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* Asegura que el texto también esté centrado */
+  }
+  
+  .table-container th {
+   
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* Asegura que el texto también esté centrado */
   }
