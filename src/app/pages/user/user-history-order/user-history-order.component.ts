@@ -58,8 +58,7 @@ export class UserHistoryOrderComponent implements OnInit {
     dialogRef.afterClosed().subscribe(
       (result) => {
         if (result) {
-          console.log('Payment modal closed with result:', result);
-          // Add any additional logic if needed
+          this.listarOrdersByUser();
         }
       },
       (error) => {
@@ -68,7 +67,7 @@ export class UserHistoryOrderComponent implements OnInit {
     );
   }
 
-  ngOnInit(): void {
+  listarOrdersByUser() {
     this.user = this.loginService.getUser();
     combineLatest([this.ordersService.listarOrdersByUser(this.user.id)]).subscribe(
       ([orders]: [any]) => {
@@ -81,5 +80,9 @@ export class UserHistoryOrderComponent implements OnInit {
         Swal.fire('Error', 'Error al cargar los datos', 'error');
       }
     );
+  }
+
+  ngOnInit(): void {
+    this.listarOrdersByUser();
   }
 }
