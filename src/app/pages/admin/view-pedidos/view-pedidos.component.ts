@@ -3,6 +3,7 @@ import { OrdersService } from 'src/app/services/orders.service';
 import { LoginService } from 'src/app/services/login.service';
 import Swal from 'sweetalert2';
 import { combineLatest } from 'rxjs';
+import { Router,NavigationEnd } from '@angular/router';
 
 @Component({
   selector: 'app-view-pedidos',
@@ -19,6 +20,7 @@ export class ViewPedidosComponent implements OnInit {
   constructor(
     private ordersService: OrdersService,
     private loginService: LoginService,
+    private router: Router
   ) {}
 
   prevPage1(): void {
@@ -45,8 +47,7 @@ export class ViewPedidosComponent implements OnInit {
     const endIndex = startIndex + this.rowsPerPage1;
     return this.orders.slice(startIndex, endIndex);
   }
-
-  ngOnInit(): void {
+  loadOrders(): void {
     this.user = this.loginService.getUser();
     combineLatest([this.ordersService.listarOrders()]).subscribe(
       ([orders]: [any]) => {
@@ -59,5 +60,14 @@ export class ViewPedidosComponent implements OnInit {
         Swal.fire('Error', 'Error al cargar los datos', 'error');
       }
     );
+  }
+
+  ngOnInit(): void {
+    this.loadOrders();
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.loadOrders(); // Recargar los pedidos al navegar a esta ruta
+      }
+    });
   }
 }
