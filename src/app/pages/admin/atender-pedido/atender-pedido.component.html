@@ -1,6 +1,6 @@
-<mat-card style="padding: 15px;">
+<mat-card style="padding: 20px;">
     <div class="link-container">
-        <a (click)="volverAProductos()" class="link-text"> < Volver</a>
+        <a (click)="volverAPedidos()" class="link-text"> < Volver</a>
     </div>
     <div class="container">
         <h1>Atender Pedido</h1>
@@ -8,7 +8,7 @@
 
     <div class="row">
         <div class="col-md-8 offset-md-2">
-            <form *ngIf="orders" (submit)="actualizarDatos()">
+            <form *ngIf="orders" >
                 <mat-form-field class="w-50" appearance="fill">
                     <mat-label>Nombre</mat-label>
                     <input [(ngModel)]="orders.user.nombre" type="text" name="nombre"
@@ -24,26 +24,77 @@
                     <input [(ngModel)]="orders.documento" type="text" name="precio"
                         placeholder="Digite el precio del producto" matInput disabled>
                 </mat-form-field>
-                <mat-form-field class="w100" appearance="fill">
-                    <mat-label>Precio Referencial</mat-label>
-                    <input [(ngModel)]="orders.totalPrice" type="number" name="stock" placeholder="Digite la cantidad del producto" matInput disabled>
-                </mat-form-field>
-                <mat-form-field class="w100" appearance="fill">
-                    <mat-label>Monto a Pagar</mat-label>
-                    <input [(ngModel)]="orders.preciocli" type="number" name="preciocli" placeholder="Digite el precio del cliente" matInput>
-                    <mat-error *ngIf="orders.preciocli <= orders.totalPrice">
-                        El precio del cliente debe ser mayor al monto pagado.
-                    </mat-error>
-                </mat-form-field>
-                <div class="dflex justify-content-center">
-                    <div class="me-2 containeractualizar text-center">
-                        <button mat-raised-button type="submit" style="background-color: #00CED1; color: white;">Aceptar</button>
-                    </div>
-                </div>
+                
             </form>
-            <div class="me-2 containeractualizar text-center">
-                <button mat-raised-button (click)="rechazarSolicitud()" style="background-color: #00CED1; color: white;">Rechazar</button>
-            </div>
         </div>
+    </div>
+
+    <div class="filter-container">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    </div>
+    <div class="table-container-wrapper" style="display: flex; justify-content: center; margin-top: 40px;">
+    <table class="table-container"  style="width: 90%; border-collapse: collapse; ">
+      <tr>
+        <th>N°</th>
+        <th>Foto</th>
+        <th>Producto</th>
+        <th>SKU</th>
+        <th>Cantidad</th>
+        <th>Precio Unitario</th>
+        <th>Nuevo Precio</th>
+      </tr>
+      <tr *ngFor="let e of displayedOrders(); let i = index" >
+        <td >{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
+        <td><img [src]="e.product.imagen" alt="Imagen del producto" class="imagen-producto" style="width: 125px; height: 150px;"></td>
+        <td>{{ e.product.nombreProducto }}</td>
+        <td>{{ e.product.sku }}</td>
+        <td>{{ e.quantity }}</td>
+        <td>{{ e.unitPrice | currency:'S/. ':'symbol':'1.2-2' }}</td>
+        <td>
+          <!-- Campo para ingresar el nuevo precio -->
+          <input
+            type="text"
+            [(ngModel)]="e.newPrice"
+            placeholder="Nuevo Precio"
+            (input)="calcularTotalCotizacion()"
+            class="form-control"
+            style="left: 50%;width: 50%;margin: 0 auto;text-align: center;"
+          />
+          <!-- Mensaje de error -->
+          <div *ngIf="e.newPrice <= e.unitPrice && e.newPrice !== null" style="color: red; font-size: 12px;">
+            El nuevo precio debe ser mayor al precio unitario.
+          </div>
+        </td>
+      </tr>
+    </table>
+</div>
+   <div class="pagination">
+      <button mat-button (click)="prevPage1()" [disabled]="currentPage1 === 1">
+        <i class="fa fa-chevron-left"></i> Anterior
+      </button>
+      <button mat-button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
+        Siguiente <i class="fa fa-chevron-right"></i>
+      </button>
+    </div>
+    <div mat-dialog-actions style="justify-content: center; align-items: center; display: flex; gap: 20px; padding: 10px;">
+      <mat-form-field appearance="fill" style="margin: 0; width: 200px;font-weight: bold;"*ngIf="orders">
+        <mat-label>Precio Referencial</mat-label>
+        <input [(ngModel)]="orders.totalPrice" type="number" name="stock" placeholder="Digite la cantidad del producto" matInput disabled>
+      </mat-form-field>
+      <mat-form-field appearance="fill" style="margin: 0; width: 200px;font-weight: bold;">
+        <mat-label>Prev. Total para la cotizacion</mat-label>
+        <input [(ngModel)]="quotationData.total" type="text" name="Prev. Total para la cotizacion" matInput disabled>
+      </mat-form-field>
+      
+        
+      </div>
+      <div style="justify-content: center; align-items: center; display: flex; gap: 20px; padding: 10px;">
+      <!-- Botón alineado a la derecha -->
+      <button mat-button (click)="rechazarSolicitud()" style="background-color: #00CED1; color: white;">
+        Rechazar
+      </button>
+      <button mat-button (click)="EnviarCotizaYDetalles()" style="background-color: #00CED1; color: white;">
+        Enviar Cotizacion y Volver
+      </button>
     </div>
 </mat-card>
