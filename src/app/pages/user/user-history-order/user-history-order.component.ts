@@ -3,6 +3,8 @@ import { OrdersService } from 'src/app/services/orders.service';
 import { LoginService } from 'src/app/services/login.service';
 import Swal from 'sweetalert2';
 import { combineLatest } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { PaymentComponent } from '../../../components/modal/payment/payment.component';
 
 @Component({
   selector: 'app-user-history-order',
@@ -19,6 +21,7 @@ export class UserHistoryOrderComponent implements OnInit {
   constructor(
     private ordersService: OrdersService,
     private loginService: LoginService,
+    private dialog: MatDialog
   ) {}
 
   prevPage1(): void {
@@ -46,7 +49,25 @@ export class UserHistoryOrderComponent implements OnInit {
     return this.orders.slice(startIndex, endIndex);
   }
 
-  ngOnInit(): void {
+  openPaymentModal(orderId: string) {
+    const dialogRef = this.dialog.open(PaymentComponent, {
+      width: '500px',
+      data: { orderId },
+    });
+
+    dialogRef.afterClosed().subscribe(
+      (result) => {
+        if (result) {
+          this.listarOrdersByUser();
+        }
+      },
+      (error) => {
+        console.error('Error closing payment modal:', error);
+      }
+    );
+  }
+
+  listarOrdersByUser() {
     this.user = this.loginService.getUser();
     combineLatest([this.ordersService.listarOrdersByUser(this.user.id)]).subscribe(
       ([orders]: [any]) => {
@@ -59,5 +80,9 @@ export class UserHistoryOrderComponent implements OnInit {
         Swal.fire('Error', 'Error al cargar los datos', 'error');
       }
     );
+  }
+
+  ngOnInit(): void {
+    this.listarOrdersByUser();
   }
 }

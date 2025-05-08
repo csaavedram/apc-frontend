@@ -1,20 +1,26 @@
 // pdf-service.ts
 import { Injectable } from '@angular/core';
+import { da } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { NumerosALetras } from 'src/app/services/numeroaletras.service';
-import { formatDate } from '@angular/common'; // Import Angular's formatDate function
+import { QuotationService } from 'src/app/services/quotation.service';
+import { UserService } from 'src/app/services/user.service';
+import { QuotationDetailsService } from 'src/app/services/quotation-details.service';
+import { UpperCasePipe } from '@angular/common';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PdfService {
-
-  constructor() { }
+  constructor(
+    private quotationService: QuotationService,
+    private userService: UserService,
+    private quotationDetailsService: QuotationDetailsService
+  ) {}
 
   generatePdf(orderData: any) {
     const doc = new jsPDF();
-    console.log(orderData)
+    console.log(orderData);
 
     if (orderData.length === 0) {
       console.error('Order data is empty');
@@ -29,12 +35,20 @@ export class PdfService {
 
     doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20); // Use the uploaded image path with rectangular dimensions
     doc.setFontSize(18);
-    doc.text(`Factura Nº001-${orderData[0].order.orderId}`, pageWidth / 2, 15, { align: 'center' });
+    doc.text(`Factura Nº001-${orderData[0].order.orderId}`, pageWidth / 2, 15, {
+      align: 'center',
+    });
     doc.setFontSize(12);
-    doc.text('APC Emedicom - RUC: 20517224694', pageWidth / 2, 25, { align: 'center' });
-    doc.text('Jr. Enrique Pallardelli 554 - Lima - Comas', pageWidth / 2, 30, { align: 'center' });
+    doc.text('APC Emedicom - RUC: 20517224694', pageWidth / 2, 25, {
+      align: 'center',
+    });
+    doc.text('Jr. Enrique Pallardelli 554 - Lima - Comas', pageWidth / 2, 30, {
+      align: 'center',
+    });
     doc.text('Teléfono: (01) 557-6015', pageWidth / 2, 35, { align: 'center' });
-    doc.text('Correo: ventas@apcemedicom.com', pageWidth / 2, 40, { align: 'center' });
+    doc.text('Correo: ventas@apcemedicom.com', pageWidth / 2, 40, {
+      align: 'center',
+    });
 
     // Add client details
     let y = 50;
@@ -46,7 +60,11 @@ export class PdfService {
     y += 10;
     doc.text(`DNI/RUC: ${orderData[0].order.documento}`, 10, y);
     y += 10;
-    doc.text(`Dirección de Entrega: ${orderData[0].order.streetAddress}`, 10, y);
+    doc.text(
+      `Dirección de Entrega: ${orderData[0].order.streetAddress}`,
+      10,
+      y
+    );
     y += 10;
 
     // Add order details
@@ -58,24 +76,46 @@ export class PdfService {
       order.product.sku,
       order.quantity,
       parseFloat(order.unitPrice).toFixed(2),
-      parseFloat(order.totalPrice).toFixed(2)
+      parseFloat(order.totalPrice).toFixed(2),
     ]);
 
     // Calculate totals
     const deliveryPrice = parseFloat(orderData[0].order.deliveryPrice);
-    const totalPrice = orderDetails.reduce((acc: number, curr: any) => acc + parseFloat(curr[4]), 0) + deliveryPrice;
+    const totalPrice =
+      orderDetails.reduce(
+        (acc: number, curr: any) => acc + parseFloat(curr[4]),
+        0
+      ) + deliveryPrice;
     const opGravada = totalPrice / 1.18;
     const igv = totalPrice - opGravada;
 
     autoTable(doc, {
       startY: y,
-      head: [['Producto', 'SKU', 'Cantidad', 'Precio Unitario', 'Precio Total']],
+      head: [
+        ['Producto', 'SKU', 'Cantidad', 'Precio Unitario', 'Precio Total'],
+      ],
       body: [
         ...orderDetails,
-        [{ content: 'COSTO DELIVERY', colSpan: 4, styles: { halign: 'right' } }, 'S/.'+deliveryPrice.toFixed(2)],
-        [{ content: 'OP. GRAVADA', colSpan: 4, styles: { halign: 'right' } }, 'S/.'+opGravada.toFixed(2)],
-        [{ content: 'IGV (18%)', colSpan: 4, styles: { halign: 'right' } }, 'S/.'+igv.toFixed(2)],
-        [{ content: 'TOTAL', colSpan: 4, styles: { halign: 'right' } }, 'S/.'+totalPrice.toFixed(2)]
+        [
+          {
+            content: 'COSTO DELIVERY',
+            colSpan: 4,
+            styles: { halign: 'right' },
+          },
+          'S/.' + deliveryPrice.toFixed(2),
+        ],
+        [
+          { content: 'OP. GRAVADA', colSpan: 4, styles: { halign: 'right' } },
+          'S/.' + opGravada.toFixed(2),
+        ],
+        [
+          { content: 'IGV (18%)', colSpan: 4, styles: { halign: 'right' } },
+          'S/.' + igv.toFixed(2),
+        ],
+        [
+          { content: 'TOTAL', colSpan: 4, styles: { halign: 'right' } },
+          'S/.' + totalPrice.toFixed(2),
+        ],
       ],
       theme: 'plain', // Change theme to 'plain' to avoid colored stripes
       styles: {
@@ -85,8 +125,8 @@ export class PdfService {
       },
       headStyles: {
         fillColor: [0, 206, 209], // RGB for #8C5962
-        textColor: [255, 255, 255] // White text color
-      }
+        textColor: [255, 255, 255], // White text color
+      },
     });
 
     y = (doc as any).lastAutoTable.finalY + 10;
@@ -111,9 +151,236 @@ export class PdfService {
     // Add footer
     doc.setFontSize(10);
     doc.text('Gracias por su compra!', pageWidth / 2, 285, { align: 'center' });
-    doc.text('Alguna consulta con tu compra? Envía un correo a consultas@apcemedicom.com', pageWidth / 2, 290, { align: 'center' });
+    doc.text(
+      'Alguna consulta con tu compra? Envía un correo a consultas@apcemedicom.com',
+      pageWidth / 2,
+      290,
+      { align: 'center' }
+    );
 
     // Save the PDF
     doc.save('factura.pdf');
+  }
+
+  generatePdfCotizacion(cotizacionId: any) {
+    console.log('Cotizacion ID:', cotizacionId);
+    this.quotationService
+      .obtenerQuotation(cotizacionId)
+      .subscribe((cotizacionData: any) => {
+        console.log('Cotizacion Data:', cotizacionData);
+        const cotizacioDetails = {
+          TipoPago: cotizacionData.tipoPago,
+          PlazoEn: new Date(cotizacionData.plazoEntrega).toLocaleDateString(
+            'es-PE',
+            {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }
+          ),
+          ValidezO: new Date(cotizacionData.validezOferta).toLocaleDateString(
+            'es-PE',
+            {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }
+          ),
+          TotalIGV: cotizacionData.total,
+        };
+        const userDetails = {
+          id: cotizacionData.user.id,
+          nombre: cotizacionData.user.nombre,
+          apellido: cotizacionData.user.apellido,
+          ruc: cotizacionData.user.ruc,
+          tipoUsuario: cotizacionData.user.tipoUsuario,
+        };
+        const razonsocial = cotizacionData.user.razonSocial;
+        const fullName = `${userDetails.nombre} ${userDetails.apellido}`;
+        const ruc = cotizacionData.user.ruc;
+
+        console.log('User Details:', userDetails);
+        console.log('Razon Social:', userDetails.tipoUsuario );
+        console.log('Full Name:', fullName);
+        this.quotationDetailsService
+          .listarQuotationsDetailsByQuotation(cotizacionId)
+          .subscribe((quotationDetailsData: any) => {
+            console.log('Quotation Details Data:', quotationDetailsData);
+            const cotizacionesDe = quotationDetailsData.map(
+              (item: any, index: number) => [
+                index + 1,
+                item.product?.nombreProducto || item.serviceType,
+                item.cantidad,
+                `S/. ${parseFloat(item.unitPrice).toFixed(2)}`,
+                `S/. ${parseFloat(item.totalPrice).toFixed(2)}`,
+              ]
+            );
+
+            console.log('Cotizaciones De:', cotizacionesDe);
+
+            const doc = new jsPDF();
+
+            const fecha = new Date().toLocaleDateString('es-PE', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+            const año = new Date().getFullYear();
+
+            doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20);
+
+            doc.setFontSize(12);
+            doc.text(`Lima, ${fecha}`, 10, 35);
+            doc.text(`COT Nº ${cotizacionId} / ${año}`, 150, 35);
+            doc.setFontSize(12);
+            doc.text('Señores:', 10, 45);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            if (userDetails.tipoUsuario == 'cliente_empresa') {
+              doc.text(`${razonsocial.toUpperCase()}`, 10, 50);
+            }
+            else{
+              doc.text(`Presente: ${fullName}`, 10, 60);
+            }
+            doc.text(`RUC: ${ruc.toUpperCase()}`, 10, 55);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+
+            doc.setFontSize(12);
+            doc.text('De nuestra más cordial consideración:\n', 10, 70);
+            doc.text(
+              'Es sumamente grato dirigirnos a ustedes, para saludarlos muy cordialmente, asimismo',
+              10,
+              80
+            );
+            doc.text(
+              'remito por medio de la presente nuestra propuesta del siguiente equipamiento:',
+              10,
+              85
+            );
+
+            //prueba para poner varios items en cotizacion y ver si se ve bien
+            // const cotizacionesPRQUEBA = Array.from({ length: 30 }, (_, index) => [
+            //   index + 1, // ITEM
+            //   `Producto ${index + 1}`, // DESCRIPCIÓN
+            //   Math.floor(Math.random() * 10) + 1, // CANT
+            //   `S/. ${(Math.random() * 100).toFixed(2)}`, // PRECIO UNITARIO
+            //   `S/. ${(Math.random() * 1000).toFixed(2)}`, // PRECIO TOTAL
+            // ]);
+
+            autoTable(doc, {
+              startY: 95,
+              head: [
+                ['ITEM', 'DESCRIPCIÓN', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL'],
+              ],
+              body: cotizacionesDe,
+              theme: 'grid',
+              styles: {
+                fontSize: 10,
+                halign: 'center',
+                valign: 'middle',
+                cellPadding: 3,
+              },
+              headStyles: {
+                fillColor: [0, 206, 209],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+              },
+              columnStyles: {
+                1: { halign: 'center' },
+              },
+              didDrawPage: (data) => {
+                // Ensure footer is added to every page
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.line(10, 280, 200, 280);
+                doc.text(
+                  'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+                  30,
+                  285,
+                  { align: 'left' }
+                );
+                doc.text(
+                  'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+                  60,
+                  290,
+                  { align: 'left' }
+                );
+              },
+            });
+
+            const finalY = (doc as any).lastAutoTable.finalY;
+            const pageHeight = doc.internal.pageSize.height;
+            const marginBottom = 20; // Space reserved for the footer
+            const remainingSpace = pageHeight - finalY - marginBottom;
+            const additionalContentHeight = 50; // Approximate height of the content below the table
+
+            let y = finalY + 10;
+
+            // Check if there is enough space for the additional content
+            if (remainingSpace < additionalContentHeight) {
+              doc.addPage(); // Add a new page if not enough space
+              y = 20; // Reset vertical position for the new page
+            }
+
+            // Add additional content below the table
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text('CONDICIONES GENERALES(S.E.U.O):', 10, y);
+            const textWidth = doc.getTextWidth('CONDICIONES GENERALES(S.E.U.O):');
+            doc.line(10, y + 1, 10 + textWidth, y + 1);
+            y += 8;
+            doc.text(`PRECIOS INC. I.G.V. : ${cotizacioDetails.TotalIGV} SOLES`, 10, y);
+            y += 5;
+            doc.text(`FORMA DE PAGO      : ${cotizacioDetails.TipoPago}`, 10, y);
+            y += 5;
+            doc.text(`PLAZO DE ENTREGA   : ${cotizacioDetails.PlazoEn}`, 10, y);
+            y += 5;
+            doc.text(`VALIDEZ DE OFERTA  : ${cotizacioDetails.ValidezO}`, 10, y);
+
+            doc.setFont('helvetica', 'normal');
+            y += 10;
+            doc.text(
+              'Agradeciendo anticipadamente la atención que le brinde la presente, es oportuno',
+              10,
+              y
+            );
+            y += 5;
+            doc.text(
+              'testimoniarle los sentimientos de consideración y estima personal.',
+              10,
+              y + 5
+            );
+            y += 15;
+            doc.text('Atentamente,', 10, y);
+
+            y += 10;
+            doc.addImage('../../../assets/firma.png', 'PNG', 10, y, 50, 50);
+            y += 25;
+
+            const pageCount = doc.getNumberOfPages();
+
+            for (let i = 1; i <= pageCount; i++) {
+              doc.setPage(i);
+              doc.setFontSize(10);
+              doc.setTextColor(0, 0, 0);
+              doc.line(10, 280, 200, 280);
+              doc.text(
+                'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+                30,
+                285,
+                { align: 'left' }
+              );
+              doc.text(
+                'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+                60,
+                290,
+                { align: 'left' }
+              );
+            }
+            doc.save(`cotizacion-${cotizacionId}.pdf`);
+          });
+      });
   }
 }

@@ -6,14 +6,11 @@ import baserUrl from './helper';
   providedIn: 'root'
 })
 export class UserService {
-
-
     constructor(private httpClient: HttpClient) { }
 
     public añadirUsuario(user:any){
       return this.httpClient.post(`${baserUrl}/usuarios/`,user);
     }
-    
     public listarUsuarios(){
       return this.httpClient.get(`${baserUrl}/usuarios/`);
     }
@@ -22,5 +19,11 @@ export class UserService {
     }
     public actualizarUsuario(id:any, user: any){
       return this.httpClient.put(`${baserUrl}/usuarios/${id}`, user);
+    }
+    public obtenerUsuarioPorRuc(ruc: string) {
+      return this.httpClient.get(`${baserUrl}/usuarios/ruc/${ruc}`);
+    }
+    public obtenerUsuarioPorRazonSocial(razonSocial: string) {
+      return this.httpClient.get(`${baserUrl}/usuarios/razonSocial/${razonSocial}`);
     }
 }

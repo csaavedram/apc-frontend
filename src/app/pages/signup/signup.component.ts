@@ -18,7 +18,9 @@ export class SignupComponent implements OnInit {
     nombre : '',
     apellido : '',
     email : '',
-    telefono : ''
+    telefono : '',
+    tipoUsuario: 'persona_natural',
+    createdAt: new Date()
   }
 
   constructor(
@@ -29,7 +31,7 @@ export class SignupComponent implements OnInit {
 
   ngOnInit(): void {
   }
-  
+
   formSubmit(){
     console.log(this.user);
     if(this.user.username == '' || this.user.username == null){
