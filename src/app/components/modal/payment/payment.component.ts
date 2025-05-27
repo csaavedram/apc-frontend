@@ -10,6 +10,9 @@ import { FacturaService } from 'src/app/services/factura.service';
 import { FacturaDetailsService } from 'src/app/services/facturadetails.service';
 import { LoginService } from 'src/app/services/login.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import { OrdersService } from 'src/app/services/orders.service';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Inject } from '@angular/core';
 
 @Component({
   selector: 'app-payment',
@@ -33,11 +36,13 @@ export class PaymentComponent implements OnInit {
 
   constructor(
     private dialogRef: MatDialogRef<PaymentComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { orderId: number }, // Recibe el orderId
     private paymentService: PaymentService,
     private facturaService: FacturaService,
     private facturaDetailsService: FacturaDetailsService,
     private paymentTermService: PaymentTermService,
     private loginService: LoginService,
+    private ordersService: OrdersService
   ) {}
 
   async ngOnInit() {
@@ -87,13 +92,13 @@ export class PaymentComponent implements OnInit {
   }
 
   closeModel() {
-    this.dialogRef.close()
+    this.dialogRef.close();
   }
 
   sendPayment(data: any) {
     const installments = Number(data.installments);
     const totalAmount = Number(data.amount);
-
+  
     const payload = {
       token: data.token,
       issuer_id: data.issuerId,
@@ -109,55 +114,36 @@ export class PaymentComponent implements OnInit {
         },
       },
     };
-
+  
     this.paymentService.createPayment(payload).subscribe(
       (mpResponse: any) => {
         console.log('✅ Pago exitoso MP:', mpResponse);
-
-        // 1) Crear la factura
+  
         const facturaPayload = {
           divisa: 'Soles',
           tipoPago: installments > 1 ? 'Credito' : 'Contado',
           total: totalAmount,
           user: { id: this.user.id },
-          fechaEmision: new Date()
+          fechaEmision: new Date(),
+          estado: 'Pagado',
+          orderId: this.data.orderId, // Usa el orderId aquí
         };
-
+  
         this.facturaService.agregarFactura(facturaPayload).subscribe(
           (facturaResp: any) => {
             console.log('✅ Factura creada:', facturaResp);
-            const facturaId = facturaResp.facturaId;
-
-            // // 2) Si es crédito (más de 1 cuota), generar y guardar los plazos
-            // if (installments > 1) {
-            //   const emisión = new Date();
-            //   const montoPorCuota = totalAmount / installments;
-
-            //   for (let i = 1; i <= installments; i++) {
-            //     const inicio = new Date(emisión);
-            //     inicio.setDate(emisión.getDate() + 30 * (i - 1));
-            //     const venc = new Date(emisión);
-            //     venc.setDate(emisión.getDate() + 30 * i);
-
-            //     const termPayload = {
-            //       days: 30 * i,
-            //       amount: Number(montoPorCuota.toFixed(2)),
-            //       factura: { facturaId },
-            //       startDate: inicio.toISOString(),
-            //       dueDate: venc.toISOString()
-            //     };
-
-            //     this.paymentTermService.agregarPlazoPago(termPayload)
-            //       .subscribe(termResp => {
-            //         console.log('✅ Plazo guardado:', termResp);
-            //       }, err => console.error('❌ Error guardando plazo:', err));
-            //   }
-            // }
-
-            // Ocultar formulario o mostrar confirmación
-            this.closeModel();
-          }, (err: any) => {
-            console.log('❌ Error creando factura:', err);
+            this.ordersService.cambiarEstadoOrder(this.data.orderId).subscribe(
+              () => {
+                console.log('✅ Estado de la orden actualizado a "Pagado"');
+                this.closeModel();
+              },
+              (err: any) => {
+                console.error('❌ Error al cambiar el estado de la orden:', err);
+              }
+            );
+          },
+          (err: any) => {
+            console.error('❌ Error creando factura:', err);
           }
         );
       },
