@@ -58,3 +58,13 @@ a {
 .custom-1-prod {
   width: 37%;
 }
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 91.7vh;
+}
+
+.content-wrap {
+  flex: 1;
+}

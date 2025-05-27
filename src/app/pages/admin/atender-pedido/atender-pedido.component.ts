@@ -72,7 +72,7 @@ export class AtenderPedidoComponent implements OnInit {
         console.log('Product:', this.product); // Agrega este log para verificar el producto
         console.log('Order Details:', this.orderDetails); // Agrega este log para verificar los detalles del pedido
         const totalP= this.orderDetails.reduce((acc: any, detalle: any) => acc + detalle.totalPrice, 0);
-        this.quotationData.total = totalP+15;
+        this.quotationData.total = totalP;
         this.userId = this.orderDetails[0].order.user.id;
         //datos iniciales de la cotización
         this.quotationData = {
@@ -126,7 +126,7 @@ calculateTotalPages1(): void {
     this.quotationData.total = this.orderDetails.reduce((sum: number, detalle: any) => {
       const precio = detalle.newPrice || detalle.unitPrice; // Usa newPrice si está definido, de lo contrario unitPrice
       return sum + precio * detalle.quantity ;
-    }, 0)+15;
+    }, 0);
   }
 
   EnviarCotizaYDetalles(): void {
@@ -155,8 +155,8 @@ calculateTotalPages1(): void {
           console.log('Detalles de cotización:', this.cotizacionDetails); // Agrega este log para verificar los datos
           this.quotationDetailsService.agregarQuotationDetail( detalleCotizacion).subscribe(
             (Refresh)=>{
-          const totalPrecioNew= this.cotizacionDetails.reduce((acc: any, detalle: any) => acc + detalle.newPrice, 0);
-          this.quotationData.total = totalPrecioNew+15;
+          const totalPrecioNew= this.cotizacionDetails.reduce((detalle: any) =>  detalle.newPrice, 0);
+          this.quotationData.total = totalPrecioNew;
           this.quotationService.actualizarQuotation( this.quotationData).subscribe(
             () => {},
           (error) => console.error('Error al crear detalles de cotización:', error)

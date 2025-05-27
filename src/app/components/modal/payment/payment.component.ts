@@ -11,6 +11,8 @@ import { FacturaDetailsService } from 'src/app/services/facturadetails.service';
 import { LoginService } from 'src/app/services/login.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { OrdersService } from 'src/app/services/orders.service';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Inject } from '@angular/core';
 
 @Component({
   selector: 'app-payment',
@@ -34,12 +36,13 @@ export class PaymentComponent implements OnInit {
 
   constructor(
     private dialogRef: MatDialogRef<PaymentComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { orderId: number }, // Recibe el orderId
     private paymentService: PaymentService,
     private facturaService: FacturaService,
     private facturaDetailsService: FacturaDetailsService,
     private paymentTermService: PaymentTermService,
     private loginService: LoginService,
-    private ordersService: OrdersService // Inject OrdersService
+    private ordersService: OrdersService
   ) {}
 
   async ngOnInit() {
@@ -122,13 +125,14 @@ export class PaymentComponent implements OnInit {
           total: totalAmount,
           user: { id: this.user.id },
           fechaEmision: new Date(),
-          estado: "Creado"
+          estado: 'Pagado',
+          orderId: this.data.orderId, // Usa el orderId aquí
         };
 
         this.facturaService.agregarFactura(facturaPayload).subscribe(
           (facturaResp: any) => {
-            const orderId = facturaResp.orderId;
-            this.ordersService.cambiarEstadoOrder(orderId).subscribe(
+            console.log('✅ Factura creada:', facturaResp);
+            this.ordersService.cambiarEstadoOrder(this.data.orderId).subscribe(
               () => {
                 console.log('✅ Estado de la orden actualizado a "Pagado"');
                 this.closeModel();

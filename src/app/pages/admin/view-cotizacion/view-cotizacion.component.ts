@@ -78,6 +78,8 @@ export class ViewCotizacionComponent implements OnInit {
   }
 
   vercotizacionPDF(cotizacionId: any) {
+    console.log("PRUEBA PDF");
+    console.log(cotizacionId);
     this.pdfService.generatePdfCotizacion(cotizacionId);
   }
 

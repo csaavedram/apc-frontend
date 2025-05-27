@@ -242,7 +242,7 @@ export class PdfService {
             else{
               doc.text(`Presente: ${fullName}`, 10, 60);
             }
-            doc.text(`RUC: ${ruc.toUpperCase()}`, 10, 55);
+            doc.text(`RUC: ${ruc}`, 10, 55);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
 

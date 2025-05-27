@@ -60,21 +60,14 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3">
-                                    <h2 class="fw-normal">Resumen de la orden</h2>
+                                    <h2 class="fw-normal"> </h2>
                                     <div class="bg-white p-3 my-3 rounded shadow-sm">
                                         <!-- <div class="row">
                                             <div class="col-9">
-                                                <h5 class="fw-bold">Costo de envío estimado</h5>
                                             </div>
                                             <div class="col-3">
                                                 <h5 class="d-flex justify-content-end">
                                                     <strong>
-                                                        <ng-container *ngIf="this.districtType === ''">
-                                                            S/. ---
-                                                        </ng-container>
-                                                        <ng-container *ngIf="this.districtType !== ''">
-                                                            S/. {{ orderData.deliveryPrice }}
-                                                        </ng-container>
                                                     </strong>
                                                 </h5>
                                             </div>
@@ -163,43 +156,13 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3">
-                                    <!-- <h2 class="fw-normal">Resumen de la orden</h2> -->
+                                    <h2 class="fw-normal"> </h2>
                                     <div class="bg-white p-3 my-3 rounded shadow-sm">
-                                        <!-- <div class="row">
-                                            <div class="col-9">
-                                                <h5 class="fw-bold">Costo de envío estimado</h5>
-                                            </div>
-                                            <div class="col-3">
-                                                <h5 class="d-flex justify-content-end"><strong>S/. {{ orderData.deliveryPrice }}</strong></h5>
-                                            </div>
-                                        </div>
-                                        <hr class="w-100 mt-2" style="border-color: rgb(188, 188, 188); border-width: 1px;">
                                         <div class="row">
-                                            <div class="col-6">
-                                                <p class="fw-bold">Subtotal: </p>
-                                            </div>
-                                            <div class="col-6">
-                                                <h5 class="d-flex fw-bold justify-content-end">S/. {{ subtotal() }}</h5>
-                                            </div>
+
                                         </div>
-                                        <hr class="w-100 mt-2" style="border-color: rgb(188, 188, 188); border-width: 1px;">
                                         <div class="row">
-                                            <div class="col-6">
-                                                <p class="fw-bold">IGV: </p>
-                                            </div>
-                                            <div class="col-6">
-                                                <h5 class="d-flex fw-bold justify-content-end">S/. {{ igv() }}</h5>
-                                            </div>
                                         </div>
-                                        <hr class="w-100 mt-2" style="border-color: rgb(0, 0, 0); border-width: 1px;">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <p class="fw-bold">Total: </p>
-                                            </div>
-                                            <div class="col-6">
-                                                <h5 class="d-flex fw-bold justify-content-end">S/. {{ totalCart() }}</h5>
-                                            </div>
-                                        </div> -->
                                         <div class="d-flex justify-content-center m-2">
                                             <button mat-button (click)="onSubmitForm_2()" class="fw-normal btn btn-dark rounded btn-block px-4">
                                                 Terminar Cotización
