@@ -36,5 +36,4 @@ export class OrdersService {
   public cambiarEstadoOrder(orderId: number) {
     return this.http.patch(`${baserUrl}/orders/cambiar-estado/${orderId}`, null);
   }
-
 }

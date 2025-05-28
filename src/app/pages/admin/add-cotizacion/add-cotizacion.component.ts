@@ -379,21 +379,17 @@ export class AddCotizacionComponent {
 
     this.quotationService.agregarQuotation(cotizacionPayload).subscribe(
       (quotation: any) => {
-        const quotationId = quotation.quotationId;
+        const cotizacionId = quotation.cotizacionId;
 
         this.detalleProductos.forEach((detalle) => {
           const detalleProductoPayload = {
             cantidad: detalle.cantidad,
-            totalPrice: detalle.totalPrice,
-            unitPrice: detalle.unitPrice,
-            newPrice: detalle.newPrice,
-            serviceType: null,
-            product: {
-              productoId: detalle.productoId,
-            },
-            quotation: {
-              quotationId: quotationId,
-            },
+            precioTotal: detalle.totalPrice,
+            precioUnitario: detalle.unitPrice,
+            precioNuevo: detalle.newPrice,
+            tipoServicio: null,
+            producto: { productoId: detalle.productoId },
+            cotizacion: { cotizacionId: cotizacionId },
             createdAt: new Date()
           };
 
@@ -406,13 +402,13 @@ export class AddCotizacionComponent {
         this.detalleServicios.forEach((detalle) => {
           const detalleServicioPayload = {
             cantidad: 1,
-            totalPrice: detalle.price,
-            unitPrice: detalle.price,
-            newPrice: null,
-            serviceType: detalle.serviceType,
-            product: null,
-            quotation: {
-              quotationId: quotationId,
+            precioTotal: detalle.price,
+            precioUnitario: detalle.price,
+            precioNuevo: null,
+            tipoServicio: detalle.serviceType,
+            productoId: null,
+            cotizacion: {
+              cotizacionId: cotizacionId,
             },
             createdAt: new Date(),
           };
@@ -423,7 +419,10 @@ export class AddCotizacionComponent {
           );
         });
 
-        Swal.fire('Éxito', 'La cotización y sus detalles han sido guardados correctamente', 'success');
+        Swal.fire('Éxito', 'La cotización y sus detalles han sido guardados correctamente', 'success')
+          .then(() => {
+            this.router.navigate(['/admin/cotizaciones']);
+          });
       },
       (error) => {
         console.error('Error al guardar la cotización:', error);

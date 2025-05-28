@@ -17,6 +17,7 @@ import { QuotationService } from 'src/app/services/quotation.service';
 import { QuotationDetailsService } from 'src/app/services/quotation-details.service';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-add-cotizacion',
@@ -32,8 +33,9 @@ import { MatNativeDateModule } from '@angular/material/core';
     MatButtonModule,
     MatSelectModule,
     MatRadioModule,
-    MatDatepickerModule, // Added MatDatepickerModule
-    MatNativeDateModule  // Added MatNativeDateModule
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './actualizar-cotizacion.component.html',
   styleUrls: ['./actualizar-cotizacion.component.css']
@@ -51,6 +53,8 @@ export class ActualizarCotizacionComponent {
     usuarioId: '',
     ruc: '',
     estado: '',
+    codigo: '',
+    createdAt: '',
   };
 
   usuario = {
@@ -77,6 +81,7 @@ export class ActualizarCotizacionComponent {
   filteredSuggestions: string[] = [];
   cotizacionId: any = null;
   nombreCompleto: string = '';
+  loading = false;
 
   constructor(
     private snack: MatSnackBar,
@@ -108,11 +113,13 @@ export class ActualizarCotizacionComponent {
   }
 
   ngOnInit(): void {
+    this.loading = true;
     this.listarProductos();
     this.listarUsuarios();
     this.cotizacionId = this.route.snapshot.params['cotizacionId'];
     this.quotationService.obtenerQuotation(this.cotizacionId).subscribe(
       (cotizacion: any) => {
+        console.log('Cotización obtenida:', cotizacion);
         this.cotizacionData = {
           divisa: cotizacion.divisa,
           tipoPago: cotizacion.tipoPago,
@@ -124,7 +131,9 @@ export class ActualizarCotizacionComponent {
           productoId: null,
           usuarioId: cotizacion.user.id,
           ruc: cotizacion.user.ruc,
-          estado: cotizacion.estado
+          estado: cotizacion.estado,
+          codigo: cotizacion.codigo,
+          createdAt: cotizacion.createdAt
         };
 
         this.usuarioInput = cotizacion.user.ruc;
@@ -145,29 +154,31 @@ export class ActualizarCotizacionComponent {
         // List quotation details
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(this.cotizacionId).subscribe(
           (detalles: any) => {
-            this.detalleProductos = detalles.filter((detalle: any) => detalle.product !== null).map((detalle: any) => ({
-              quotationdetailsId: detalle.quotationdetailsId,
-              productoId: detalle.product.productoId,
-              nombreProducto: detalle.product.nombreProducto,
+            this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
+              cotizacionDetalleId: detalle.cotizacionDetalleId,
+              productoId: detalle.producto.productoId,
+              nombreProducto: detalle.producto.nombreProducto,
               cantidad: detalle.cantidad,
-              unitPrice: detalle.unitPrice,
-              newPrice: detalle.newPrice,
-              totalPrice: detalle.totalPrice,
+              precioUnitario: detalle.precioUnitario,
+              precioNuevo: detalle.precioNuevo,
+              precioTotal: detalle.precioTotal,
               igv: detalle.igv
             }));
 
-            this.detalleServicios = detalles.filter((detalle: any) => detalle.serviceType !== null).map((detalle: any) => ({
-              quotationdetailsId: detalle.quotationdetailsId, // Incluye el ID del detalle
-              serviceType: detalle.serviceType,
-              totalPrice: detalle.totalPrice,
-              unitPrice: detalle.unitPrice,
+            this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
+              cotizacionDetalleId: detalle.cotizacionDetalleId, // Incluye el ID del detalle
+              tipoServicio: detalle.tipoServicio,
+              precioTotal: detalle.precioTotal,
+              precioUnitario: detalle.precioUnitario,
             }));
+            this.loading = false;
           },
           (error) => {
             console.error('Error al obtener detalles de la cotización:', error);
             this.snack.open('Error al obtener detalles de la cotización', '', {
               duration: 3000
             });
+            this.loading = false;
           }
         );
       },
@@ -176,6 +187,7 @@ export class ActualizarCotizacionComponent {
         this.snack.open('Error al obtener cotización', '', {
           duration: 3000
         });
+        this.loading = false;
       }
     );
   }
@@ -245,7 +257,7 @@ export class ActualizarCotizacionComponent {
     this.selectedProduct = { ...productoEncontrado };
   }
 
-  agregarDetalleCotizacion(newPrice: number, cantidad: number): void {
+  agregarDetalleCotizacion(precioNuevo: number, cantidad: number): void {
     if (!this.selectedProduct) {
       this.snack.open('Debe buscar un producto válido antes de agregar un detalle', '', {
         duration: 3000,
@@ -254,7 +266,7 @@ export class ActualizarCotizacionComponent {
       return;
     }
 
-    if (!newPrice || isNaN(newPrice)) {
+    if (!precioNuevo || isNaN(precioNuevo)) {
       this.snack.open('Debe ingresar un nuevo precio válido', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
@@ -286,7 +298,7 @@ export class ActualizarCotizacionComponent {
       return;
     }
 
-    if (newPrice < this.selectedProduct.precio) {
+    if (precioNuevo < this.selectedProduct.precio) {
       this.snack.open('El nuevo precio no puede ser menor que el precio unitario', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
@@ -301,9 +313,9 @@ export class ActualizarCotizacionComponent {
     if (existingProductIndex !== -1) {
       const existingProduct = this.detalleProductos[existingProductIndex];
 
-      if (existingProduct.newPrice !== newPrice) {
+      if (existingProduct.precioNuevo !== precioNuevo) {
         this.snack.open(
-          `El precio ingresado (${newPrice}) es diferente al registrado anteriormente (${existingProduct.newPrice}). Debe ser igual.`,
+          `El precio ingresado (${precioNuevo}) es diferente al registrado anteriormente (${existingProduct.precioNuevo}). Debe ser igual.`,
           '',
           {
             duration: 3000,
@@ -324,23 +336,23 @@ export class ActualizarCotizacionComponent {
       }
 
       existingProduct.cantidad = newTotalQuantity;
-      existingProduct.totalPrice = existingProduct.newPrice * newTotalQuantity;
-      existingProduct.igv = existingProduct.newPrice * newTotalQuantity * 0.18; // Correct IGV calculation
+      existingProduct.precioTotal = existingProduct.precioNuevo * newTotalQuantity;
+      existingProduct.igv = existingProduct.precioNuevo * newTotalQuantity * 0.18; // Correct IGV calculation
 
       this.snack.open('Cantidad actualizada correctamente', '', {
         duration: 3000,
         panelClass: ['snackbar-success']
       });
     } else {
-      const igv = newPrice * 0.18; // Correctly calculate IGV as 18% of the new price
+      const igv = precioNuevo * 0.18; // Correctly calculate IGV as 18% of the new price
 
       const detalle = {
         productoId: this.selectedProduct.productoId,
         nombreProducto: this.selectedProduct.nombreProducto,
         cantidad,
-        unitPrice: this.selectedProduct.precio,
-        newPrice,
-        totalPrice: newPrice * cantidad, // Multiply by quantity for total
+        precioUnitario: this.selectedProduct.precio,
+        precioNuevo,
+        precioTotal: precioNuevo * cantidad, // Multiply by quantity for total
         igv: igv * cantidad // Multiply by quantity for total IGV
       };
 
@@ -387,8 +399,8 @@ export class ActualizarCotizacionComponent {
     }
 
     detalle.cantidad = nuevaCantidad;
-    detalle.totalPrice = detalle.newPrice * nuevaCantidad;
-    detalle.igv = detalle.totalPrice * 0.18;
+    detalle.precioTotal = detalle.precioNuevo * nuevaCantidad;
+    detalle.igv = detalle.precioTotal * 0.18;
 
     this.snack.open('Cantidad actualizada correctamente', '', {
       duration: 3000,
@@ -408,9 +420,9 @@ export class ActualizarCotizacionComponent {
     }
 
     const detalle = {
-      serviceType: this.selectedServiceType.type,
-      totalPrice: price,
-      unitPrice: price,
+      tipoServicio: this.selectedServiceType.type,
+      precioTotal: price,
+      precioUnitario: price,
     };
 
     this.detalleServicios.push(detalle);
@@ -481,7 +493,7 @@ export class ActualizarCotizacionComponent {
     }
 
     const cotizacionPayload = {
-      quotationId: this.cotizacionId,
+      cotizacionId: this.cotizacionId,
       divisa: this.cotizacionData.divisa,
       tipoPago: this.cotizacionData.tipoPago,
       plazoEntrega: this.cotizacionData.plazoEntrega,
@@ -491,6 +503,8 @@ export class ActualizarCotizacionComponent {
         id: this.usuario.id,
       },
       estado: this.cotizacionData.estado,
+      codigo: this.cotizacionData.codigo,
+      createdAt: this.cotizacionData.createdAt
     };
 
     // Update the quotation
@@ -499,14 +513,14 @@ export class ActualizarCotizacionComponent {
         // Fetch original details to compare
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(this.cotizacionId).subscribe(
           (originalDetails: any) => {
-            const originalProductDetails = originalDetails.filter((d: any) => d.product !== null);
-            const originalServiceDetails = originalDetails.filter((d: any) => d.serviceType !== null);
+            const originalProductDetails = originalDetails.filter((d: any) => d.producto !== null);
+            const originalServiceDetails = originalDetails.filter((d: any) => d.tipoServicio !== null);
 
             // Handle product details
             this.syncDetails(
               originalProductDetails,
               this.detalleProductos,
-              'newPrice',
+              'precioNuevo',
               (detail) => this.quotationDetailsService.agregarQuotationDetail(detail),
               (detail) => this.quotationDetailsService.actualizarQuotationDetail(detail),
               (detailId) => this.quotationDetailsService.eliminarQuotationDetail(detailId)
@@ -516,13 +530,16 @@ export class ActualizarCotizacionComponent {
             this.syncDetails(
               originalServiceDetails,
               this.detalleServicios,
-              'serviceType',
+              'tipoServicio',
               (detail) => this.quotationDetailsService.agregarQuotationDetail(detail),
               (detail) => this.quotationDetailsService.actualizarQuotationDetail(detail),
               (detailId) => this.quotationDetailsService.eliminarQuotationDetail(detailId)
             );
 
-            Swal.fire('Éxito', 'La cotización y sus detalles han sido actualizados correctamente', 'success');
+            Swal.fire('Éxito', 'La cotización y sus detalles han sido actualizados correctamente', 'success')
+              .then(() => {
+                this.router.navigate(['/admin/cotizaciones']);
+              });
           },
           (error) => {
             console.error('Error al obtener detalles originales:', error);
@@ -552,37 +569,29 @@ export class ActualizarCotizacionComponent {
     console.log('Original details:', originalDetails);
     console.log('Current details:', currentDetails);
 
-    // Crear un mapa de los detalles originales usando quotationdetailsId como clave
     const originalMap = new Map(originalDetails.map((d) => {
-      const mapKey = d.quotationdetailsId; // Usar quotationdetailsId como clave principal
-      console.log(`Original map key: ${mapKey}`, d);
+      const mapKey = d.cotizacionDetalleId;
       return [mapKey, d];
     }));
 
-    // Procesar los detalles actuales
     currentDetails.forEach((current) => {
-      const mapKey = current.quotationdetailsId; // Usar quotationdetailsId como clave principal
-      console.log(`Current map key: ${mapKey}`, current);
+      const mapKey = current.cotizacionDetalleId;
 
       const original = originalMap.get(mapKey);
 
       if (original) {
-        console.log(`Updating detail: ${mapKey}`);
-        // Actualizar si hay cambios
         if (JSON.stringify(original) !== JSON.stringify(current)) {
-          console.log('Original:', original);
-          console.log('Current:', current);
 
           const updatePayload = {
-            quotationdetailsId: original.quotationdetailsId,
-            cantidad: current.cantidad || (current.serviceType ? 1 : null),
-            totalPrice: current.totalPrice,
-            unitPrice: current.unitPrice,
-            newPrice: current.newPrice,
-            product: current.productoId ? { productoId: current.productoId } : null,
-            serviceType: current.serviceType || null,
-            quotation: { quotationId: this.cotizacionId },
-            createdAt: original.createdAt || new Date().toISOString()
+            cotizacionDetalleId: original.cotizacionDetalleId,
+            cantidad: current.cantidad || (current.tipoServicio ? 1 : null),
+            precioTotal: current.precioTotal,
+            precioUnitario: current.precioUnitario,
+            precioNuevo: current.precioNuevo,
+            producto: current.productoId ? { productoId: current.productoId } : null,
+            tipoServicio: current.tipoServicio || null,
+            cotizacion: { cotizacionId: this.cotizacionId },
+            createdAt: original.createdAt
           };
 
           updateFn(updatePayload).subscribe(
@@ -590,17 +599,17 @@ export class ActualizarCotizacionComponent {
             (error: any) => console.error('Error al actualizar detalle:', error)
           );
         }
-        originalMap.delete(mapKey); // Eliminar del mapa para evitar duplicados
+        originalMap.delete(mapKey);
       } else {
         console.log(`Adding new detail: ${mapKey}`);
         const addPayload = {
-          cantidad: current.cantidad || (current.serviceType ? 1 : null),
-          totalPrice: current.totalPrice,
-          unitPrice: current.unitPrice,
-          newPrice: current.newPrice,
-          product: current.productoId ? { productoId: current.productoId } : null,
-          serviceType: current.serviceType || null,
-          quotation: { quotationId: this.cotizacionId },
+          cantidad: current.cantidad || (current.tipoServicio ? 1 : null),
+          precioTotal: current.precioTotal,
+          precioUnitario: current.precioUnitario,
+          precioNuevo: current.precioNuevo,
+          producto: current.productoId ? { productoId: current.productoId } : null,
+          tipoServicio: current.tipoServicio || null,
+          cotizacion: { cotizacionId: this.cotizacionId },
           createdAt: new Date().toISOString()
         };
 
@@ -613,9 +622,9 @@ export class ActualizarCotizacionComponent {
 
     // Eliminar los detalles que no están en los detalles actuales
     originalMap.forEach((original) => {
-      console.log(`Deleting detail: ${original.quotationdetailsId}`, original);
-      deleteFn(original.quotationdetailsId).subscribe(
-        () => console.log(`Detail deleted successfully: ${original.quotationdetailsId}`),
+      console.log(`Deleting detail: ${original.cotizacionDetalleId}`, original);
+      deleteFn(original.cotizacionDetalleId).subscribe(
+        () => console.log(`Detail deleted successfully: ${original.cotizacionDetalleId}`),
         (error: any) => console.error('Error deleting detail:', error)
       );
     });
@@ -671,20 +680,20 @@ export class ActualizarCotizacionComponent {
   }
 
   calcularOpGravadas(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.82, 0); // 82% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.totalPrice * 0.82, 0); // 82% of total price for services
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad * 0.82, 0); // 82% of new price for products
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioTotal * 0.82, 0); // 82% of total price for services
     return totalProductos + totalServicios;
   }
 
   calcularIgv(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.18, 0); // 18% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.totalPrice * 0.18, 0); // 18% of total price for services
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad * 0.18, 0); // 18% of new price for products
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioTotal * 0.18, 0); // 18% of total price for services
     return totalProductos + totalServicios;
   }
 
   calcularTotal(): number {
-    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
-           this.detalleServicios.reduce((sum, detalle) => sum + detalle.totalPrice, 0); // Total is the sum of all new prices
+    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad, 0) +
+           this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioTotal, 0); // Total is the sum of all new prices
   }
 
   onTipoBusquedaChange(): void {

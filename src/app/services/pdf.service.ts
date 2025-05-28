@@ -163,11 +163,8 @@ export class PdfService {
   }
 
   generatePdfCotizacion(cotizacionId: any) {
-    console.log('Cotizacion ID:', cotizacionId);
-    this.quotationService
-      .obtenerQuotation(cotizacionId)
-      .subscribe((cotizacionData: any) => {
-        console.log('Cotizacion Data:', cotizacionData);
+    this.quotationService.obtenerQuotation(cotizacionId).subscribe(
+      (cotizacionData: any) => {
         const cotizacioDetails = {
           TipoPago: cotizacionData.tipoPago,
           PlazoEn: new Date(cotizacionData.plazoEntrega).toLocaleDateString(
@@ -199,24 +196,17 @@ export class PdfService {
         const fullName = `${userDetails.nombre} ${userDetails.apellido}`;
         const ruc = cotizacionData.user.ruc;
 
-        console.log('User Details:', userDetails);
-        console.log('Razon Social:', userDetails.tipoUsuario );
-        console.log('Full Name:', fullName);
-        this.quotationDetailsService
-          .listarQuotationsDetailsByQuotation(cotizacionId)
-          .subscribe((quotationDetailsData: any) => {
-            console.log('Quotation Details Data:', quotationDetailsData);
+        this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacionId).subscribe(
+          (quotationDetailsData: any) => {
             const cotizacionesDe = quotationDetailsData.map(
               (item: any, index: number) => [
                 index + 1,
-                item.product?.nombreProducto || item.serviceType,
+                item.producto?.nombreProducto || item.tipoServicio,
                 item.cantidad,
-                `S/. ${parseFloat(item.unitPrice).toFixed(2)}`,
-                `S/. ${parseFloat(item.totalPrice).toFixed(2)}`,
+                item.producto === null ? `S/. ${parseFloat(item.precioUnitario).toFixed(2)}` : `S/. ${parseFloat(item.precioNuevo).toFixed(2)}`,
+                `S/. ${parseFloat(item.precioTotal).toFixed(2)}`,
               ]
             );
-
-            console.log('Cotizaciones De:', cotizacionesDe);
 
             const doc = new jsPDF();
 
@@ -259,15 +249,6 @@ export class PdfService {
               85
             );
 
-            //prueba para poner varios items en cotizacion y ver si se ve bien
-            // const cotizacionesPRQUEBA = Array.from({ length: 30 }, (_, index) => [
-            //   index + 1, // ITEM
-            //   `Producto ${index + 1}`, // DESCRIPCIÓN
-            //   Math.floor(Math.random() * 10) + 1, // CANT
-            //   `S/. ${(Math.random() * 100).toFixed(2)}`, // PRECIO UNITARIO
-            //   `S/. ${(Math.random() * 1000).toFixed(2)}`, // PRECIO TOTAL
-            // ]);
-
             autoTable(doc, {
               startY: 95,
               head: [
@@ -289,8 +270,7 @@ export class PdfService {
               columnStyles: {
                 1: { halign: 'center' },
               },
-              didDrawPage: (data) => {
-                // Ensure footer is added to every page
+              didDrawPage: () => {
                 const pageHeight = doc.internal.pageSize.height;
                 doc.setFontSize(10);
                 doc.setTextColor(0, 0, 0);
@@ -312,19 +292,17 @@ export class PdfService {
 
             const finalY = (doc as any).lastAutoTable.finalY;
             const pageHeight = doc.internal.pageSize.height;
-            const marginBottom = 20; // Space reserved for the footer
+            const marginBottom = 20;
             const remainingSpace = pageHeight - finalY - marginBottom;
-            const additionalContentHeight = 50; // Approximate height of the content below the table
+            const additionalContentHeight = 50;
 
             let y = finalY + 10;
 
-            // Check if there is enough space for the additional content
             if (remainingSpace < additionalContentHeight) {
-              doc.addPage(); // Add a new page if not enough space
-              y = 20; // Reset vertical position for the new page
+              doc.addPage();
+              y = 20;
             }
 
-            // Add additional content below the table
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
             doc.text('CONDICIONES GENERALES(S.E.U.O):', 10, y);

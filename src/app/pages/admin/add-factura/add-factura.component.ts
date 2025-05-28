@@ -130,28 +130,28 @@ export class AddFacturaComponent {
             tipoUsuario: cotizacion.user.tipoUsuario
           };
 
-          this.nombreCliente = this.usuario.tipoUsuario === 'Empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
+          this.nombreCliente = this.usuario.tipoUsuario === 'cliente_empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
           this.ruc = this.usuario.ruc;
 
-          this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacion.quotationId).subscribe(
+          this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacion.cotizacionId).subscribe(
             (detalles: any) => {
               this.allDetails = detalles;
-              this.detalleProductos = detalles.filter((detalle: any) => detalle.product !== null).map((detalle: any) => ({
-                quotationdetailsId: detalle.quotationdetailsId,
-                productoId: detalle.product.productoId,
-                nombreProducto: detalle.product.nombreProducto,
+              console.log('Detalles de la cotización:', detalles);
+              this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
+                cotizacionDetalleId: detalle.cotizacionDetalleId,
+                productoId: detalle.producto.productoId,
+                nombreProducto: detalle.producto.nombreProducto,
                 cantidad: detalle.cantidad,
-                unitPrice: detalle.unitPrice,
-                newPrice: detalle.newPrice,
-                totalPrice: detalle.totalPrice,
+                precioUnitario: detalle.precioNuevo,
+                precioTotal: detalle.precioTotal,
                 igv: detalle.igv
               }));
 
-              this.detalleServicios = detalles.filter((detalle: any) => detalle.serviceType !== null).map((detalle: any) => ({
-                quotationdetailsId: detalle.quotationdetailsId,
-                serviceType: detalle.serviceType,
-                totalPrice: detalle.totalPrice,
-                unitPrice: detalle.unitPrice
+              this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
+                cotizacionDetalleId: detalle.cotizacionDetalleId,
+                tipoServicio: detalle.tipoServicio,
+                precioTotal: detalle.precioTotal,
+                precioUnitario: detalle.precioUnitario
               }));
 
               this.busquedaRealizada = false;
@@ -189,7 +189,7 @@ export class AddFacturaComponent {
   }
 
   guardarInformacion(): void {
-
+    // FALTAN VALIDACIONES
 
         const facturaPayload = {
           divisa: this.facturaData.divisa,
@@ -199,7 +199,7 @@ export class AddFacturaComponent {
           user: {
             id: this.usuario.id,
           },
-          estado: 'Creado'
+          estado: 'Creado',
         };
 
         this.facturaService.agregarFactura(facturaPayload).subscribe(
@@ -207,14 +207,12 @@ export class AddFacturaComponent {
             const facturaId = factura.facturaId;
 
             this.detalleProductos.forEach((detalle) => {
-              console.log(detalle)
-              console.log(facturaId)
               const detalleProductoPayload = {
                 cantidad: detalle.cantidad,
-                totalPrice: detalle.totalPrice,
-                unitPrice: detalle.unitPrice,
-                serviceType: null,
-                product: { productoId: detalle.productoId },
+                precioTotal: detalle.precioTotal,
+                precioUnitario: detalle.precioUnitario,
+                tipoServicio: null,
+                producto: { productoId: detalle.productoId },
                 factura: { facturaId: facturaId },
                 createdAt: new Date()
               };
@@ -228,12 +226,12 @@ export class AddFacturaComponent {
             this.detalleServicios.forEach((detalle) => {
               const detalleServicioPayload = {
                 cantidad: 1,
-                totalPrice: detalle.totalPrice,
-                unitPrice: detalle.unitPrice,
-                productId: null,
+                precioTotal: detalle.precioTotal,
+                precioUnitario: detalle.precioUnitario,
+                productoId: null,
                 factura: { facturaId: facturaId },
                 createdAt: new Date(),
-                serviceType: detalle.serviceType,
+                tipoServicio: detalle.tipoServicio,
               };
 
               this.facturaDetailService.agregarFacturaDetail(detalleServicioPayload).subscribe(
@@ -255,19 +253,19 @@ export class AddFacturaComponent {
   }
 
   calcularOpGravadas(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.82, 0); // 82% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.totalPrice * 0.82, 0); // 82% of total price for services
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad * 0.82, 0);
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.82, 0);
     return totalProductos + totalServicios;
   }
 
   calcularIgv(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.18, 0); // 18% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.totalPrice * 0.18, 0); // 18% of total price for services
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad * 0.18, 0);
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.18, 0);
     return totalProductos + totalServicios;
   }
 
   calcularTotal(): number {
-    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
-           this.detalleServicios.reduce((sum, detalle) => sum + detalle.totalPrice, 0); // Total is the sum of all new prices
+    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0) +
+           this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0);
   }
 }

@@ -90,29 +90,29 @@ export class ViewFacturaDetailComponent {
           tipoUsuario: factura.user.tipoUsuario
         };
 
-        this.nombreCliente = this.usuario.tipoUsuario === 'Empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
+        this.nombreCliente = this.usuario.tipoUsuario === 'cliente_empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
         this.ruc = this.usuario.ruc;
 
         this.facturaDetailService.listarFacturaDetailsPorFactura(factura.facturaId).subscribe(
           (detalles: any) => {
             this.allDetails = detalles;
             console.log(this.allDetails)
-            this.detalleProductos = detalles.filter((detalle: any) => detalle.product !== null).map((detalle: any) => ({
-              quotationdetailsId: detalle.quotationdetailsId,
-              productoId: detalle.product.productoId,
-              nombreProducto: detalle.product.nombreProducto,
+            this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
+              cotizacionDetalleId: detalle.cotizacionDetalleId,
+              productoId: detalle.producto.productoId,
+              nombreProducto: detalle.producto.nombreProducto,
               cantidad: detalle.cantidad,
-              unitPrice: detalle.unitPrice,
-              newPrice: detalle.newPrice,
-              totalPrice: detalle.totalPrice,
+              precioUnitario: detalle.precioUnitario,
+              precioNuevo: detalle.precioNuevo,
+              precioTotal: detalle.precioTotal,
               igv: detalle.igv
             }));
 
-            this.detalleServicios = detalles.filter((detalle: any) => detalle.serviceType !== null).map((detalle: any) => ({
-              quotationdetailsId: detalle.quotationdetailsId,
-              serviceType: detalle.serviceType,
-              totalPrice: detalle.totalPrice,
-              unitPrice: detalle.unitPrice
+            this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
+              cotizacionDetalleId: detalle.cotizacionDetalleId,
+              tipoServicio: detalle.tipoServicio,
+              precioTotal: detalle.precioTotal,
+              precioUnitario: detalle.precioUnitario
             }));
 
             this.loading = false;
@@ -141,19 +141,19 @@ export class ViewFacturaDetailComponent {
   }
 
   calcularOpGravadas(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.82, 0); // 82% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.price * 0.82, 0); // 82% of total price for services
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad * 0.82, 0);
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.82, 0);
     return totalProductos + totalServicios;
   }
 
   calcularIgv(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.18, 0); // 18% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.price * 0.18, 0); // 18% of total price for services
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad * 0.18, 0);
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.18, 0);
     return totalProductos + totalServicios;
   }
 
   calcularTotal(): number {
-    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
-           this.detalleServicios.reduce((sum, detalle) => sum + detalle.price, 0); // Total is the sum of all new prices
+    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0) +
+           this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0);
   }
 }

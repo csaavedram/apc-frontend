@@ -29,8 +29,12 @@
         <td>{{ e.divisa }}</td>
         <td>{{ e.tipoPago }}</td>
         <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
-        <td>{{ e.user.apellido + ', ' + e.user.nombre }}</td>
-        <td>{{ e.fechaEmision | date:'dd-MM-yyyy HH:mm:ss' }}</td>
+        <td>
+          {{ e.user.tipoUsuario === 'cliente_empresa'
+              ? e.user.razonSocial
+              : (e.user.apellido ? e.user.apellido + ', ' : '') + (e.user.nombre || 'Sin información') }}
+        </td>
+        <td>{{ e.fechaEmision | date:'dd-MM-yyyy' }}</td>
         <td>{{ e.estado }}</td>
         <td>
           <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
