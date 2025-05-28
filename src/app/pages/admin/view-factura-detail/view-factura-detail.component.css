@@ -1,0 +1,74 @@
+.w100{
+  width: 100%;
+}
+.w50izq{
+width: 48%;
+margin-right: 19.5px;
+}
+.w50der{
+width: 48%;
+margin-left: 19.5px;
+}
+h1, button {
+  margin: 0;
+  font-weight: bold;
+}
+
+h1 {
+  align-self: flex-start;
+}
+.container {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 10px;
+  padding-bottom: 20px;
+}
+
+.link-container {
+  margin-top: 2px;
+}
+
+.link-text {
+  font-size: 18px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #000000;
+  transition: color 0.3s ease;
+}
+
+.link-text:hover {
+  color: #00CED1;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.action-icon {
+  cursor: pointer;
+  margin: 0 5px;
+  transition: color 0.3s ease;
+}
+
+.edit-icon {
+  color: #007bff; /* Blue for edit */
+}
+
+.edit-icon:hover {
+  color: #0056b3; /* Darker blue on hover */
+}
+
+.delete-icon {
+  color: #dc3545; /* Red for delete */
+}
+
+.delete-icon:hover {
+  color: #a71d2a; /* Darker red on hover */
+}
+
+::ng-deep .mat-mdc-radio-button.mat-accent {
+  --mdc-radio-selected-focus-icon-color: rgb(25, 25, 25);
+  --mdc-radio-selected-hover-icon-color: rgb(25, 25, 25);
+  --mdc-radio-selected-icon-color: rgb(25, 25, 25);
+  --mdc-radio-selected-pressed-icon-color: rgb(25, 25, 25);
+  --mat-radio-ripple-color: rgb(25, 25, 25);
+  --mat-radio-checked-ripple-color: rgb(25, 25, 25);
+}

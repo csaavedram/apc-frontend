@@ -90,6 +90,9 @@ import { ActualizarServicioComponent } from './pages/admin/actualizar-servicio/a
 import { MantenimientoComponent } from './pages/mantenimiento/mantenimiento.component';
 import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-pedido.component';
 import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
+import { ViewFacturaComponent } from './pages/admin/view-facturas/view-facturas.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AddFacturaComponent } from './pages/admin/add-factura/add-factura.component';
 
 
 @NgModule({ declarations: [
@@ -153,7 +156,7 @@ import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizac
         ActualizarServicioComponent,
         MantenimientoComponent,
         AtenderPedidoComponent,
-     
+        ViewFacturaComponent,
     ],
     exports: [MatToolbarModule, MatButtonModule, MatIconModule, MatExpansionModule],
     bootstrap: [AppComponent], imports: [BrowserModule,
@@ -177,5 +180,6 @@ import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizac
         MatNativeDateModule,
         MatStepperModule,
         ReactiveFormsModule,
-        MatDialogModule], providers: [authInterceptorProviders, MatDialog, provideHttpClient(withInterceptorsFromDi())] })
+        MatDialogModule,
+        MatProgressSpinnerModule], providers: [authInterceptorProviders, MatDialog, provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule { }

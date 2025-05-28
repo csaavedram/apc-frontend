@@ -24,7 +24,7 @@
                     <input [(ngModel)]="orders.documento" type="text" name="precio"
                         placeholder="Digite el precio del producto" matInput disabled>
                 </mat-form-field>
-                
+
             </form>
         </div>
     </div>
@@ -68,27 +68,18 @@
       </tr>
     </table>
 </div>
-   <div class="pagination">
-      <button mat-button (click)="prevPage1()" [disabled]="currentPage1 === 1">
-        <i class="fa fa-chevron-left"></i> Anterior
-      </button>
-      <button mat-button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
-        Siguiente <i class="fa fa-chevron-right"></i>
-      </button>
-    </div>
-    <div mat-dialog-actions style="justify-content: center; align-items: center; display: flex; gap: 20px; padding: 10px;">
-      <mat-form-field appearance="fill" style="margin: 0; width: 200px;font-weight: bold;"*ngIf="orders">
-        <mat-label>Precio Referencial</mat-label>
-        <input [(ngModel)]="orders.totalPrice" type="number" name="stock" placeholder="Digite la cantidad del producto" matInput disabled>
-      </mat-form-field>
-      <mat-form-field appearance="fill" style="margin: 0; width: 200px;font-weight: bold;">
-        <mat-label>Prev. Total para la cotizacion</mat-label>
-        <input [(ngModel)]="quotationData.total" type="text" name="Prev. Total para la cotizacion" matInput disabled>
-      </mat-form-field>
-      
-        
+
+    <div style="display: flex; justify-content: space-between; width: 100%; max-width: 500px; margin: 0 auto; font-weight: bold;">
+      <div style="text-align: center; flex: 1;">
+        <p>Precio Referencial</p>
+        <p style="font-size: 18px; color: #333;">S/. {{ orders.totalPrice }}</p>
       </div>
-      <div style="justify-content: center; align-items: center; display: flex; gap: 20px; padding: 10px;">
+      <div style="text-align: center; flex: 1;">
+        <p>Precio Total de Cotización</p>
+        <p style="font-size: 18px; color: #333;">S/. {{ quotationData.total }}</p>
+      </div>
+    </div>
+    <div style="justify-content: center; align-items: center; display: flex; gap: 20px; padding: 10px;">
       <!-- Botón alineado a la derecha -->
       <button mat-button (click)="rechazarSolicitud()" style="background-color: #00CED1; color: white;">
         Rechazar

@@ -349,7 +349,7 @@ export class EnvioComponent implements OnInit {
   }
 
   totalCart() {
-    const total = this.myList.reduce(function (acc, product) { return acc + (product.cantidad * product.precio); }, 0) + this.orderData.deliveryPrice;
+    const total = this.myList.reduce(function (acc, product) { return acc + (product.cantidad * product.precio); }, 0);
     return total;
   }
 

@@ -85,7 +85,7 @@ export class AtenderPedidoComponent implements OnInit {
             id: this.userId,
             },
           createdAt: this.getCurrentDate(),
-          
+
         };
         console.log('QUOTATION DATA:', this.quotationData); // Agrega este log para verificar los datos
 
@@ -98,13 +98,13 @@ export class AtenderPedidoComponent implements OnInit {
   prevPage1(): void {
     if (this.currentPage1 > 1) {
       this.currentPage1--;}}
-  
+
   nextPage1(): void {
         if (this.currentPage1 < this.totalPages1) {
           this.currentPage1++;}}
 
   volverAPedidos() {
-    this.router.navigate(['/admin/pedidos']); 
+    this.router.navigate(['/admin/pedidos']);
   }
 calculateTotalPages1(): void {
     this.totalPages1 = Math.ceil(this.displayedOrders().length / this.rowsPerPage1);
@@ -121,6 +121,7 @@ calculateTotalPages1(): void {
     const currentDate = new Date();
     return currentDate.toISOString();
   }
+
   calcularTotalCotizacion(): void {
     this.quotationData.total = this.orderDetails.reduce((sum: number, detalle: any) => {
       const precio = detalle.newPrice || detalle.unitPrice; // Usa newPrice si está definido, de lo contrario unitPrice
@@ -129,7 +130,7 @@ calculateTotalPages1(): void {
   }
 
   EnviarCotizaYDetalles(): void {
-    
+
       this.quotationData.estado = 'En aceptar';
       this.quotationService.agregarQuotation(this.quotationData).subscribe((cotizacion:any) => {
         console.log('Payload enviado:', this.quotationData); // Agrega este log para verificar los datos
@@ -141,11 +142,11 @@ calculateTotalPages1(): void {
             totalPrice: detalle.totalPrice,
             unitPrice: detalle.unitPrice,
             newPrice: detalle.newPrice, // Puedes ajustar este valor si es necesario
-            
+
             serviceType: null,
             product: {
               productoId: detalle.product.productoId, // Asocia el producto
-              
+
             },
             quotation: this.quotationData,
             createdAt: this.getCurrentDate(),
@@ -162,7 +163,7 @@ calculateTotalPages1(): void {
           );}
                 );
                 console.log('Detalles de cotización creados:', this.quotationData); // Agrega este log para verificar los datos
-         
+
         });
         const idUser = this.orders.user.id;
         this.orders.status = 'Aceptado';
@@ -182,13 +183,13 @@ calculateTotalPages1(): void {
           telefono: null,
           username: null
         };
-    
+
         this.ordersService.actualizarOrder(this.orders).subscribe(
           (data) => {
             this.orders = data;
             Swal.fire('Solicitud Aceptada', 'La solicitud ha sido aceptada correctamente', 'success');
             this.volverAPedidos();
-         
+
           },
           (error) => {
             Swal.fire('Error en el sistema', 'No se ha podido actualizar la información del producto', 'error');
@@ -198,9 +199,9 @@ calculateTotalPages1(): void {
       Swal.fire('Éxito', 'La cotización y sus detalles han sido guardados correctamente', 'success');
      this.volverAPedidos();
     });
-  
+
   }
-   
+
   public rechazarSolicitud() {
     this.product.stock = this.orderDetails.product.stock + this.orderDetails.quantity;
     this.productoService.actualizarProducto(this.product).subscribe(

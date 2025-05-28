@@ -32,7 +32,6 @@ export class ViewCotizacionComponent implements OnInit {
 
   constructor(
     private quotationService: QuotationService,
-    private quotationDetailsService: QuotationDetailsService,
     private pdfService: PdfService
   ) {}
 

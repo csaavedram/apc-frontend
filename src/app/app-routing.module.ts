@@ -55,6 +55,9 @@ import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-ped
 import { ViewCotizacionComponent } from './pages/admin/view-cotizacion/view-cotizacion.component';
 import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
 import { ActualizarCotizacionComponent } from './pages/admin/actualizar-cotizacion/actualizar-cotizacion.component';
+import { ViewFacturaComponent } from './pages/admin/view-facturas/view-facturas.component';
+import { AddFacturaComponent } from './pages/admin/add-factura/add-factura.component';
+import { ViewFacturaDetailComponent } from './pages/admin/view-factura-detail/view-factura-detail.component';
 
 
 const routes: Routes = [
@@ -245,7 +248,18 @@ const routes: Routes = [
         path: 'actualizarcotizacion/:cotizacionId',
         component: ActualizarCotizacionComponent
       },
-     
+      {
+        path: 'facturas',
+        component: ViewFacturaComponent
+      },
+      {
+        path: 'addfactura',
+        component: AddFacturaComponent
+      },
+      {
+        path: 'viewfactura/:facturaId',
+        component: ViewFacturaDetailComponent
+      },
     ]
   },
   {//user/profile

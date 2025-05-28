@@ -373,7 +373,8 @@ export class AddCotizacionComponent {
       user: {
         id: this.usuario.id,
       },
-      estado: 'Creado'
+      estado: 'Creado',
+      createdAt: new Date(),
     };
 
     this.quotationService.agregarQuotation(cotizacionPayload).subscribe(

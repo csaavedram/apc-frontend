@@ -16,21 +16,25 @@ export class OrdersService {
   public agregarOrder(order:any){
     return this.http.post(`${baserUrl}/orders/`, order);
   }
-  
+
   public eliminarOrder(orderId:any){
     return this.http.delete(`${baserUrl}/orders/${orderId}`);
   }
-  
+
   public obtenerOrder(orderId:any){
     return this.http.get(`${baserUrl}/orders/${orderId}`);
   }
-  
+
   public actualizarOrder(order:any){
     return this.http.put(`${baserUrl}/orders/`, order);
   }
 
   public listarOrdersByUser(userId:any){
     return this.http.get(`${baserUrl}/orders/user/${userId}`);
+  }
+
+  public cambiarEstadoOrder(orderId: number) {
+    return this.http.patch(`${baserUrl}/orders/cambiar-estado/${orderId}`, null);
   }
 
 }
