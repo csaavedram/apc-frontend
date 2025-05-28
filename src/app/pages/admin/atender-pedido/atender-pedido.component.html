@@ -77,6 +77,13 @@
       </button>
     </div>
     <div mat-dialog-actions style="justify-content: center; align-items: center; display: flex; gap: 20px; padding: 10px;">
+<<<<<<< HEAD
+=======
+      <mat-form-field appearance="fill" style="margin: 0; width: 200px;font-weight: bold;"*ngIf="orders">
+        <mat-label>Precio Referencial</mat-label>
+        <input [(ngModel)]="orders.totalPrice" type="number" name="stock" placeholder="Digite la cantidad del producto" matInput disabled>
+      </mat-form-field>
+>>>>>>> c18b7b5 (AtenderPedidosListoHuayta)
       <mat-form-field appearance="fill" style="margin: 0; width: 200px;font-weight: bold;">
         <mat-label>Prev. Total para la cotizacion</mat-label>
         <input [(ngModel)]="quotationData.total" type="text" name="Prev. Total para la cotizacion" matInput disabled>
