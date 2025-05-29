@@ -367,148 +367,94 @@ export class PdfService {
   }
 
   generatePdfFactura(facturaId: any) {
-    console.log('Factura ID:', facturaId);
-    this.facturaService.obtenerFactura(facturaId).subscribe((facturaData: any) => {
-      this.facturaDetailsService.listarFacturaDetailsPorFactura(facturaId).subscribe((facturaDetails: any) => {
-        const doc = new jsPDF();
+  this.facturaService.obtenerFactura(facturaId).subscribe((facturaData: any) => {
+    this.facturaDetailsService.listarFacturaDetailsPorFactura(facturaId).subscribe((facturaDetails: any) => {
+      const doc = new jsPDF();
 
-        const codigoFactura = facturaData.codigo || facturaData.id || facturaId;
-        const fecha = new Date().toLocaleDateString('es-PE', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        });
+      const codigoFactura = facturaData.codigo || facturaData.id || facturaId;
+      const fecha = new Date().toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
 
-        doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20);
+      doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20);
 
-        doc.setFontSize(12);
-        doc.text(`Lima, ${fecha}`, 10, 35);
-        doc.text(`FACTURA Nº ${codigoFactura}`, 150, 35);
+      doc.setFontSize(12);
+      doc.text(`Lima, ${fecha}`, 10, 35);
+      doc.text(`FACTURA Nº ${codigoFactura}`, 150, 35);
 
-        // Datos del cliente
-        let y = 45;
-        doc.setFontSize(12);
-        doc.text('Señor(es):', 10, y);
-        y += 5;
-        doc.setFont('helvetica', 'bold');
-        const razonSocial = facturaData.user?.razonSocial;
-        const nombreCompleto = `${facturaData.user?.nombre || ''} ${facturaData.user?.apellido || ''}`.trim();
-        if (razonSocial) {
-          doc.text(`${razonSocial.toUpperCase()}`, 10, y);
-        } else {
-          doc.text(`Presente: ${nombreCompleto}`, 10, y);
-        }
-        y += 5;
-        doc.text(`RUC/DNI: ${(facturaData.user?.ruc || facturaData.user?.dni || '').toUpperCase()}`, 10, y);
-        doc.setFont('helvetica', 'normal');
-        y += 10;
+      // Datos del cliente
+      let y = 45;
+      doc.setFontSize(12);
+      doc.text('Señores:', 10, y);
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      const razonSocial = facturaData.user?.razonSocial;
+      const nombreCompleto = `${facturaData.user?.nombre || ''} ${facturaData.user?.apellido || ''}`.trim();
+      if (razonSocial) {
+        doc.text(`${razonSocial.toUpperCase()}`, 10, y);
+      } else {
+        doc.text(`Presente: ${nombreCompleto}`, 10, y);
+      }
+      y += 5;
+      doc.text(`RUC/DNI: ${(facturaData.user?.ruc || facturaData.user?.dni || '').toUpperCase()}`, 10, y);
+      doc.setFont('helvetica', 'normal');
+      y += 10;
 
-        // Detalle de productos
-        doc.setFontSize(12);
-        doc.text('Detalle de Productos:', 10, y);
-        y += 5;
+      // Mensaje cordial
+      doc.setFontSize(12);
+      doc.text('De nuestra más cordial consideración:\n', 10, y);
+      y += 10;
+      doc.text(
+        'Es sumamente grato dirigirnos a ustedes, para saludarlos muy cordialmente, asimismo',
+        10,
+        y
+      );
+      y += 5;
+      doc.text('remito por medio de la presente nuestra propuesta del siguiente equipamiento:',
+        10,
+        y
+      );
+      y += 10;
 
-        const detallesTabla = facturaDetails.map((item: any, index: number) => [
-          index + 1,
-          item.producto?.nombreProducto || item.descripcion || '',
-          item.producto?.sku || item.sku || '',
-          item.cantidad || 1,
-          `S/. ${parseFloat(item.precioUnitario || item.unitPrice || 0).toFixed(2)}`,
-          `S/. ${parseFloat(item.precioTotal || item.totalPrice || 0).toFixed(2)}`
-        ]);
+      
 
-        // Totales
-        const deliveryPrice = parseFloat(facturaData.costoDelivery || facturaData.deliveryPrice || 0);
-        const totalPrice = detallesTabla.reduce((acc: number, curr: any) => acc + parseFloat(curr[5].replace('S/. ', '')), 0) + deliveryPrice;
-        const opGravada = totalPrice / 1.18;
-        const igv = totalPrice - opGravada;
+      const detallesTabla = facturaDetails.map((item: any, index: number) => [
+        index + 1,
+        item.producto?.nombreProducto || item.tipoServicio,
+        item.cantidad,
+        `S/. ${parseFloat(item.precioUnitario).toFixed(2)}`,
+        `S/. ${parseFloat(item.precioTotal).toFixed(2)}`
+      ]);
 
-        autoTable(doc, {
-          startY: y,
-          head: [['ITEM', 'PRODUCTO', 'SKU', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL']],
-          body: [
-            ...detallesTabla,
-            [
-              { content: '', colSpan: 4 },
-              { content: 'COSTO DELIVERY', styles: { halign: 'right' } },
-              `S/. ${deliveryPrice.toFixed(2)}`
-            ],
-            [
-              { content: '', colSpan: 4 },
-              { content: 'OP. GRAVADA', styles: { halign: 'right' } },
-              `S/. ${opGravada.toFixed(2)}`
-            ],
-            [
-              { content: '', colSpan: 4 },
-              { content: 'IGV (18%)', styles: { halign: 'right' } },
-              `S/. ${igv.toFixed(2)}`
-            ],
-            [
-              { content: '', colSpan: 4 },
-              { content: 'TOTAL', styles: { halign: 'right' } },
-              `S/. ${totalPrice.toFixed(2)}`
-            ]
-          ],
-          theme: 'grid',
-          styles: {
-            fontSize: 10,
-            halign: 'center',
-            valign: 'middle',
-            cellPadding: 3,
-          },
-          headStyles: {
-            fillColor: [0, 206, 209],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-          },
-          columnStyles: {
-            1: { halign: 'center' },
-          },
-          didDrawPage: (data) => {
-            const pageHeight = doc.internal.pageSize.height;
-            doc.setFontSize(10);
-            doc.setTextColor(0, 0, 0);
-            doc.line(10, 280, 200, 280);
-            doc.text(
-              'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
-              30,
-              285,
-              { align: 'left' }
-            );
-            doc.text(
-              'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
-              60,
-              290,
-              { align: 'left' }
-            );
-          },
-        });
+      // Totales
+      const totalPrice = detallesTabla.reduce((acc: number, curr: any) => acc + parseFloat(curr[4].replace('S/. ', '')), 0);
+      const opGravada = totalPrice / 1.18;
+      const igv = totalPrice - opGravada;
 
-        let finalY = (doc as any).lastAutoTable.finalY;
-        const pageHeight = doc.internal.pageSize.height;
-        const marginBottom = 20;
-        const remainingSpace = pageHeight - finalY - marginBottom;
-        const additionalContentHeight = 20;
-
-        if (remainingSpace < additionalContentHeight) {
-          doc.addPage();
-          finalY = 20;
-        } else {
-          finalY += 10;
-        }
-
-        doc.setFontSize(12);
-        doc.text('¡Gracias por su compra!', doc.internal.pageSize.getWidth() / 2, finalY + 10, { align: 'center' });
-        doc.text(
-          '¿Alguna consulta con tu compra? Envía un correo a consultas@apcemedicom.com',
-          doc.internal.pageSize.getWidth() / 2,
-          finalY + 16,
-          { align: 'center' }
-        );
-
-        const pageCount = doc.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          doc.setPage(i);
+      // Tabla de productos
+      autoTable(doc, {
+        startY: y,
+        head: [['ITEM', 'DESCRIPCIÓN', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL']],
+        body: detallesTabla,
+        theme: 'grid',
+        styles: {
+          fontSize: 10,
+          halign: 'center',
+          valign: 'middle',
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [0, 206, 209],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        columnStyles: {
+          1: { halign: 'center' },
+        },
+        didDrawPage: () => {
+          const pageHeight = doc.internal.pageSize.height;
           doc.setFontSize(10);
           doc.setTextColor(0, 0, 0);
           doc.line(10, 280, 200, 280);
@@ -524,10 +470,90 @@ export class PdfService {
             290,
             { align: 'left' }
           );
-        }
-
-        doc.save(`factura-${codigoFactura}.pdf`);
+        },
       });
+
+      // --- Salto de página si no hay espacio para totales y firma ---
+      let finalY = (doc as any).lastAutoTable.finalY;
+      const pageHeight = doc.internal.pageSize.height;
+      const marginBottom = 20;
+      const additionalContentHeight = 50;
+      let yTotales = finalY + 10;
+
+      if (pageHeight - finalY - marginBottom < additionalContentHeight) {
+        doc.addPage();
+        yTotales = 20;
+      }
+
+      // Totales fuera de la tabla
+      const labelX = 60;
+      const valueX = 190;
+
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('OP. GRAVADA:', labelX, yTotales, { align: 'left' });
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${opGravada.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      yTotales += 10;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('IGV (18%):', labelX, yTotales, { align: 'left' });
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${igv.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      yTotales += 10;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('TOTAL:', labelX, yTotales, { align: 'left' });
+      doc.setFontSize(15);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${totalPrice.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      // Mensaje de cierre y firma
+      yTotales += 20;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(
+        'Agradeciendo anticipadamente la atención que le brinde la presente, es oportuno',
+        10,
+        yTotales
+      );
+      yTotales += 5;
+      doc.text(
+        'testimoniarle los sentimientos de consideración y estima personal.',
+        10,
+        yTotales + 5
+      );
+      yTotales += 15;
+      doc.text('Atentamente,', 10, yTotales);
+
+      yTotales += 10;
+      doc.addImage('../../../assets/firma.png', 'PNG', 10, yTotales, 50, 50);
+
+      // Footer en todas las páginas
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.line(10, 280, 200, 280);
+        doc.text(
+          'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+          30,
+          285,
+          { align: 'left' }
+        );
+        doc.text(
+          'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+          60,
+          290,
+          { align: 'left' }
+        );
+      }
+
+      doc.save(`factura-${codigoFactura}.pdf`);
     });
-  }
+  });
+}
 }
