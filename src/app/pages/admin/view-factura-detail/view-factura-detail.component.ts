@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FacturaService } from 'src/app/services/factura.service';
-import { FacturaDetailsService } from 'src/app/services/facturadetails.service';
+import { FacturaDetailsService } from 'src/app/services/factura-details.service';
 
 @Component({
   selector: 'app-view-factura-detail',

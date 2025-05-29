@@ -58,6 +58,8 @@ import { ActualizarCotizacionComponent } from './pages/admin/actualizar-cotizaci
 import { ViewFacturaComponent } from './pages/admin/view-facturas/view-facturas.component';
 import { AddFacturaComponent } from './pages/admin/add-factura/add-factura.component';
 import { ViewFacturaDetailComponent } from './pages/admin/view-factura-detail/view-factura-detail.component';
+import { ViewNotasCreditoComponent } from './pages/admin/view-notas-credito/view-notas-credito.component';
+import { AddNotaCreditoComponent } from './pages/admin/add-nota-credito/add-nota-credito.component';
 
 
 const routes: Routes = [
@@ -260,6 +262,14 @@ const routes: Routes = [
         path: 'viewfactura/:facturaId',
         component: ViewFacturaDetailComponent
       },
+      {
+        path: 'notascredito',
+        component: ViewNotasCreditoComponent
+      },
+      {
+        path: 'addnotacredito',
+        component: AddNotaCreditoComponent
+      }
     ]
   },
   {//user/profile

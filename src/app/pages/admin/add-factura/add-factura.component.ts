@@ -17,7 +17,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import Swal from 'sweetalert2';
 import { FacturaService } from 'src/app/services/factura.service';
-import { FacturaDetailsService } from 'src/app/services/facturadetails.service';
+import { FacturaDetailsService } from 'src/app/services/factura-details.service';
 
 @Component({
   selector: 'app-add-factura',

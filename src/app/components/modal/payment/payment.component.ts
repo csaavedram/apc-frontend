@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { PaymentService } from '../../../services/mercado-pago.service';
 import { PaymentTermService } from 'src/app/services/payment-term.service';
 import { FacturaService } from 'src/app/services/factura.service';
-import { FacturaDetailsService } from 'src/app/services/facturadetails.service';
+import { FacturaDetailsService } from 'src/app/services/factura-details.service';
 import { LoginService } from 'src/app/services/login.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { OrdersService } from 'src/app/services/orders.service';

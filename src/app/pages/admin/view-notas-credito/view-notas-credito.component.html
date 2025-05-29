@@ -1,15 +1,15 @@
 <mat-card style="padding: 15px;">
   <div class="container" style="max-width: 100%;">
-      <h1>Facturas</h1>
-      <button routerLink="/admin/addfactura" mat-raised-button style="background-color: #00CED1; color: white;">Nueva Factura</button>
+    <h1>Notas de Crédito</h1>
+    <button routerLink="/admin/addnotacredito" mat-raised-button style="background-color: #00CED1; color: white;">Nueva Nota de Crédito</button>
   </div>
   <div class="filter-container">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
-      <div class="search-bar-container">
-          <input type="text" [(ngModel)]="searchTerm1" class="search-bar-input" placeholder="Buscar por código" />
-          <i class="fas fa-search search-icon"></i>
-      </div>
+    <div class="search-bar-container">
+      <input type="text" [(ngModel)]="searchTerm1" class="search-bar-input" placeholder="Buscar por código" />
+      <i class="fas fa-search search-icon"></i>
+    </div>
   </div>
   <table class="table-container">
       <tr>
@@ -38,13 +38,7 @@
         <td>{{ e.estado }}</td>
         <td>
           <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
-            <i [routerLink]="'/admin/viewfactura/'+e.facturaId" class="fas fa-eye"></i>
-          </div>
-          <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="anularFactura(e.facturaId)">
-            <i class="fas fa-times"></i>
-          </div>
-          <div style="padding-left: 5px; padding-right: 5px;" class="descargar-icono" (click)="verFacturaPDF(e.facturaId)">
-            <i class="fa-solid fa-file-pdf"></i>
+            <i [routerLink]="'/admin/viewnotacredito/'+e.notaCreditoId" class="fas fa-eye"></i>
           </div>
         </td>
       </tr>

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FacturaService } from 'src/app/services/factura.service';
+import { PdfService } from 'src/app/services/pdf.service';
 import { UserService } from 'src/app/services/user.service';
 import Swal from 'sweetalert2';
 
@@ -18,7 +19,8 @@ export class ViewFacturaComponent implements OnInit {
 
   constructor(
     private facturaService: FacturaService,
-    private userService: UserService
+    private userService: UserService,
+    private pdfService: PdfService
   ) {}
 
   prevPage1(): void {
@@ -86,6 +88,10 @@ export class ViewFacturaComponent implements OnInit {
         Swal.fire('Error', 'No se pudo obtener la información de la factura', 'error');
       }
     )
+  }
+
+  verFacturaPDF(facturaId: any) {
+    this.pdfService.generatePdfFactura(facturaId);
   }
 
   listarFacturas() {
