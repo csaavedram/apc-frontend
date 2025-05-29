@@ -1,1 +1,305 @@
-<p>add-nota-credito works!</p>
+<mat-card class="p-3">
+  <div class="link-container">
+    <a (click)="volverANotas()" class="link-text">
+      < Volver</a>
+  </div>
+  <div class="container flex flex-column -mx-2">
+    <h1>Agregar nueva nota de crédito</h1>
+
+    <div class="row">
+      <div class="col-md-6 mt-3">
+        <form novalidate>
+
+          <p>Ingrese el código de factura</p>
+          <div class="row">
+            <div class="col-10">
+              <mat-form-field appearance="fill" class="w-100">
+                <mat-label>Código de Factura</mat-label>
+                <input matInput [(ngModel)]="codigoFactura" name="codigoFactura" placeholder="Ingrese el código de factura" />
+              </mat-form-field>
+            </div>
+            <div class="col-2">
+              <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 10px;">
+                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2"
+                  (click)="buscarFacturaPorCodigo()">
+                  <div class="d-flex justify-content-between align-items-center gap-1">
+                    <i class="fa-solid fa-magnifying-glass" style="color: #ffffff; font-size: 12px;"></i>
+                    <span style="color: #ffffff; font-size: 14px">Buscar</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          @if(busquedaExitosa) {
+            <!-- Selectors -->
+            <div class="radio-group mb-3">
+              <mat-radio-group [(ngModel)]="tipoBusqueda" name="tipoBusqueda" (change)="onTipoBusquedaChange()">
+                <mat-radio-button class="custom-radio" value="ruc" style="margin-right: 20px">RUC</mat-radio-button>
+                <mat-radio-button class="custom-radio" value="razon_social">Razon Social</mat-radio-button>
+              </mat-radio-group>
+            </div>
+
+            <!-- Fields for users -->
+            <div class="row">
+              <div class="col-10">
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>
+                    {{ tipoBusqueda === 'ruc'
+                    ? 'Ingrese el RUC del cliente o empresa'
+                    : 'Ingrese la razon social de la empresa' }}
+                  </mat-label>
+                  <input [(ngModel)]="usuarioInput" name="usuarioId" type="text" placeholder="Digite el RUC de la empresa o razón social" matInput (input)="onUsuarioInputChange()" />
+                </mat-form-field>
+                <div *ngIf="tipoBusqueda === 'razon_social' && filteredSuggestions.length > 0" class="autocomplete-dropdown" style="position: absolute; z-index: 1000; background: white; border: 1px solid #ccc; width: 100%; max-height: 150px; overflow-y: auto; max-width: 520px; margin-top: -20px">
+                  <div *ngFor="let suggestion of filteredSuggestions" class="autocomplete-item" (click)="selectSuggestion(suggestion)" style="padding: 8px; cursor: pointer;">
+                    {{ suggestion }}
+                  </div>
+                </div>
+
+                @if (tipoBusqueda === 'ruc') {
+                  <mat-form-field appearance="fill" class="w-100">
+                    <mat-label>Nombre del Cliente o Empresa</mat-label>
+                    <input [ngModel]="usuario.tipoUsuario === 'persona_natural' ? nombreCompleto : usuario.razonSocial" name="nombreCompleto" type="text" placeholder="Digite el nombre completo" matInput disabled="true"/>
+                  </mat-form-field>
+                }
+              </div>
+              <div class="col-2">
+                @if (tipoBusqueda === 'ruc') {
+                  <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" (click)="tipoBusqueda === 'ruc' ? buscarClientePorRuc() : buscarClientePorRazonSocial()">
+                    <div class="d-flex justify-content-between align-items-center gap-1">
+                      <i class="fa-solid fa-magnifying-glass" style="color: #ffffff; font-size: 12px;"></i>
+                      <span style="color: #ffffff; font-size: 14px;">Buscar</span>
+                    </div>
+                  </button>
+                }
+                @if (this.usuario.razonSocial !== '' && this.tipoBusqueda === 'razon_social') {
+                  <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" (click)="eliminarCliente()">
+                    <div class="d-flex justify-content-between align-items-center gap-1">
+                      <i class="fa-solid fa-trash" style="color: #ffffff; font-size: 12px;"></i>
+                      <span style="color: #ffffff; font-size: 14px;">Borrar</span>
+                    </div>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Fields for quotations -->
+            <div class="row">
+              <div class="col-10">
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <mat-form-field appearance="fill" class="w-100">
+                      <mat-label>Divisa</mat-label>
+                      <mat-select [(ngModel)]="notaData.divisa" name="divisa">
+                        <mat-option [value]="'Soles'">Soles</mat-option>
+                        <mat-option [value]="'Dolares'">Dólares</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-md-6">
+                    <mat-form-field appearance="fill" class="w-100">
+                      <mat-label>Tipo de Pago</mat-label>
+                      <mat-select [(ngModel)]="notaData.tipoPago" name="tipoPago">
+                        <mat-option [value]="'Contado'">Contado</mat-option>
+                        <mat-option [value]="'Credito'">Crédito</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+              <div class="col-2">
+                <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 5px;">
+                </div>
+              </div>
+            </div>
+
+            <div class="radio-group mb-3">
+              <mat-radio-group [(ngModel)]="notaData.tipo" name="tipo" (change)="onTipoChange()">
+                <mat-radio-button class="custom-radio" value="bien" style="margin-right: 20px;">Bien</mat-radio-button>
+                <mat-radio-button class="custom-radio" value="servicio">Servicio</mat-radio-button>
+              </mat-radio-group>
+            </div>
+
+            <!-- Fields for products -->
+            <div *ngIf="notaData.tipo === 'bien'" class="row">
+              <div class="col-10">
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Ingrese el SKU</mat-label>
+                  <input [(ngModel)]="notaData.productoId" name="productoId" type="text" placeholder="Digite el SKU"
+                    matInput />
+                </mat-form-field>
+              </div>
+              <div class="col-2">
+                <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 10px;">
+                  <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" (click)="buscarProductoPorSku()">
+                    <div class="d-flex justify-content-between align-items-center gap-1">
+                      <i class="fa-solid fa-magnifying-glass" style="color: #ffffff; font-size: 12px;"></i>
+                      <span style="color: #ffffff; font-size: 14px;">Buscar</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="selectedProduct" class="row">
+              <div class="col-10">
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Precio unitario</mat-label>
+                  <input type="number" [(ngModel)]="selectedProduct.precio" [ngModelOptions]="{standalone: true}" matInput
+                    readonly disabled="true" />
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Nuevo precio</mat-label>
+                  <input #newPriceInput type="number" [(ngModel)]="selectedProduct.newPrice" name="newPrice"
+                    placeholder="Ingrese el nuevo precio" matInput />
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Cantidad</mat-label>
+                  <input #cantidadInput type="number" [(ngModel)]="selectedProduct.cantidad" name="cantidad"
+                    placeholder="Ingrese la cantidad" matInput />
+                </mat-form-field>
+
+                <div class="d-flex justify-content-between align-items-center">
+                  <p>Stock disponible: {{ selectedProduct.stock }}</p>
+                  <p *ngIf="selectedProduct.newPrice && selectedProduct.cantidad">
+                    IGV (18%): S/. {{ (selectedProduct.newPrice * selectedProduct.cantidad * 0.18).toFixed(2) }}
+                  </p>
+                </div>
+
+                <div class="d-flex justify-content-end mt-1">
+                  <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+                    (click)="agregarDetalleFactura(+newPriceInput.value, +cantidadInput.value)">
+                    + Agregar detalle de bien
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fields for services -->
+            <div *ngIf="notaData.tipo === 'servicio'" class="row">
+              <div class="col-10">
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Tipo de Servicio</mat-label>
+                  <mat-select [(ngModel)]="selectedServiceType.type" name="serviceType">
+                    <mat-option [value]="'Mantenimiento Correctivo'">Mantenimiento Correctivo</mat-option>
+                    <mat-option [value]="'Mantenimiento Preventivo'">Mantenimiento Preventivo</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Precio</mat-label>
+                  <input #servicePriceInput type="number" [(ngModel)]="selectedServiceType.price" name="servicePrice"
+                    placeholder="Ingrese el precio" matInput />
+                </mat-form-field>
+
+                <div class="d-flex justify-content-end mt-1">
+                  <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+                    (click)="agregarDetalleServicio(+servicePriceInput.value)">
+                    + Agregar detalle de servicio
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </form>
+      </div>
+
+      <div class="col-md-6">
+        <div *ngIf="!busquedaRealizada && allDetails.length === 0" class="text-center mt-3">
+          <p>Realice la búsqueda de la factura para poder agregar la nota de crédito</p>
+        </div>
+        <div *ngIf="busquedaRealizada" class="mt-4 text-center d-flex justify-content-center align-items-center flex-column">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p class="mt-2">Cargando...</p>
+        </div>
+        <div *ngIf="detalleProductos.length > 0" style="max-height: 300px; overflow-y: auto;">
+          <h3>Productos</h3>
+          <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Precio Nuevo</th>
+                <th style="width: 20%;">Total</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let detalle of detalleProductos; let i = index">
+                <td>{{ detalle.nombreProducto }}</td>
+                <td>
+                  <div class="d-flex justify-content-center align-items-center">
+                    <input type="number" [(ngModel)]="detalle.cantidad" (change)="actualizarCantidad(i, detalle.cantidad)" class="form-control text-center" style="width: 60px;" />
+                  </div>
+                </td>
+                <td>S/. {{ getPrecioUnitarioPorProductoId(detalle.productoId) | number:'1.0-2' }}</td>
+                <td>S/. {{ detalle.precioUnitario | number:'1.0-2' }}</td>
+                <td>S/. {{ detalle.precioTotal | number:'1.0-2' }}</td>
+                <td>
+                  <i class="fa-solid fa-trash action-icon delete-icon text-danger" (click)="eliminarDetalleProducto(i)"></i>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Message or Table for Services -->
+        <div *ngIf="detalleServicios.length === 0 && notaData.tipo === 'servicio'" class="text-center my-3">
+          <p>Para agregar un servicio complete los campos respectivos</p>
+        </div>
+        <div *ngIf="detalleServicios.length > 0" style="max-height: 300px; overflow-y: auto;">
+          <h3>Servicios</h3>
+          <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Tipo de Servicio</th>
+                <th>Precio</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let detalle of detalleServicios; let i = index">
+                <td>{{ detalle.tipoServicio }}</td>
+                <td>S/. {{ detalle.precioUnitario }}</td>
+                <td>
+                  <i class="fa-solid fa-trash action-icon delete-icon text-danger" (click)="eliminarDetalleServicio(i)"></i>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="detalleProductos.length > 0 || detalleServicios.length > 0" class="mt-4">
+          <h3>Resumen</h3>
+          <table class="table table-bordered text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>OP Gravadas</th>
+                <th>IGV (18%)</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>S/. {{ calcularOpGravadas() | number:'1.0-2' }}</td>
+                <td>S/. {{ calcularIgv() | number:'1.0-2' }}</td>
+                <td>S/. {{ calcularTotal() | number:'1.0-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="d-flex justify-content-end mt-4">
+            <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+              (click)="guardarInformacion()">
+              Agregar Nota de Crédito
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-card>

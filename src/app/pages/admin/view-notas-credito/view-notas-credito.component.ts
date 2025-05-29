@@ -5,6 +5,7 @@ import { MatButton } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterModule } from '@angular/router';
 import { NotaCreditoService } from 'src/app/services/nota-credito.service';
+import { PdfService } from 'src/app/services/pdf.service';
 import { UserService } from 'src/app/services/user.service';
 import Swal from 'sweetalert2';
 
@@ -31,7 +32,7 @@ export class ViewNotasCreditoComponent {
 
   constructor(
     private notaCreditoService: NotaCreditoService,
-    private userService: UserService
+    private pdfService: PdfService,
   ) {}
 
   prevPage1(): void {
@@ -64,7 +65,11 @@ export class ViewNotasCreditoComponent {
       notas.codigo.toLowerCase().includes(this.searchTerm1.toLowerCase().trim()));
   }
 
-  listarFacturas() {
+  verNotaCreditoPDF(facturaId: any) {
+    this.pdfService.generatePdfFactura(facturaId);
+  }
+
+  listarNotasCredito() {
     this.notaCreditoService.listarNotasCredito().subscribe(
       (notas: any) => {
         this.notas = notas;
@@ -78,6 +83,6 @@ export class ViewNotasCreditoComponent {
   }
 
   ngOnInit(): void {
-    this.listarFacturas();
+    this.listarNotasCredito();
   }
 }

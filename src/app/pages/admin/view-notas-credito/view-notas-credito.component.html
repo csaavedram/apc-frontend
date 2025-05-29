@@ -12,43 +12,46 @@
     </div>
   </div>
   <table class="table-container">
-      <tr>
-          <th>N°</th>
-          <th>Código</th>
-          <th>Divisa</th>
-          <th>Tipo de Pago</th>
-          <th>Total</th>
-          <th>Cliente</th>
-          <th>Fecha de Emisión</th>
-          <th>Estado</th>
-          <th>Operaciones</th>
-      </tr>
-      <tr *ngFor="let e of displayedFacturas(); let i = index" mat-subheader>
-        <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
-        <td>{{ e.codigo }}</td>
-        <td>{{ e.divisa }}</td>
-        <td>{{ e.tipoPago }}</td>
-        <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
-        <td>
-          {{ e.user.tipoUsuario === 'cliente_empresa'
-              ? e.user.razonSocial
-              : (e.user.apellido ? e.user.apellido + ', ' : '') + (e.user.nombre || 'Sin información') }}
-        </td>
-        <td>{{ e.fechaEmision | date:'dd-MM-yyyy' }}</td>
-        <td>{{ e.estado }}</td>
-        <td>
-          <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
-            <i [routerLink]="'/admin/viewnotacredito/'+e.notaCreditoId" class="fas fa-eye"></i>
-          </div>
-        </td>
-      </tr>
+    <tr>
+      <th>N°</th>
+      <th>Código</th>
+      <th>Divisa</th>
+      <th>Tipo de Pago</th>
+      <th>Total</th>
+      <th>Cliente</th>
+      <th>Fecha de Emisión</th>
+      <th>Estado</th>
+      <th>Operaciones</th>
+    </tr>
+    <tr *ngFor="let e of displayedFacturas(); let i = index" mat-subheader>
+      <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
+      <td>{{ e.codigo }}</td>
+      <td>{{ e.divisa }}</td>
+      <td>{{ e.tipoPago }}</td>
+      <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
+      <td>
+        {{ e.user.tipoUsuario === 'cliente_empresa'
+          ? e.user.razonSocial
+          : (e.user.apellido ? e.user.apellido + ', ' : '') + (e.user.nombre || 'Sin información') }}
+      </td>
+      <td>{{ e.fechaEmision | date:'dd-MM-yyyy' }}</td>
+      <td>{{ e.estado }}</td>
+      <td>
+        <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
+          <i [routerLink]="'/admin/viewnotacredito/'+e.notaCreditoId" class="fas fa-eye"></i>
+        </div>
+        <div style="padding-left: 5px; padding-right: 5px;" class="descargar-icono" (click)="verNotaCreditoPDF(e.notaCreditoId)">
+          <i class="fa-solid fa-file-pdf"></i>
+        </div>
+      </td>
+    </tr>
   </table>
   <div class="pagination">
-      <button (click)="prevPage1()" [disabled]="currentPage1 === 1">
-          <i class="fa fa-chevron-left"></i> Anterior
-      </button>
-      <button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
-          Siguiente <i class="fa fa-chevron-right"></i>
-      </button>
+    <button (click)="prevPage1()" [disabled]="currentPage1 === 1">
+      <i class="fa fa-chevron-left"></i> Anterior
+    </button>
+    <button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
+      Siguiente <i class="fa fa-chevron-right"></i>
+    </button>
   </div>
 </mat-card>
