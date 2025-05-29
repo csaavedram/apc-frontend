@@ -65,8 +65,8 @@ export class ViewNotasCreditoComponent {
       notas.codigo.toLowerCase().includes(this.searchTerm1.toLowerCase().trim()));
   }
 
-  verNotaCreditoPDF(facturaId: any) {
-    this.pdfService.generatePdfFactura(facturaId);
+  verNotaCreditoPDF(notaCreditoId: any) {
+    this.pdfService.generatePdfNotaCredito(notaCreditoId);
   }
 
   listarNotasCredito() {

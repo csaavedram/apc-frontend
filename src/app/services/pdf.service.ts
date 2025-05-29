@@ -418,7 +418,7 @@ export class PdfService {
       );
       y += 10;
 
-      
+
 
       const detallesTabla = facturaDetails.map((item: any, index: number) => [
         index + 1,
@@ -556,4 +556,8 @@ export class PdfService {
     });
   });
 }
+
+  generatePdfNotaCredito(notaCreditoId: any) {
+    // a
+  }
 }
