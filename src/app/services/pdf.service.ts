@@ -9,6 +9,8 @@ import { QuotationDetailsService } from 'src/app/services/quotation-details.serv
 import { UpperCasePipe } from '@angular/common';
 import { FacturaService } from './factura.service';
 import { FacturaDetailsService } from './factura-details.service';
+import { NotaCreditoService } from './nota-credito.service';
+import { NotaCreditoDetailsService } from './nota-credito-details.service';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +21,9 @@ export class PdfService {
     private userService: UserService,
     private quotationDetailsService: QuotationDetailsService,
     private facturaService: FacturaService,
-    private facturaDetailsService: FacturaDetailsService
+    private facturaDetailsService: FacturaDetailsService,
+    private notaCreditoService: NotaCreditoService,
+    private notaCreditoDetailsService: NotaCreditoDetailsService,
   ) {}
 
   generatePdf(orderData: any) {
@@ -558,6 +562,193 @@ export class PdfService {
 }
 
   generatePdfNotaCredito(notaCreditoId: any) {
-    // a
+    this.notaCreditoService.obtenerNotaCredito(notaCreditoId).subscribe((notaCreditoData: any) => {
+    this.notaCreditoDetailsService.listarNotasCreditoDetailsPorNotaCredito(notaCreditoId).subscribe((notaCreditoDetails: any) => {
+      const doc = new jsPDF();
+
+      const codigoNotaCredito = notaCreditoData.codigo || notaCreditoData.id || notaCreditoId;
+      const fecha = new Date().toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20);
+
+      doc.setFontSize(12);
+      doc.text(`Lima, ${fecha}`, 10, 35);
+      doc.text(`NOTA DE CRÉDITO Nº ${codigoNotaCredito}`, 130, 35);
+
+      // Datos del cliente
+      let y = 45;
+      doc.setFontSize(12);
+      doc.text('Señores:', 10, y);
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      const razonSocial = notaCreditoData.user?.razonSocial;
+      const nombreCompleto = `${notaCreditoData.user?.nombre || ''} ${notaCreditoData.user?.apellido || ''}`.trim();
+      if (razonSocial) {
+        doc.text(`${razonSocial.toUpperCase()}`, 10, y);
+      } else {
+        doc.text(`Presente: ${nombreCompleto}`, 10, y);
+      }
+      y += 5;
+      doc.text(`RUC/DNI: ${(notaCreditoData.user?.ruc || notaCreditoData.user?.dni || '').toUpperCase()}`, 10, y);
+      doc.setFont('helvetica', 'normal');
+      y += 10;
+
+      // Mensaje cordial
+      doc.setFontSize(12);
+      doc.text('De nuestra más cordial consideración:\n', 10, y);
+      y += 10;
+      doc.text(
+        'Es sumamente grato dirigirnos a ustedes, para saludarlos muy cordialmente, asimismo',
+        10,
+        y
+      );
+      y += 5;
+      doc.text('remito por medio de la presente nuestra propuesta del siguiente equipamiento:',
+        10,
+        y
+      );
+      y += 10;
+
+
+
+      const detallesTabla = notaCreditoDetails.map((item: any, index: number) => [
+        index + 1,
+        item.producto?.nombreProducto || item.tipoServicio,
+        item.cantidad,
+        `S/. ${parseFloat(item.precioUnitario).toFixed(2)}`,
+        `S/. ${parseFloat(item.precioTotal).toFixed(2)}`
+      ]);
+
+      // Totales
+      const totalPrice = detallesTabla.reduce((acc: number, curr: any) => acc + parseFloat(curr[4].replace('S/. ', '')), 0);
+      const opGravada = totalPrice / 1.18;
+      const igv = totalPrice - opGravada;
+
+      // Tabla de productos
+      autoTable(doc, {
+        startY: y,
+        head: [['ITEM', 'DESCRIPCIÓN', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL']],
+        body: detallesTabla,
+        theme: 'grid',
+        styles: {
+          fontSize: 10,
+          halign: 'center',
+          valign: 'middle',
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [0, 206, 209],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        columnStyles: {
+          1: { halign: 'center' },
+        },
+        didDrawPage: () => {
+          const pageHeight = doc.internal.pageSize.height;
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.line(10, 280, 200, 280);
+          doc.text(
+            'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+            30,
+            285,
+            { align: 'left' }
+          );
+          doc.text(
+            'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+            60,
+            290,
+            { align: 'left' }
+          );
+        },
+      });
+
+      // --- Salto de página si no hay espacio para totales y firma ---
+      let finalY = (doc as any).lastAutoTable.finalY;
+      const pageHeight = doc.internal.pageSize.height;
+      const marginBottom = 20;
+      const additionalContentHeight = 50;
+      let yTotales = finalY + 10;
+
+      if (pageHeight - finalY - marginBottom < additionalContentHeight) {
+        doc.addPage();
+        yTotales = 20;
+      }
+
+      // Totales fuera de la tabla
+      const labelX = 60;
+      const valueX = 190;
+
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('OP. GRAVADA:', labelX, yTotales, { align: 'left' });
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${opGravada.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      yTotales += 10;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('IGV (18%):', labelX, yTotales, { align: 'left' });
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${igv.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      yTotales += 10;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('TOTAL:', labelX, yTotales, { align: 'left' });
+      doc.setFontSize(15);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${totalPrice.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      // Mensaje de cierre y firma
+      yTotales += 20;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(
+        'Agradeciendo anticipadamente la atención que le brinde la presente, es oportuno',
+        10,
+        yTotales
+      );
+      yTotales += 5;
+      doc.text(
+        'testimoniarle los sentimientos de consideración y estima personal.',
+        10,
+        yTotales + 5
+      );
+      yTotales += 15;
+      doc.text('Atentamente,', 10, yTotales);
+
+      yTotales += 10;
+      doc.addImage('../../../assets/firma.png', 'PNG', 10, yTotales, 50, 50);
+
+      // Footer en todas las páginas
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.line(10, 280, 200, 280);
+        doc.text(
+          'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+          30,
+          285,
+          { align: 'left' }
+        );
+        doc.text(
+          'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+          60,
+          290,
+          { align: 'left' }
+        );
+      }
+
+      doc.save(`nota-credito-${codigoNotaCredito}.pdf`);
+    });
+  });
   }
 }
