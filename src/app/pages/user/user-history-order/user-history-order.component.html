@@ -27,7 +27,7 @@
                   <i [routerLink]="'/user/detalle-pedido/'+e.orderId" class="fas fa-info-circle"></i>
               </div>
               <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Aceptado'">
-                  <i (click)="openPaymentModal(e.orderId)" class="fas fa-credit-card"></i>
+                  <i [routerLink]="'/user/pago/'+e.orderId" class="fas fa-credit-card"></i>
               </div>
           </td>
       </tr>
