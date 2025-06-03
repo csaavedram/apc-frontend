@@ -8,6 +8,7 @@ import { QuotationService } from 'src/app/services/quotation.service';
 import { InventarioService } from 'src/app/services/inventario.service';
 import { ProductoService } from 'src/app/services/producto.service';
 import Swal from 'sweetalert2';
+import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.service';
 
 @Component({
   selector: 'app-atender-pedido',
@@ -24,7 +25,8 @@ export class AtenderPedidoComponent implements OnInit {
     private productoService: ProductoService,
     private router: Router,
     private quotationService: QuotationService,
-    private quotationDetailsService: QuotationDetailsService
+    private quotationDetailsService: QuotationDetailsService,
+    private ordenCotizacionService: OrdenCotizacionService
   ) { }
 
   quotationData: any= {
@@ -122,22 +124,30 @@ export class AtenderPedidoComponent implements OnInit {
 
   calcularTotalCotizacion(): void {
     this.quotationData.total = this.orderDetails.reduce((sum: number, detalle: any) => {
-      const precio = detalle.precioNuevo || detalle.precioUnitario;
-      return sum + precio * detalle.cantidad ;
+      console.log(detalle);
+      const precio = detalle.newPrice || detalle.unitPrice;
+      return sum + precio * detalle.quantity ;
     }, 0);
   }
 
   EnviarCotizaYDetalles(): void {
-    this.quotationData.estado = 'En aceptar';
+    this.quotationData.estado = 'Por aceptar';
     this.quotationService.agregarQuotation(this.quotationData).subscribe(
       (cotizacion: any) => {
-        this.quotationData.quotationId = cotizacion.quotationId;
+        this.quotationData.quotationId = cotizacion.cotizacionId;
+
+        const ordenCotizacionData = {
+          cotizacion: { cotizacionId: this.quotationData.quotationId },
+          order: { orderId: this.orderId },
+        }
+
+        this.ordenCotizacionService.agregarOrdenCotizacion(ordenCotizacionData).subscribe(() => {})
 
         const detallesCotizacion = this.orderDetails.map((detalle: any) => ({
           cantidad: detalle.quantity,
           precioTotal: detalle.totalPrice,
-          precioUnitario: detalle.precioUnitario,
-          precioNuevo: detalle.precioNuevo,
+          precioUnitario: detalle.unitPrice,
+          precioNuevo: detalle.newPrice,
           tipoServicio: null,
           producto: {
             productoId: detalle.product.productoId,
@@ -150,27 +160,14 @@ export class AtenderPedidoComponent implements OnInit {
           this.quotationDetailsService.agregarQuotationDetail(detalleCotizacion).subscribe(
             () => {
               this.quotationData.total = detallesCotizacion.reduce((sum: number, detalle: any) => sum + (detalle.precioNuevo || detalle.precioUnitario) * detalle.cantidad, 0);
-              this.quotationService.actualizarQuotation(this.quotationData).subscribe(
+              console.log(this.quotationData.total)
+              const data = { preciocli: this.quotationData.total }
+              this.ordersService.atenderOrder(this.orders.orderId, data).subscribe(
                 () => {
-                  this.orders.status = 'Aceptado';
-                  this.orders.preciocli = this.quotationData.total;
-
-                  this.ordersService.actualizarOrder(this.orders).subscribe(
-                    () => {
-                      Swal.fire('Solicitud Aceptada', 'La solicitud ha sido aceptada correctamente', 'success');
-                      this.volverAPedidos();
-                    },
-                    (error: any) => {
-                      console.error('Error al actualizar la orden:', error);
-                      Swal.fire('Error', 'No se pudo actualizar la orden', 'error');
-                    }
-                  );
-                },
-                (error: any) => {
-                  console.error('Error al actualizar la cotización:', error);
-                  Swal.fire('Error', 'No se pudo actualizar la cotización', 'error');
+                  Swal.fire('Solicitud Aceptada', 'La solicitud ha sido aceptada correctamente', 'success');
+                  this.volverAPedidos();
                 }
-              );
+              )
             },
             (error: any) => {
               console.error('Error al agregar detalles de cotización:', error);
@@ -185,7 +182,6 @@ export class AtenderPedidoComponent implements OnInit {
       }
     );
   }
-
 
   rechazarSolicitud() {
     this.product.stock = this.orderDetails.product.stock + this.orderDetails.quantity;
@@ -206,8 +202,6 @@ export class AtenderPedidoComponent implements OnInit {
         productoId: this.product.productoId,
       },
     };
-
-    console.log(this.inventario);
 
     this.inventarioService.agregarProductoInventario(this.inventario).subscribe(
       (data) => {

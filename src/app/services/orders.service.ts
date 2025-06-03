@@ -36,4 +36,8 @@ export class OrdersService {
   public cambiarEstadoOrder(orderId: number) {
     return this.http.patch(`${baserUrl}/orders/cambiar-estado/${orderId}`, null);
   }
+
+  public atenderOrder(orderId: number, data: any) {
+    return this.http.patch(`${baserUrl}/orders/atender/${orderId}`, data);
+  }
 }

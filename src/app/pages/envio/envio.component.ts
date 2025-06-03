@@ -212,6 +212,7 @@ export class EnvioComponent implements OnInit {
     this.user = this.loginService.getUser();
     this.orderData.user.id = this.user.id;
 
+    this.orderData.fechaOperacion = this.getCurrentDate();
     this.orderData.createdAt = this.getCurrentDate();
     this.orderData.status = 'Solicitado';
     this.orderData.subtotalPrice = this.subtotal();
