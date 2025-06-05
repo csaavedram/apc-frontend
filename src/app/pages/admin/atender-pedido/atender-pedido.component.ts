@@ -102,6 +102,7 @@ export class AtenderPedidoComponent implements OnInit {
             this.quotationData.total = totalP;
             this.userId = this.orderDetails[0].order.user.id;
 
+
             this.quotationData = {
               divisa: '',
               tipoPago: this.orders.tipoPago || '',
@@ -167,6 +168,7 @@ export class AtenderPedidoComponent implements OnInit {
   }
 
   EnviarCotizaYDetalles(): void {
+
     this.quotationData.estado = 'Por aceptar';
     console.log('Iniciando envío de cotización y detalles:', this.quotationData);
 
@@ -177,6 +179,7 @@ export class AtenderPedidoComponent implements OnInit {
         const ordenCotizacionData = {
           cotizacion: { cotizacionId: this.quotationData.quotationId },
           order: { orderId: this.orderId },
+
         };
 
         this.ordenCotizacionService.agregarOrdenCotizacion(ordenCotizacionData).subscribe(() => {});
