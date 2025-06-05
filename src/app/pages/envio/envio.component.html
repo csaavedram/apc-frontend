@@ -117,40 +117,19 @@
                         </form>
                     </mat-step>
                     <!-- Datos Personales -->
-                    <mat-step label="Datos Personales" [stepControl]="secondFormGroup">
+                    <mat-step label="Tipo de Pago" [stepControl]="secondFormGroup">
                         <form [formGroup]="secondFormGroup">
                             <div class="row my-4">
                                 <div class="col-lg-9">
-                                    <h2 class="fw-normal">Seleccione y escriba su documento</h2>
+                                    <h2 class="fw-normal">Seleccione el tipo de Pago</h2>
                                     <div class="bg-white rounded shadow-sm p-4 pb-2">
                                         <div class="m-3">
                                             <mat-form-field appearance="fill" class="w-100">
-                                                <mat-label>Seleccione Tipo de Documento</mat-label>
-                                                <mat-select
-                                                    name="tipoDocumento"
-                                                    [(ngModel)]="personalData.tipoDocumento"
-                                                    (selectionChange)="onTipoDocumentoChange()"
-                                                    formControlName="tipoDocumento"
-                                                    required
-                                                >
-                                                <mat-option *ngFor="let documento of tipoDocumento" [value]="documento.id">
-                                                    {{ documento.name }}
-                                                </mat-option>
+                                                <mat-label>Seleccione Tipo de Pago</mat-label>
+                                                <mat-select formControlName="tipoPago" (selectionChange)="onTipoPagoChange()">
+                                                    <mat-option [value]="'Contado'">Contado</mat-option>
+                                                    <mat-option [value]="'Credito'">Credito</mat-option>
                                                 </mat-select>
-                                            </mat-form-field>
-                                            <mat-form-field appearance="fill" class="w-100">
-                                                <mat-label *ngIf="personalData.tipoDocumento === 1">Número de DNI</mat-label>
-                                                <mat-label *ngIf="personalData.tipoDocumento === 2">Número de RUC</mat-label>
-                                                <input
-                                                    (change)="onTipoDocumentoChange()"
-                                                    name="nroDocumento"
-                                                    placeholder="Número de Documento"
-                                                    formControlName="nroDocumento"
-                                                    required
-                                                    matInput
-                                                    appSoloNumeros
-                                                    [(ngModel)]="orderData.documento"
-                                                >
                                             </mat-form-field>
                                         </div>
                                     </div>

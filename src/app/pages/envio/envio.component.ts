@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, Inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AbstractControl, FormBuilder, ValidatorFn, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -23,24 +23,11 @@ export class EnvioComponent implements OnInit {
   myList: any[] = this.loadFromLocalStorage();
   user: any;
 
-  // Datos Personales
-
-  tipoDocumento = [
-    {
-      id: 1,
-      name: 'DNI',
-    },
-    {
-      id: 2,
-      name: 'RUC',
-    },
-  ];
-
   metodoPago: any
 
-  personalData = {
-    tipoDocumento: null,
-    numeroDocumento: '',
+  personalData: { tipoPago: string | null, numeroDocumento: string } = {
+    tipoPago: null,
+    numeroDocumento: ''
   };
 
   // Entrega
@@ -68,7 +55,7 @@ export class EnvioComponent implements OnInit {
     user: {
       id: '',
     },
-    documento: '',
+    tipoPago: '',
     fechaOperacion: '',
     noperacion: '',
     tipoOperacion: ''
@@ -88,10 +75,25 @@ export class EnvioComponent implements OnInit {
     },
   };
 
+  plazoPagoData = {
+    dias: 0,
+    cantidad: 0.0,
+    factura: {
+      facturaId: 0
+    },
+    fechaInicio: '',
+    fechaFin: ''
+  }
+
   // 1er Formulario
 
   firstFormGroup = this._formBuilder.group({
     address: ['', Validators.required],
+  });
+
+  secondFormGroup = this._formBuilder.group({
+    tipoPago: ['', Validators.required],
+    nroDocumento: ['', [Validators.required, Validators.pattern(/^[0-9]+$/)]],
   });
 
   onSubmitForm_1() {
@@ -103,96 +105,24 @@ export class EnvioComponent implements OnInit {
     }
   }
 
-  // 2do Formulario
+  onSubmitForm_2() {
+    const tipoPago = this.secondFormGroup.get('tipoPago')?.value;
 
-  secondFormGroup = this._formBuilder.group({
-    tipoDocumento: [null, Validators.required],
-    nroDocumento: [
-      { value: '', disabled: true },
-      [Validators.required, this.documentValidator()],
-    ],
-  });
+    if (!tipoPago) {
+        this.snack.open('Debe seleccionar un tipo de pago', '', {
+            duration: 3000,
+        });
+        return;
+    }
+
+    console.log('Form submitted with tipoPago:', tipoPago);
+    this.orderData.tipoPago = tipoPago;
+    this.guardarInformacion();
+  }
 
   isDocumentoEnabled = false;
 
-  onTipoDocumentoChange() {
-    const tipoDocumentoControl = this.secondFormGroup.get('tipoDocumento');
-    const nroDocumentoControl = this.secondFormGroup.get('nroDocumento');
-
-    if (tipoDocumentoControl && nroDocumentoControl) {
-      // Verificación de nulidad
-      const tipoDocumento = tipoDocumentoControl.value;
-
-      if (tipoDocumento === 1 || tipoDocumento === 2) {
-        nroDocumentoControl.enable();
-      } else {
-        nroDocumentoControl.disable();
-        nroDocumentoControl.reset();
-      }
-    }
-  }
-
-  documentValidator(): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: any } | null => {
-      const value = control.value;
-      const tipoDocumento = this.secondFormGroup?.get('tipoDocumento')?.value;
-
-      if (!tipoDocumento) {
-        return null;
-      }
-
-      if (tipoDocumento === 1 && value.length !== 8) {
-        return { invalidDNI: true };
-      }
-
-      if (tipoDocumento === 2) {
-        if (value.length !== 11) {
-          return { invalidRUC: true };
-        }
-        const stockRegex = /^(10|20)\d{9}$/;
-        if (!stockRegex.test(value)) {
-          return { invalidRUCFormat: true };
-        }
-      }
-
-      return null;
-    };
-  }
-
   validFirstStep: boolean = false;
-
-  onSubmitForm_2() {
-    if (!this.secondFormGroup.valid) {
-      this.snack.open('Debe Seleccionar el Tipo de Documento', '', {
-        duration: 3000,
-      });
-
-      const errors = this.secondFormGroup.get('nroDocumento')?.errors;
-      if (errors) {
-        if (errors['invalidDNI']) {
-          this.snack.open('El número del documento (DNI) debe tener 8 dígitos', '', {
-            duration: 3000,
-          });
-          return;
-        } else if (errors['invalidRUC']) {
-          this.snack.open('El número del documento (RUC) debe tener 11 dígitos', '', {
-            duration: 3000,
-          });
-          return;
-        } else if (errors['invalidRUCFormat']) {
-          this.snack.open('El número del documento (RUC) debe iniciar con 10 o 20', '', {
-            duration: 3000,
-          });
-          return;
-        }
-      }
-
-      return;
-    }
-
-    // Aquí termina el proceso de cotización
-    this.guardarInformacion();
-  }
 
   constructor(
     private snack: MatSnackBar,
@@ -206,6 +136,7 @@ export class EnvioComponent implements OnInit {
     private http: HttpClient,
     private inventarioService: InventarioService,
     private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -368,6 +299,27 @@ export class EnvioComponent implements OnInit {
     }
     if (this.districtType === 'D') {
       this.orderData.deliveryPrice = 30;
+    }
+  }
+
+  onTipoPagoChange() {
+    const tipoPagoControl = this.secondFormGroup.get('tipoPago');
+
+    if (tipoPagoControl) {
+        this.personalData.tipoPago = tipoPagoControl.value || null;
+
+        const nroDocumentoControl = this.secondFormGroup.get('nroDocumento');
+        if (nroDocumentoControl) {
+            if (this.personalData.tipoPago === 'Credito') {
+                nroDocumentoControl.enable();
+            } else {
+                nroDocumentoControl.disable();
+                nroDocumentoControl.reset();
+            }
+        }
+
+        // Trigger change detection
+        this.cdr.detectChanges();
     }
   }
 }

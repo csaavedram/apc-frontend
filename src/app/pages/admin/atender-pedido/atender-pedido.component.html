@@ -9,6 +9,7 @@
   <div class="row">
     <div class="col-md-8 offset-md-2">
       <form *ngIf="orders">
+        <p>Datos del Cliente:</p>
         <mat-form-field class="w-50" appearance="fill">
           <mat-label>Nombre</mat-label>
           <input [(ngModel)]="orders.user.nombre" type="text" name="nombre" matInput disabled>
@@ -21,6 +22,65 @@
           <mat-label>DNI/RUC</mat-label>
           <input [(ngModel)]="orders.documento" type="text" name="documento" matInput disabled>
         </mat-form-field>
+
+        <div class="row">
+          <p>Para la cotización, completar los siguientes campos:</p>
+          <div class="col-md-6">
+            <mat-form-field appearance="fill" class="w-100">
+              <mat-label>Divisa</mat-label>
+              <mat-select [(ngModel)]="quotationData.divisa" name="divisa">
+                <mat-option [value]="'Soles'">Soles</mat-option>
+                <mat-option [value]="'Dolares'">Dólares</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="col-md-6">
+            <mat-form-field appearance="fill" class="w-100">
+              <mat-label>Tipo de Pago</mat-label>
+              <mat-select [(ngModel)]="quotationData.tipoPago" name="tipoPago" disabled>
+                <mat-option [value]="'Contado'">Contado</mat-option>
+                <mat-option [value]="'Credito'">Crédito</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+
+        @if(quotationData.tipoPago === 'Credito') {
+          <div style="display: flex; align-items: center;">
+            <div style="flex-grow: 1;">
+              <mat-form-field appearance="fill" class="w-100">
+                <mat-label>Ingresar la cantidad de plazos de pago</mat-label>
+                <input [(ngModel)]="nroPlazos" name="plazos" type="text" placeholder="Ingrese la cantidad de plazos de pago" matInput />
+              </mat-form-field>
+            </div>
+            <div style="flex-grow: 0; margin-left: 20px; margin-top: -20px;">
+              <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" style="flex-grow: 1;" (click)="buscarPlazos()">
+                <div class="d-flex justify-content-between align-items-center gap-1">
+                  <span style="color: #ffffff; font-size: 14px;">+ Asignar Plazos</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        }
+
+        <div class="row">
+          <div class="col-md-6">
+            <mat-form-field appearance="fill" class="w-100">
+              <mat-label>Plazo de Entrega</mat-label>
+              <input matInput [matDatepicker]="plazoEntregaPicker" [(ngModel)]="quotationData.plazoEntrega" name="plazoEntrega" [min]="getCurrentDate()" />
+              <mat-datepicker-toggle matSuffix [for]="plazoEntregaPicker"></mat-datepicker-toggle>
+              <mat-datepicker #plazoEntregaPicker [startAt]="getCurrentDate()"></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div class="col-md-6">
+            <mat-form-field appearance="fill" class="w-100">
+              <mat-label>Validez de Oferta</mat-label>
+              <input matInput [matDatepicker]="validezOfertaPicker" [(ngModel)]="quotationData.validezOferta" name="validezOferta" [min]="getCurrentDate()" />
+              <mat-datepicker-toggle matSuffix [for]="validezOfertaPicker"></mat-datepicker-toggle>
+              <mat-datepicker #validezOfertaPicker [startAt]="getCurrentDate()"></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
       </form>
     </div>
   </div>

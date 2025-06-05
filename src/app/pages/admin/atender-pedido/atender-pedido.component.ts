@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { OrdersService } from 'src/app/services/orders.service';
@@ -9,6 +9,9 @@ import { InventarioService } from 'src/app/services/inventario.service';
 import { ProductoService } from 'src/app/services/producto.service';
 import Swal from 'sweetalert2';
 import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.service';
+import { MatDialog } from '@angular/material/dialog';
+import { AddPlazosPagoComponent } from 'src/app/components/modal/add-plazos-pago/add-plazos-pago.component';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 
 @Component({
   selector: 'app-atender-pedido',
@@ -26,20 +29,39 @@ export class AtenderPedidoComponent implements OnInit {
     private router: Router,
     private quotationService: QuotationService,
     private quotationDetailsService: QuotationDetailsService,
-    private ordenCotizacionService: OrdenCotizacionService
+    private ordenCotizacionService: OrdenCotizacionService,
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog,
+    private paymentTermService: PaymentTermService // Added PaymentTermService
   ) { }
 
   quotationData: any= {
     cotizacionId: 0,
     divisa: '',
-    plazoEntrega: this.getCurrentDate(),
+    plazoEntrega: '',
     tipoPago: '',
     total: 0.0,
     user: { id: null },
-    validezOferta: this.getCurrentDate(),
+    validezOferta: '',
     estado: 'Por aceptar',
     createdAt: new Date(),
   };
+
+//   {
+//   "plazoPagoId": 1,
+//   "dias": 30,
+//   "cantidad": 1000.50,
+//   "factura": {
+//     "facturaId": 123
+//   },
+//   "fechaInicio": "2025-06-01T00:00:00",
+//   "fechaFin": "2025-07-01T00:00:00"
+// }
+
+  plazoPagoData = {
+    fechaInicio: '',
+    fechaFin: ''
+  }
 
   orderId = 0;
   inventario: any;
@@ -52,39 +74,53 @@ export class AtenderPedidoComponent implements OnInit {
   rowsPerPage1 = 10;
   totalPages1 = 0;
   userId = 0;
+  currentDate: string = '';
+  nroPlazos: number = 0;
 
   ngOnInit(): void {
+    this.currentDate = this.getCurrentDate();
     this.orderId = this.route.snapshot.params['orderId'];
+
     this.ordersService.obtenerOrder(this.orderId).subscribe(
       (data) => {
         this.orders = data;
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
-    combineLatest([ this.orderDetailsService.listarOrdersDetailsByOrder(this.orderId)]).subscribe(
-      ([data]: [any]) => {
-        this.orderDetails = data.map((detalle:any)=> ({
-          ...detalle,
-          newPrice: null}));;
-        this.product = this.orderDetails[0].product;
-        const totalP= this.orderDetails.reduce((acc: any, detalle: any) => acc + detalle.totalPrice, 0);
-        this.quotationData.total = totalP;
-        this.userId = this.orderDetails[0].order.user.id;
+        console.log(this.orders);
 
-        this.quotationData = {
-          divisa: "Soles",
-          tipoPago: "Contado",
-          plazoEntrega:this.getCurrentDate(),
-          validezOferta: this.getCurrentDate(),
-          total: this.quotationData.total,
-          user:{
-            id: this.userId,
-            },
-          createdAt: this.getCurrentDate(),
+        combineLatest([this.orderDetailsService.listarOrdersDetailsByOrder(this.orderId)]).subscribe(
+          ([data]: [any]) => {
+            this.orderDetails = data.map((detalle: any) => ({
+              ...detalle,
+              newPrice: null,
+            }));
 
-        };
+            this.product = this.orderDetails[0].product;
+            const totalP = this.orderDetails.reduce(
+              (acc: any, detalle: any) => acc + detalle.totalPrice,
+              0
+            );
+
+            this.quotationData.total = totalP;
+            this.userId = this.orderDetails[0].order.user.id;
+
+            this.quotationData = {
+              divisa: '',
+              tipoPago: this.orders.tipoPago || '',
+              plazoEntrega: this.currentDate,
+              validezOferta: this.currentDate,
+              total: this.quotationData.total,
+              user: {
+                id: this.userId,
+              },
+              createdAt: this.currentDate,
+            };
+
+            // Trigger change detection to avoid ExpressionChangedAfterItHasBeenCheckedError
+            this.cdr.detectChanges();
+          },
+          (error) => {
+            console.log(error);
+          }
+        );
       },
       (error) => {
         console.log(error);
@@ -119,7 +155,7 @@ export class AtenderPedidoComponent implements OnInit {
 
   getCurrentDate(): string {
     const currentDate = new Date();
-    return currentDate.toISOString();
+    return currentDate.toISOString().split('T')[0];
   }
 
   calcularTotalCotizacion(): void {
@@ -132,6 +168,8 @@ export class AtenderPedidoComponent implements OnInit {
 
   EnviarCotizaYDetalles(): void {
     this.quotationData.estado = 'Por aceptar';
+    console.log('Iniciando envío de cotización y detalles:', this.quotationData);
+
     this.quotationService.agregarQuotation(this.quotationData).subscribe(
       (cotizacion: any) => {
         this.quotationData.quotationId = cotizacion.cotizacionId;
@@ -139,9 +177,9 @@ export class AtenderPedidoComponent implements OnInit {
         const ordenCotizacionData = {
           cotizacion: { cotizacionId: this.quotationData.quotationId },
           order: { orderId: this.orderId },
-        }
+        };
 
-        this.ordenCotizacionService.agregarOrdenCotizacion(ordenCotizacionData).subscribe(() => {})
+        this.ordenCotizacionService.agregarOrdenCotizacion(ordenCotizacionData).subscribe(() => {});
 
         const detallesCotizacion = this.orderDetails.map((detalle: any) => ({
           cantidad: detalle.quantity,
@@ -159,15 +197,49 @@ export class AtenderPedidoComponent implements OnInit {
         detallesCotizacion.forEach((detalleCotizacion: any) => {
           this.quotationDetailsService.agregarQuotationDetail(detalleCotizacion).subscribe(
             () => {
-              this.quotationData.total = detallesCotizacion.reduce((sum: number, detalle: any) => sum + (detalle.precioNuevo || detalle.precioUnitario) * detalle.cantidad, 0);
-              console.log(this.quotationData.total)
-              const data = { preciocli: this.quotationData.total }
-              this.ordersService.atenderOrder(this.orders.orderId, data).subscribe(
-                () => {
-                  Swal.fire('Solicitud Aceptada', 'La solicitud ha sido aceptada correctamente', 'success');
-                  this.volverAPedidos();
-                }
-              )
+              this.quotationData.total = detallesCotizacion.reduce(
+                (sum: number, detalle: any) => sum + (detalle.precioNuevo || detalle.unitPrice) * detalle.cantidad,
+                0
+              );
+
+              const data = { preciocli: this.quotationData.total };
+              console.log('Actualizando orden con datos:', data);
+              this.ordersService.atenderOrder(this.orders.orderId, data).subscribe(() => {
+                const totalPorPlazo = this.quotationData.total / this.nroPlazos;
+
+                console.log(this.plazoPagoData);
+
+                const plazosPago = Array.isArray(this.plazoPagoData)
+                  ? this.plazoPagoData.map((plazo: any) => ({
+                      cantidad: totalPorPlazo,
+                      facturaId: null,
+                      cotizacion: { cotizacionId: this.quotationData.quotationId },
+                      fechaInicio: plazo.fechaInicio,
+                      fechaFin: plazo.fechaFin,
+                    }))
+                  : [{
+                      cantidad: totalPorPlazo,
+                      facturaId: null,
+                      cotizacion: { cotizacionId: this.quotationData.quotationId },
+                      fechaInicio: this.plazoPagoData.fechaInicio,
+                      fechaFin: this.plazoPagoData.fechaFin,
+                    }];
+
+                console.log('Plazos de pago generados:', plazosPago);
+                plazosPago.forEach((plazoPago) => {
+                  this.paymentTermService.agregarPlazoPago(plazoPago).subscribe(
+                    () => {
+                      console.log('Plazo de pago guardado:', plazoPago);
+                    },
+                    (error) => {
+                      console.error('Error al guardar plazo de pago:', error);
+                    }
+                  );
+                });
+
+                Swal.fire('Solicitud Aceptada', 'La solicitud ha sido aceptada correctamente', 'success');
+                this.volverAPedidos();
+              });
             },
             (error: any) => {
               console.error('Error al agregar detalles de cotización:', error);
@@ -241,5 +313,23 @@ export class AtenderPedidoComponent implements OnInit {
         console.log(error);
       }
     );
+  }
+
+  buscarPlazos(): void {
+    if (this.nroPlazos <= 0) {
+      Swal.fire('Error', 'Debe ingresar un número válido de plazos de pago', 'error');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(AddPlazosPagoComponent, {
+      width: '500px',
+      data: { cantidadPlazos: this.nroPlazos },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.plazoPagoData = result;
+      }
+    });
   }
 }

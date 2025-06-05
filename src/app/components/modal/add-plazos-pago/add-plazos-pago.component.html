@@ -1,0 +1,22 @@
+<div class="p-4" style="max-height: 600px;">
+  <h2>Asignar Fechas de Plazos de Pago</h2>
+  <div *ngFor="let plazo of plazos; let i = index" style="margin-bottom: 20px; overflow-y: auto; max-height: 400px;">
+    <p>Nro. Plazo de Pago {{i + 1}}</p>
+    <mat-form-field appearance="fill" class="w-100">
+      <mat-label>Fecha de Inicio - Plazo {{ i + 1 }}</mat-label>
+      <input matInput [matDatepicker]="inicioPicker" [(ngModel)]="plazo.fechaInicio" />
+      <mat-datepicker-toggle matSuffix [for]="inicioPicker"></mat-datepicker-toggle>
+      <mat-datepicker #inicioPicker></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="w-100">
+      <mat-label>Fecha de Fin - Plazo {{ i + 1 }}</mat-label>
+      <input matInput [matDatepicker]="finPicker" [(ngModel)]="plazo.fechaFin" />
+      <mat-datepicker-toggle matSuffix [for]="finPicker"></mat-datepicker-toggle>
+      <mat-datepicker #finPicker></mat-datepicker>
+    </mat-form-field>
+  </div>
+  <div style="text-align: center; margin-top: 10px; padding-bottom: 20px; gap: 10px; display: flex; justify-content: center;">
+    <button mat-raised-button style="background-color: #00CED1; color: white;" (click)="guardarPlazos()">Guardar</button>
+    <button mat-raised-button style="margin-left: 10px;" (click)="cancelarPlazos()">Cancelar</button>
+  </div>
+</div>
