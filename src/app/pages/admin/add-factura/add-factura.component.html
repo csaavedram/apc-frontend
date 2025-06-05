@@ -1,0 +1,156 @@
+<mat-card class="p-3">
+  <div class="link-container">
+    <a (click)="volverAFacturas()" class="link-text">
+      < Volver</a>
+  </div>
+  <div class="container flex flex-column -mx-2">
+    <h1>Agregar nueva factura</h1>
+
+    <div class="row">
+      <div class="col-md-6 mt-3">
+        <form novalidate>
+          <p>Ingrese el código de cotización</p>
+          <!-- Fields for quotations -->
+          <div class="row">
+            <div class="col-10">
+              <mat-form-field appearance="fill" class="w-100">
+                <mat-label>Código de Cotización</mat-label>
+                <input matInput [(ngModel)]="codigoCotizacion" name="codigoCotizacion" placeholder="Ingrese el código de cotización" />
+              </mat-form-field>
+            </div>
+            <div class="col-2">
+              <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 10px;">
+                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2"
+                  (click)="buscarCotizacionPorCodigo()">
+                  <div class="d-flex justify-content-between align-items-center gap-1">
+                    <i class="fa-solid fa-magnifying-glass" style="color: #ffffff; font-size: 12px;"></i>
+                    <span style="color: #ffffff; font-size: 14px">Buscar</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-10">
+              <div class="row">
+                <div class="col-12">
+                  <mat-form-field appearance="fill" class="w-100">
+                    <mat-label>Nombre del Cliente</mat-label>
+                    <input matInput [(ngModel)]="nombreCliente" name="nombreCliente" disabled />
+                  </mat-form-field>
+                </div>
+                <div class="col-12">
+                  <mat-form-field appearance="fill" class="w-100">
+                    <mat-label>RUC del Cliente</mat-label>
+                    <input matInput [(ngModel)]="ruc" name="ruc" disabled />
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field appearance="fill" class="w-100">
+                    <mat-label>Divisa</mat-label>
+                    <input matInput [(ngModel)]="facturaData.divisa" name="divisa" disabled />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field appearance="fill" class="w-100">
+                    <mat-label>Tipo de Pago</mat-label>
+                    <input matInput [(ngModel)]="facturaData.tipoPago" name="tipoPago" disabled />
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+            <div class="col-2">
+              <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 5px;">
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="col-md-6">
+        <div *ngIf="!busquedaRealizada && allDetails.length === 0" class="text-center mt-3">
+          <p>Realice la búsqueda de la cotización para poder agregar la factura</p>
+        </div>
+        <div *ngIf="busquedaRealizada" class="mt-4 text-center d-flex justify-content-center align-items-center flex-column">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p class="mt-2">Cargando...</p>
+        </div>
+        <div *ngIf="detalleProductos.length > 0" style="max-height: 300px; overflow-y: auto;">
+          <h3>Productos</h3>
+          <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th style="width: 20%;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let detalle of detalleProductos; let i = index">
+                <td>{{ detalle.nombreProducto }}</td>
+                <td>{{ detalle.cantidad }}</td>
+                <td>S/. {{ detalle.precioUnitario }}</td>
+                <td>S/. {{ detalle.precioTotal | number:'1.0-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Message or Table for Services -->
+        <div *ngIf="detalleServicios.length === 0 && facturaData.tipo === 'servicio'" class="text-center my-3">
+          <p>Para agregar un servicio complete los campos respectivos</p>
+        </div>
+        <div *ngIf="detalleServicios.length > 0" style="max-height: 300px; overflow-y: auto;">
+          <h3>Servicios</h3>
+          <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Tipo de Servicio</th>
+                <th>Precio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let detalle of detalleServicios; let i = index">
+                <td>{{ detalle.tipoServicio }}</td>
+                <td>S/. {{ detalle.precioUnitario }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="detalleProductos.length > 0 || detalleServicios.length > 0" class="mt-4">
+          <h3>Resumen</h3>
+          <table class="table table-bordered text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>OP Gravadas</th>
+                <th>IGV (18%)</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>S/. {{ calcularOpGravadas() | number:'1.0-2' }}</td>
+                <td>S/. {{ calcularIgv() | number:'1.0-2' }}</td>
+                <td>S/. {{ calcularTotal() | number:'1.0-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="d-flex justify-content-end mt-4">
+            <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+              (click)="guardarInformacion()">
+              Agregar Factura
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-card>

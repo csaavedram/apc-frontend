@@ -1,0 +1,185 @@
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+th {
+  background-color: #f2f2f2;
+}
+.filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.search-bar-container,
+.almacen-dropdown {
+margin-left: 10px;
+}
+.almacen-dropdown {
+  margin-left: auto;
+  padding: 8px;
+  width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+.search-icon {
+  margin-right: 8px;
+  color: #555;
+}
+.search-bar-container {
+  margin-top:-10px;
+  margin-bottom: 10px;
+}
+
+.search-bar-input {
+  padding: 8px;
+  width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+a {
+  text-decoration: none;
+  color: #333;
+  margin-right: 7px;
+}
+.container {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 10px;
+  padding-bottom: 20px;
+}
+
+h1, button {
+  margin: 0;
+  font-weight: bold;
+}
+
+h1 {
+  align-self: flex-start;
+}
+
+button {
+  align-self: flex-end;
+}
+.eliminar-icono {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.eliminar-icono i {
+  color: black;
+  transition: color 0.3s, transform 0.3s;
+}
+
+.eliminar-icono:hover i {
+  color: red;
+  transform: scale(1.2);
+}
+
+.descargar-icono {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.descargar-icono i {
+  color: black;
+  transition: color 0.3s, transform 0.3s;
+}
+
+.descargar-icono:hover i {
+  color: green;
+  transform: scale(1.2);
+}
+
+.editar-icono {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.editar-icono i {
+  color: black;
+  transition: color 0.3s, transform 0.3s;
+}
+
+.editar-icono:hover i {
+  color: #00adef;
+  transform: scale(1.2);
+}
+.detalle-icono {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.detalle-icono i {
+  color: black;
+  transition: color 0.3s, transform 0.3s;
+}
+
+.detalle-icono:hover i {
+  color: #004aad;
+  transform: scale(1.2);
+}
+.table-container {
+  max-height: 500px;
+
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+  text-align: right;
+}
+
+.pagination button {
+  background: none;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  transition: transform 0.3s;
+  font-size: 18px;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination button i {
+  transition: transform 0.3s;
+}
+
+.pagination button:hover {
+  transform: scale(1.1);
+}
+
+.pagination button:hover i {
+  transform: translateX(5px);
+}

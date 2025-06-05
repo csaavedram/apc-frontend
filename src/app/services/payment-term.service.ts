@@ -10,10 +10,10 @@ export class PaymentTermService {
   constructor(private http: HttpClient) {}
 
   public agregarPlazoPago(paymentTerm: any) {
-    return this.http.post(`${baserUrl}/paymentterms/`, paymentTerm);
+    return this.http.post(`${baserUrl}/plazospago/`, paymentTerm);
   }
 
   public obtenerPlazosPagoPorFactura(facturaId: any) {
-    return this.http.get(`${baserUrl}/paymentterms/factura/${facturaId}`);
+    return this.http.get(`${baserUrl}/plazospago/factura/${facturaId}`);
   }
 }

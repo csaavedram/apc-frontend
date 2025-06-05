@@ -150,7 +150,7 @@
 
             <mat-form-field appearance="fill" class="w-100">
               <mat-label>Nuevo precio</mat-label>
-              <input #newPriceInput type="number" [(ngModel)]="selectedProduct.newPrice" name="newPrice"
+              <input #newPriceInput type="number" [(ngModel)]="selectedProduct.precioNuevo" name="precioNuevo"
                 placeholder="Ingrese el nuevo precio" matInput />
             </mat-form-field>
 
@@ -162,8 +162,8 @@
 
             <div class="d-flex justify-content-between align-items-center">
               <p>Stock disponible: {{ selectedProduct.stock }}</p>
-              <p *ngIf="selectedProduct.newPrice && selectedProduct.cantidad">
-                IGV (18%): S/. {{ (selectedProduct.newPrice * selectedProduct.cantidad * 0.18).toFixed(2) }}
+              <p *ngIf="selectedProduct.precioNuevo && selectedProduct.cantidad">
+                IGV (18%): S/. {{ (selectedProduct.precioNuevo * selectedProduct.cantidad * 0.18).toFixed(2) }}
               </p>
             </div>
 
@@ -202,9 +202,9 @@
       </div>
 
       <div class="col-md-6">
-        <!-- Message or Table for Products -->
-        <div *ngIf="detalleProductos.length === 0 && cotizacionData.tipo === 'bien'" class="text-center my-3">
-          <p>Para agregar productos debe de buscarlos por SKU</p>
+        <div *ngIf="loading" class="text-center d-flex justify-content-center align-items-center flex-column mt-5">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p class="mt-2">Cargando...</p>
         </div>
         <div *ngIf="detalleProductos.length > 0" style="margin-bottom: 25px;">
           <h3>Productos agregados</h3>
@@ -228,9 +228,9 @@
                       <input type="number" [(ngModel)]="detalle.cantidad" (change)="actualizarCantidad(i, detalle.cantidad)" class="form-control text-center" style="width: 60px;" />
                     </div>
                   </td>
-                  <td>S/. {{ detalle.unitPrice }}</td>
-                  <td>S/. {{ detalle.newPrice }}</td>
-                  <td>S/. {{ detalle.totalPrice | number:'1.0-2' }}</td>
+                  <td>S/. {{ detalle.precioUnitario }}</td>
+                  <td>S/. {{ detalle.precioNuevo }}</td>
+                  <td>S/. {{ detalle.precioTotal | number:'1.0-2' }}</td>
                   <td>
                     <i class="fa-solid fa-trash action-icon delete-icon text-danger" (click)="eliminarDetalleProducto(i)"></i>
                   </td>
@@ -241,9 +241,6 @@
         </div>
 
         <!-- Message or Table for Services -->
-        <div *ngIf="detalleServicios.length === 0 && cotizacionData.tipo === 'servicio'" class="text-center my-3">
-          <p>Para agregar un servicio complete los campos respectivos</p>
-        </div>
         <div *ngIf="detalleServicios.length > 0">
           <h3>Servicios agregados</h3>
           <div style="max-height: 300px; overflow-y: auto;">
@@ -257,8 +254,8 @@
               </thead>
               <tbody>
                 <tr *ngFor="let detalle of detalleServicios; let i = index">
-                  <td>{{ detalle.serviceType }}</td>
-                  <td>S/. {{ detalle.totalPrice }}</td>
+                  <td>{{ detalle.tipoServicio }}</td>
+                  <td>S/. {{ detalle.precioTotal }}</td>
                   <td>
                     <i class="fa-solid fa-trash action-icon delete-icon text-danger" (click)="eliminarDetalleServicio(i)"></i>
                   </td>

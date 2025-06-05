@@ -33,7 +33,11 @@ export class QuotationService {
     return this.http.get(`${baserUrl}/quotation/user/${userId}`);
   }
 
-  public cancelarCotizacion(quotationId: any) {
-    return this.http.patch(`${baserUrl}/quotation/cancel/${quotationId}`, null);
+  public anularCotizacion(quotationId: any) {
+    return this.http.patch(`${baserUrl}/quotation/anular/${quotationId}`, null);
+  }
+
+  public obtenerCotizacionPorCodigo(codigo: string) {
+    return this.http.get(`${baserUrl}/quotation/codigo/${codigo}`);
   }
 }

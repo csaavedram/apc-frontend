@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { PaymentService } from '../../../services/mercado-pago.service';
 import { PaymentTermService } from 'src/app/services/payment-term.service';
 import { FacturaService } from 'src/app/services/factura.service';
-import { FacturaDetailsService } from 'src/app/services/facturadetails.service';
+import { FacturaDetailsService } from 'src/app/services/factura-details.service';
 import { LoginService } from 'src/app/services/login.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { OrdersService } from 'src/app/services/orders.service';
@@ -98,7 +98,6 @@ export class PaymentComponent implements OnInit {
   sendPayment(data: any) {
     const installments = Number(data.installments);
     const totalAmount = Number(data.amount);
-  
     const payload = {
       token: data.token,
       issuer_id: data.issuerId,
@@ -118,7 +117,6 @@ export class PaymentComponent implements OnInit {
     this.paymentService.createPayment(payload).subscribe(
       (mpResponse: any) => {
         console.log('✅ Pago exitoso MP:', mpResponse);
-  
         const facturaPayload = {
           divisa: 'Soles',
           tipoPago: installments > 1 ? 'Credito' : 'Contado',
@@ -128,7 +126,6 @@ export class PaymentComponent implements OnInit {
           estado: 'Pagado',
           orderId: this.data.orderId, // Usa el orderId aquí
         };
-  
         this.facturaService.agregarFactura(facturaPayload).subscribe(
           (facturaResp: any) => {
             console.log('✅ Factura creada:', facturaResp);
@@ -152,5 +149,5 @@ export class PaymentComponent implements OnInit {
       }
     );
   }
-
 }
+

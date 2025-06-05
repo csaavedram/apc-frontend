@@ -7,6 +7,8 @@ import { QuotationService } from 'src/app/services/quotation.service';
 import { UserService } from 'src/app/services/user.service';
 import { QuotationDetailsService } from 'src/app/services/quotation-details.service';
 import { UpperCasePipe } from '@angular/common';
+import { FacturaService } from './factura.service';
+import { FacturaDetailsService } from './factura-details.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +17,9 @@ export class PdfService {
   constructor(
     private quotationService: QuotationService,
     private userService: UserService,
-    private quotationDetailsService: QuotationDetailsService
+    private quotationDetailsService: QuotationDetailsService,
+    private facturaService: FacturaService,
+    private facturaDetailsService: FacturaDetailsService
   ) {}
 
   generatePdf(orderData: any) {
@@ -163,11 +167,8 @@ export class PdfService {
   }
 
   generatePdfCotizacion(cotizacionId: any) {
-    console.log('Cotizacion ID:', cotizacionId);
-    this.quotationService
-      .obtenerQuotation(cotizacionId)
-      .subscribe((cotizacionData: any) => {
-        console.log('Cotizacion Data:', cotizacionData);
+    this.quotationService.obtenerQuotation(cotizacionId).subscribe(
+      (cotizacionData: any) => {
         const cotizacioDetails = {
           TipoPago: cotizacionData.tipoPago,
           PlazoEn: new Date(cotizacionData.plazoEntrega).toLocaleDateString(
@@ -199,24 +200,17 @@ export class PdfService {
         const fullName = `${userDetails.nombre} ${userDetails.apellido}`;
         const ruc = cotizacionData.user.ruc;
 
-        console.log('User Details:', userDetails);
-        console.log('Razon Social:', userDetails.tipoUsuario );
-        console.log('Full Name:', fullName);
-        this.quotationDetailsService
-          .listarQuotationsDetailsByQuotation(cotizacionId)
-          .subscribe((quotationDetailsData: any) => {
-            console.log('Quotation Details Data:', quotationDetailsData);
+        this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacionId).subscribe(
+          (quotationDetailsData: any) => {
             const cotizacionesDe = quotationDetailsData.map(
               (item: any, index: number) => [
                 index + 1,
-                item.product?.nombreProducto || item.serviceType,
+                item.producto?.nombreProducto || item.tipoServicio,
                 item.cantidad,
-                `S/. ${parseFloat(item.unitPrice).toFixed(2)}`,
-                `S/. ${parseFloat(item.totalPrice).toFixed(2)}`,
+                item.producto === null ? `S/. ${parseFloat(item.precioUnitario).toFixed(2)}` : `S/. ${parseFloat(item.precioNuevo).toFixed(2)}`,
+                `S/. ${parseFloat(item.precioTotal).toFixed(2)}`,
               ]
             );
-
-            console.log('Cotizaciones De:', cotizacionesDe);
 
             const doc = new jsPDF();
 
@@ -259,15 +253,6 @@ export class PdfService {
               85
             );
 
-            //prueba para poner varios items en cotizacion y ver si se ve bien
-            // const cotizacionesPRQUEBA = Array.from({ length: 30 }, (_, index) => [
-            //   index + 1, // ITEM
-            //   `Producto ${index + 1}`, // DESCRIPCIÓN
-            //   Math.floor(Math.random() * 10) + 1, // CANT
-            //   `S/. ${(Math.random() * 100).toFixed(2)}`, // PRECIO UNITARIO
-            //   `S/. ${(Math.random() * 1000).toFixed(2)}`, // PRECIO TOTAL
-            // ]);
-
             autoTable(doc, {
               startY: 95,
               head: [
@@ -289,8 +274,7 @@ export class PdfService {
               columnStyles: {
                 1: { halign: 'center' },
               },
-              didDrawPage: (data) => {
-                // Ensure footer is added to every page
+              didDrawPage: () => {
                 const pageHeight = doc.internal.pageSize.height;
                 doc.setFontSize(10);
                 doc.setTextColor(0, 0, 0);
@@ -312,19 +296,17 @@ export class PdfService {
 
             const finalY = (doc as any).lastAutoTable.finalY;
             const pageHeight = doc.internal.pageSize.height;
-            const marginBottom = 20; // Space reserved for the footer
+            const marginBottom = 20;
             const remainingSpace = pageHeight - finalY - marginBottom;
-            const additionalContentHeight = 50; // Approximate height of the content below the table
+            const additionalContentHeight = 50;
 
             let y = finalY + 10;
 
-            // Check if there is enough space for the additional content
             if (remainingSpace < additionalContentHeight) {
-              doc.addPage(); // Add a new page if not enough space
-              y = 20; // Reset vertical position for the new page
+              doc.addPage();
+              y = 20;
             }
 
-            // Add additional content below the table
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
             doc.text('CONDICIONES GENERALES(S.E.U.O):', 10, y);
@@ -382,5 +364,200 @@ export class PdfService {
             doc.save(`cotizacion-${cotizacionId}.pdf`);
           });
       });
+  }
+
+  generatePdfFactura(facturaId: any) {
+  this.facturaService.obtenerFactura(facturaId).subscribe((facturaData: any) => {
+    this.facturaDetailsService.listarFacturaDetailsPorFactura(facturaId).subscribe((facturaDetails: any) => {
+      const doc = new jsPDF();
+
+      const codigoFactura = facturaData.codigo || facturaData.id || facturaId;
+      const fecha = new Date().toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      doc.addImage('../../../assets/logo.png', 'PNG', 10, 10, 50, 20);
+
+      doc.setFontSize(12);
+      doc.text(`Lima, ${fecha}`, 10, 35);
+      doc.text(`FACTURA Nº ${codigoFactura}`, 150, 35);
+
+      // Datos del cliente
+      let y = 45;
+      doc.setFontSize(12);
+      doc.text('Señores:', 10, y);
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      const razonSocial = facturaData.user?.razonSocial;
+      const nombreCompleto = `${facturaData.user?.nombre || ''} ${facturaData.user?.apellido || ''}`.trim();
+      if (razonSocial) {
+        doc.text(`${razonSocial.toUpperCase()}`, 10, y);
+      } else {
+        doc.text(`Presente: ${nombreCompleto}`, 10, y);
+      }
+      y += 5;
+      doc.text(`RUC/DNI: ${(facturaData.user?.ruc || facturaData.user?.dni || '').toUpperCase()}`, 10, y);
+      doc.setFont('helvetica', 'normal');
+      y += 10;
+
+      // Mensaje cordial
+      doc.setFontSize(12);
+      doc.text('De nuestra más cordial consideración:\n', 10, y);
+      y += 10;
+      doc.text(
+        'Es sumamente grato dirigirnos a ustedes, para saludarlos muy cordialmente, asimismo',
+        10,
+        y
+      );
+      y += 5;
+      doc.text('remito por medio de la presente nuestra propuesta del siguiente equipamiento:',
+        10,
+        y
+      );
+      y += 10;
+
+
+
+      const detallesTabla = facturaDetails.map((item: any, index: number) => [
+        index + 1,
+        item.producto?.nombreProducto || item.tipoServicio,
+        item.cantidad,
+        `S/. ${parseFloat(item.precioUnitario).toFixed(2)}`,
+        `S/. ${parseFloat(item.precioTotal).toFixed(2)}`
+      ]);
+
+      // Totales
+      const totalPrice = detallesTabla.reduce((acc: number, curr: any) => acc + parseFloat(curr[4].replace('S/. ', '')), 0);
+      const opGravada = totalPrice / 1.18;
+      const igv = totalPrice - opGravada;
+
+      // Tabla de productos
+      autoTable(doc, {
+        startY: y,
+        head: [['ITEM', 'DESCRIPCIÓN', 'CANT', 'PRECIO UNITARIO', 'PRECIO TOTAL']],
+        body: detallesTabla,
+        theme: 'grid',
+        styles: {
+          fontSize: 10,
+          halign: 'center',
+          valign: 'middle',
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [0, 206, 209],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        columnStyles: {
+          1: { halign: 'center' },
+        },
+        didDrawPage: () => {
+          const pageHeight = doc.internal.pageSize.height;
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.line(10, 280, 200, 280);
+          doc.text(
+            'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+            30,
+            285,
+            { align: 'left' }
+          );
+          doc.text(
+            'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+            60,
+            290,
+            { align: 'left' }
+          );
+        },
+      });
+
+      // --- Salto de página si no hay espacio para totales y firma ---
+      let finalY = (doc as any).lastAutoTable.finalY;
+      const pageHeight = doc.internal.pageSize.height;
+      const marginBottom = 20;
+      const additionalContentHeight = 50;
+      let yTotales = finalY + 10;
+
+      if (pageHeight - finalY - marginBottom < additionalContentHeight) {
+        doc.addPage();
+        yTotales = 20;
+      }
+
+      // Totales fuera de la tabla
+      const labelX = 60;
+      const valueX = 190;
+
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('OP. GRAVADA:', labelX, yTotales, { align: 'left' });
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${opGravada.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      yTotales += 10;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('IGV (18%):', labelX, yTotales, { align: 'left' });
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${igv.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      yTotales += 10;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('TOTAL:', labelX, yTotales, { align: 'left' });
+      doc.setFontSize(15);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`S/. ${totalPrice.toFixed(2)}`, valueX, yTotales, { align: 'right' });
+
+      // Mensaje de cierre y firma
+      yTotales += 20;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(
+        'Agradeciendo anticipadamente la atención que le brinde la presente, es oportuno',
+        10,
+        yTotales
+      );
+      yTotales += 5;
+      doc.text(
+        'testimoniarle los sentimientos de consideración y estima personal.',
+        10,
+        yTotales + 5
+      );
+      yTotales += 15;
+      doc.text('Atentamente,', 10, yTotales);
+
+      yTotales += 10;
+      doc.addImage('../../../assets/firma.png', 'PNG', 10, yTotales, 50, 50);
+
+      // Footer en todas las páginas
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.line(10, 280, 200, 280);
+        doc.text(
+          'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+          30,
+          285,
+          { align: 'left' }
+        );
+        doc.text(
+          'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+          60,
+          290,
+          { align: 'left' }
+        );
+      }
+
+      doc.save(`factura-${codigoFactura}.pdf`);
+    });
+  });
+}
+
+  generatePdfNotaCredito(notaCreditoId: any) {
+    // a
   }
 }

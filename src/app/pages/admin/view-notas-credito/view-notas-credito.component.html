@@ -1,0 +1,57 @@
+<mat-card style="padding: 15px;">
+  <div class="container" style="max-width: 100%;">
+    <h1>Notas de Crédito</h1>
+    <button routerLink="/admin/addnotacredito" mat-raised-button style="background-color: #00CED1; color: white;">Nueva Nota de Crédito</button>
+  </div>
+  <div class="filter-container">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <div class="search-bar-container">
+      <input type="text" [(ngModel)]="searchTerm1" class="search-bar-input" placeholder="Buscar por código" />
+      <i class="fas fa-search search-icon"></i>
+    </div>
+  </div>
+  <table class="table-container">
+    <tr>
+      <th>N°</th>
+      <th>Código</th>
+      <th>Divisa</th>
+      <th>Tipo de Pago</th>
+      <th>Total</th>
+      <th>Cliente</th>
+      <th>Fecha de Emisión</th>
+      <th>Estado</th>
+      <th>Operaciones</th>
+    </tr>
+    <tr *ngFor="let e of displayedFacturas(); let i = index" mat-subheader>
+      <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
+      <td>{{ e.codigo }}</td>
+      <td>{{ e.divisa }}</td>
+      <td>{{ e.tipoPago }}</td>
+      <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
+      <td>
+        {{ e.user.tipoUsuario === 'cliente_empresa'
+          ? e.user.razonSocial
+          : (e.user.apellido ? e.user.apellido + ', ' : '') + (e.user.nombre || 'Sin información') }}
+      </td>
+      <td>{{ e.fechaEmision | date:'dd-MM-yyyy' }}</td>
+      <td>{{ e.estado }}</td>
+      <td>
+        <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
+          <i [routerLink]="'/admin/viewnotacredito/'+e.notaCreditoId" class="fas fa-eye"></i>
+        </div>
+        <div style="padding-left: 5px; padding-right: 5px;" class="descargar-icono" (click)="verNotaCreditoPDF(e.notaCreditoId)">
+          <i class="fa-solid fa-file-pdf"></i>
+        </div>
+      </td>
+    </tr>
+  </table>
+  <div class="pagination">
+    <button (click)="prevPage1()" [disabled]="currentPage1 === 1">
+      <i class="fa fa-chevron-left"></i> Anterior
+    </button>
+    <button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
+      Siguiente <i class="fa fa-chevron-right"></i>
+    </button>
+  </div>
+</mat-card>

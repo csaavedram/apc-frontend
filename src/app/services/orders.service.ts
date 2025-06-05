@@ -16,15 +16,15 @@ export class OrdersService {
   public agregarOrder(order:any){
     return this.http.post(`${baserUrl}/orders/`, order);
   }
-  
+
   public eliminarOrder(orderId:any){
     return this.http.delete(`${baserUrl}/orders/${orderId}`);
   }
-  
+
   public obtenerOrder(orderId:any){
     return this.http.get(`${baserUrl}/orders/${orderId}`);
   }
-  
+
   public actualizarOrder(order:any){
     return this.http.put(`${baserUrl}/orders/`, order);
   }
@@ -36,4 +36,11 @@ export class OrdersService {
     return this.http.patch(`${baserUrl}/orders/cambiar-estado/${orderId}`, null);
   }
 
+  public cambiarEstadoOrder(orderId: number) {
+    return this.http.patch(`${baserUrl}/orders/cambiar-estado/${orderId}`, null);
+  }
+
+  public atenderOrder(orderId: number, data: any) {
+    return this.http.patch(`${baserUrl}/orders/atender/${orderId}`, data);
+  }
 }

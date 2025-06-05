@@ -32,7 +32,6 @@ export class ViewCotizacionComponent implements OnInit {
 
   constructor(
     private quotationService: QuotationService,
-    private quotationDetailsService: QuotationDetailsService,
     private pdfService: PdfService
   ) {}
 
@@ -78,32 +77,30 @@ export class ViewCotizacionComponent implements OnInit {
     });
   }
 
-  vercotizacionPDF(cotizacionId: any) {
-    console.log("PRUEBA PDF");
-    console.log(cotizacionId);
+  verCotizacionPDF(cotizacionId: any) {
     this.pdfService.generatePdfCotizacion(cotizacionId);
   }
 
-  cancelarCotizacion(cotizacionId: any): void {
+  anularCotizacion(cotizacionId: any): void {
     Swal.fire({
-      title: 'Cancelar cotización',
-      text: '¿Estás seguro de cancelar esta cotización?',
+      title: 'Anular cotización',
+      text: '¿Estás seguro de anular esta cotización?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Cancelar cotización',
+      confirmButtonText: 'Anular cotización',
       cancelButtonText: 'Volver'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.quotationService.cancelarCotizacion(cotizacionId).subscribe(
+        this.quotationService.anularCotizacion(cotizacionId).subscribe(
           () => {
-            Swal.fire('Cotización cancelada', 'La cotización ha sido cancelada con éxito', 'success');
+            Swal.fire('Cotización anulada', 'La cotización ha sido anulada con éxito', 'success');
             this.listarCotizaciones();
           },
           (error) => {
             console.log(error)
-            Swal.fire('Error', 'Ocurrió un error al cancelar la cotización', 'error');
+            Swal.fire('Error', 'Ocurrió un error al anular la cotización', 'error');
           }
         );
       }

@@ -24,4 +24,12 @@ export class FacturaService {
   public listarFacturasPorUsuario(userId: any) {
     return this.http.get(`${baserUrl}/factura/user/${userId}`);
   }
+
+  public anularFactura(facturaId: any) {
+    return this.http.patch(`${baserUrl}/factura/anular/${facturaId}`, null);
+  }
+
+  public obtenerFacturaPorCodigo(codigo: string) {
+    return this.http.get(`${baserUrl}/factura/codigo/${codigo}`);
+  }
 }

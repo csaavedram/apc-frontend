@@ -36,6 +36,7 @@ import  {MatExpansionModule } from "@angular/material/expansion";
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatStepperModule} from '@angular/material/stepper';
 import {MatNativeDateModule} from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 
 import { CarruselComponent } from './components/carrusel/carrusel.component';
@@ -179,6 +180,7 @@ import { ToastrModule } from 'ngx-toastr';
         MatDatepickerModule,        MatNativeDateModule,
         MatStepperModule,
         ReactiveFormsModule,
+        MatProgressSpinnerModule,
         MatDialogModule,        ToastrModule.forRoot({
           timeOut: 3000,
           positionClass: 'toast-bottom-right',

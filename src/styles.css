@@ -59,7 +59,10 @@ body {
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-/* Estilos personalizados para ngx-toastr con colores pasteles */
+
+.mat-mdc-progress-spinner {
+    --mdc-circular-progress-active-indicator-color: #00CED1;
+
 .custom-toast {
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

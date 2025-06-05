@@ -14,6 +14,7 @@
     <table class="table-container">
         <tr>
             <th>N°</th>
+            <th>Código</th>
             <th>Cliente</th>
             <th>Divisa</th>
             <th>Tipo de Pago</th>
@@ -24,31 +25,32 @@
             <th>Operaciones</th>
         </tr>
         <tr *ngFor="let e of displayedCotizaciones(); let i = index" mat-subheader>
-            <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
-            <td>
-              {{ e.user.tipoUsuario === 'cliente_empresa'
-                  ? e.user.razonSocial
-                  : (e.user.apellido ? e.user.apellido + ', ' : '') + (e.user.nombre || 'Sin información') }}
-            </td>
-            <td>{{ e.divisa === 'DOLAR' ? 'Dolar' : 'Soles' }}</td>
-            <td>{{ e.tipoPago === 'CONTADO' ? 'Contado' : 'Credito' }}</td>
-            <td>{{ convertirFecha(e.plazoEntrega) }}</td>
-            <td>{{ convertirFecha(e.validezOferta) }}</td>
-            <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
-            <td>{{ e.estado }}</td>
-            <td>
-                @if(e.estado !== 'Cancelado') {
-                  <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
-                    <i [routerLink]="'/admin/actualizarcotizacion/'+e.quotationId" class="fas fa-edit"></i>
-                  </div>
-                  <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="cancelarCotizacion(e.quotationId)">
-                      <i class="fas fa-times"></i>
-                  </div>
-                }
-                <div style="padding-left: 5px; padding-right: 5px;" class="descargar-icono" (click)="vercotizacionPDF(e.quotationId)">
-                    <i class="fa-solid fa-file-pdf"></i>
-                </div>
-            </td>
+          <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
+          <td>{{ e.codigo }}</td>
+          <td>
+            {{ e.user.tipoUsuario === 'cliente_empresa'
+                ? e.user.razonSocial
+                : (e.user.apellido ? e.user.apellido + ', ' : '') + (e.user.nombre || 'Sin información') }}
+          </td>
+          <td>{{ e.divisa === 'DOLAR' ? 'Dolar' : 'Soles' }}</td>
+          <td>{{ e.tipoPago === 'CONTADO' ? 'Contado' : 'Credito' }}</td>
+          <td>{{ convertirFecha(e.plazoEntrega) }}</td>
+          <td>{{ convertirFecha(e.validezOferta) }}</td>
+          <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
+          <td>{{ e.estado }}</td>
+          <td>
+            @if(e.estado !== 'Cancelado') {
+              <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
+                <i [routerLink]="'/admin/actualizarcotizacion/'+e.cotizacionId" class="fas fa-edit"></i>
+              </div>
+              <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="anularCotizacion(e.cotizacionId)">
+                <i class="fas fa-times"></i>
+              </div>
+            }
+            <div style="padding-left: 5px; padding-right: 5px;" class="descargar-icono" (click)="verCotizacionPDF(e.cotizacionId)">
+              <i class="fa-solid fa-file-pdf"></i>
+            </div>
+          </td>
         </tr>
     </table>
     <div class="pagination">
