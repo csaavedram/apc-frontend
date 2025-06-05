@@ -10,17 +10,13 @@
     <div class="col-md-8 offset-md-2">
       <form *ngIf="orders">
         <p>Datos del Cliente:</p>
-        <mat-form-field class="w-50" appearance="fill">
+        <mat-form-field class="w-100" appearance="fill">
           <mat-label>Nombre</mat-label>
-          <input [(ngModel)]="orders.user.nombre" type="text" name="nombre" matInput disabled>
-        </mat-form-field>
-        <mat-form-field class="w-50" appearance="fill">
-          <mat-label>Apellido</mat-label>
-          <input [(ngModel)]="orders.user.apellido" type="text" name="apellido" matInput disabled>
+          <input [value]="orders.user.nombre + ' ' + orders.user.apellido" type="text" name="nombreCompleto" matInput disabled>
         </mat-form-field>
         <mat-form-field class="w100" appearance="fill">
           <mat-label>DNI/RUC</mat-label>
-          <input [(ngModel)]="orders.documento" type="text" name="documento" matInput disabled>
+          <input [(ngModel)]="orders.user.username" type="text" name="documento" matInput disabled>
         </mat-form-field>
 
         <div class="row">
