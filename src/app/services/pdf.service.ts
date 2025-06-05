@@ -21,7 +21,7 @@ export class PdfService {
     private quotationDetailsService: QuotationDetailsService,
     private facturaService: FacturaService,
     private facturaDetailsService: FacturaDetailsService,
-    private paymentTermService: PaymentTermService 
+    private paymentTermService: PaymentTermService
   ) {}
 
   generatePdf(orderData: any) {
@@ -512,9 +512,9 @@ export class PdfService {
       doc.setTextColor(0, 0, 0);
       doc.text(`S/. ${totalPrice.toFixed(2)}`, valueX, yTotales, { align: 'right' });
 
-      //a
+      console.log(facturaData)
       // Apartado de información de crédito SOLO si es de crédito
-      if (facturaData.tipoPago && facturaData.tipoPago === 'Credito') {
+      if (facturaData.tipoPago === 'Credito') {
         // Obtener los plazos de pago antes de guardar el PDF
         this.paymentTermService.obtenerPlazosPagoPorFactura(facturaId).subscribe((plazos: any) => {
           console.log(plazos);
