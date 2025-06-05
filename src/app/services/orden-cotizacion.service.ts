@@ -12,11 +12,11 @@ export class OrdenCotizacionService {
     return this.http.post(`${baserUrl}/ordencotizacion/`, ordenCotizacion);
   }
 
-  public obtenerOrdenesPorOrderId(orderId: number) {
+  public obtenerOrdenCotizacionPorOrderId(orderId: number) {
     return this.http.get(`${baserUrl}/ordencotizacion/order/${orderId}`);
   }
 
-  public obtenerOrdenesPorCotizacionId(cotizacionId: number) {
+  public obtenerOrdenCotizacionPorCotizacionId(cotizacionId: number) {
     return this.http.get(`${baserUrl}/ordencotizacion/cotizacion/${cotizacionId}`);
   }
 }

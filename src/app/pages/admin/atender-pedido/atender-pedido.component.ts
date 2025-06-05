@@ -12,6 +12,7 @@ import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.servic
 import { MatDialog } from '@angular/material/dialog';
 import { AddPlazosPagoComponent } from 'src/app/components/modal/add-plazos-pago/add-plazos-pago.component';
 import { PaymentTermService } from 'src/app/services/payment-term.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-atender-pedido',
@@ -21,6 +22,7 @@ import { PaymentTermService } from 'src/app/services/payment-term.service';
 export class AtenderPedidoComponent implements OnInit {
 
   constructor(
+    private snack: MatSnackBar,
     private route: ActivatedRoute,
     private ordersService: OrdersService,
     private orderDetailsService: OrdersDetailsService,
@@ -46,17 +48,6 @@ export class AtenderPedidoComponent implements OnInit {
     estado: 'Por aceptar',
     createdAt: new Date(),
   };
-
-//   {
-//   "plazoPagoId": 1,
-//   "dias": 30,
-//   "cantidad": 1000.50,
-//   "factura": {
-//     "facturaId": 123
-//   },
-//   "fechaInicio": "2025-06-01T00:00:00",
-//   "fechaFin": "2025-07-01T00:00:00"
-// }
 
   plazoPagoData = {
     fechaInicio: '',
@@ -219,6 +210,7 @@ export class AtenderPedidoComponent implements OnInit {
                       cotizacion: { cotizacionId: this.quotationData.quotationId },
                       fechaInicio: plazo.fechaInicio,
                       fechaFin: plazo.fechaFin,
+                      estado: "Pendiente"
                     }))
                   : [{
                       cantidad: totalPorPlazo,
@@ -226,9 +218,9 @@ export class AtenderPedidoComponent implements OnInit {
                       cotizacion: { cotizacionId: this.quotationData.quotationId },
                       fechaInicio: this.plazoPagoData.fechaInicio,
                       fechaFin: this.plazoPagoData.fechaFin,
+                      estado: "Pendiente"
                     }];
 
-                console.log('Plazos de pago generados:', plazosPago);
                 plazosPago.forEach((plazoPago) => {
                   this.paymentTermService.agregarPlazoPago(plazoPago).subscribe(
                     () => {
@@ -319,8 +311,11 @@ export class AtenderPedidoComponent implements OnInit {
   }
 
   buscarPlazos(): void {
-    if (this.nroPlazos <= 0) {
-      Swal.fire('Error', 'Debe ingresar un número válido de plazos de pago', 'error');
+    if (this.nroPlazos <= 1) {
+      this.snack.open('Debe ingresar mínimo 2 nros. de plazos', '', {
+        duration: 3000,
+        panelClass: ['snackbar-error']
+      });
       return;
     }
 

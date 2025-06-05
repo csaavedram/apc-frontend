@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { combineLatest } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { PaymentComponent } from '../../../components/modal/payment/payment.component';
+import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.service';
 
 @Component({
   selector: 'app-user-history-order',
@@ -21,6 +22,7 @@ export class UserHistoryOrderComponent implements OnInit {
   constructor(
     private ordersService: OrdersService,
     private loginService: LoginService,
+    private ordenCotizacionService: OrdenCotizacionService,
     private dialog: MatDialog
   ) {}
 
@@ -74,6 +76,8 @@ export class UserHistoryOrderComponent implements OnInit {
         // Ordenar los pedidos por fecha de creación, de más reciente a más antiguo
         this.orders = orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.calculateTotalPages1();
+
+        this.ordenCotizacionService.obtenerOrdenCotizacionPorOrderId(orders.orderId)
       },
       (error) => {
         console.log(error);

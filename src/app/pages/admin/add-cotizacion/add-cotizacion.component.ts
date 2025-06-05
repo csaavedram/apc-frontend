@@ -17,6 +17,9 @@ import { QuotationDetailsService } from 'src/app/services/quotation-details.serv
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import Swal from 'sweetalert2';
+import { AddPlazosPagoComponent } from 'src/app/components/modal/add-plazos-pago/add-plazos-pago.component';
+import { MatDialog } from '@angular/material/dialog';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 
 @Component({
   selector: 'app-add-cotizacion',
@@ -60,6 +63,11 @@ export class AddCotizacionComponent {
     tipoUsuario: ''
   };
 
+  plazoPagoData = {
+    fechaInicio: '',
+    fechaFin: ''
+  }
+
   productos: any[] = [];
   servicios: any[] = [];
   detalleProductos: any[] = [];
@@ -73,14 +81,17 @@ export class AddCotizacionComponent {
   usuarioInput: string = '';
   suggestions: string[] = [];
   filteredSuggestions: string[] = [];
+  nroPlazos: number = 0;
 
   constructor(
     private snack: MatSnackBar,
     private productoService: ProductoService,
     private quotationService: QuotationService,
+    private paymentTermService: PaymentTermService,
     private quotationDetailsService: QuotationDetailsService,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   onUsuarioInputChange(): void {
@@ -343,6 +354,16 @@ export class AddCotizacionComponent {
       return;
     }
 
+    if (this.cotizacionData.tipoPago === 'Credito') {
+      if (this.nroPlazos <= 0 || !Array.isArray(this.plazoPagoData) || this.plazoPagoData.some(plazo => !plazo.fechaInicio || !plazo.fechaFin)) {
+        this.snack.open('Debe asignar la cantidad de plazos de pago, incluyendo sus fechas correctamente', '', {
+          duration: 3000,
+          panelClass: ['snackbar-error']
+        });
+        return;
+      }
+    }
+
     if (!this.cotizacionData.plazoEntrega) {
       this.snack.open('Debe seleccionar un plazo de entrega', '', {
         duration: 3000,
@@ -416,6 +437,39 @@ export class AddCotizacionComponent {
           this.quotationDetailsService.agregarQuotationDetail(detalleServicioPayload).subscribe(
             () => console.log('Detalle de servicio guardado'),
             (error) => console.error('Error al guardar detalle de servicio:', error)
+          );
+        });
+
+        const totalPorPlazo = quotation.total / this.nroPlazos;
+
+        console.log(this.plazoPagoData);
+
+        const plazosPago = Array.isArray(this.plazoPagoData)
+          ? this.plazoPagoData.map((plazo: any) => ({
+              cantidad: totalPorPlazo,
+              facturaId: null,
+              cotizacion: { cotizacionId: cotizacionId },
+              fechaInicio: plazo.fechaInicio,
+              fechaFin: plazo.fechaFin,
+              estado: "Pendiente"
+            }))
+          : [{
+              cantidad: totalPorPlazo,
+              facturaId: null,
+              cotizacion: { cotizacionId: cotizacionId },
+              fechaInicio: this.plazoPagoData.fechaInicio,
+              fechaFin: this.plazoPagoData.fechaFin,
+              estado: "Pendiente"
+            }];
+
+        plazosPago.forEach((plazoPago) => {
+          this.paymentTermService.agregarPlazoPago(plazoPago).subscribe(
+            () => {
+              console.log('Plazo de pago guardado:', plazoPago);
+            },
+            (error) => {
+              console.error('Error al guardar plazo de pago:', error);
+            }
           );
         });
 
@@ -575,6 +629,27 @@ export class AddCotizacionComponent {
     this.snack.open('Cantidad actualizada correctamente', '', {
       duration: 3000,
       panelClass: ['snackbar-success']
+    });
+  }
+
+  buscarPlazos(): void {
+    if (this.nroPlazos <= 1) {
+      this.snack.open('Debe ingresar mínimo 2 nros. de plazos', '', {
+        duration: 3000,
+        panelClass: ['snackbar-error']
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(AddPlazosPagoComponent, {
+      width: '500px',
+      data: { cantidadPlazos: this.nroPlazos },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.plazoPagoData = result;
+      }
     });
   }
 }
