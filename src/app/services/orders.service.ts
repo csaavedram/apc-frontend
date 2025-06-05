@@ -32,9 +32,6 @@ export class OrdersService {
   public listarOrdersByUser(userId:any){
     return this.http.get(`${baserUrl}/orders/user/${userId}`);
   }
-  public cambiarEstadoOrder(orderId: number) {
-    return this.http.patch(`${baserUrl}/orders/cambiar-estado/${orderId}`, null);
-  }
 
   public cambiarEstadoOrder(orderId: number) {
     return this.http.patch(`${baserUrl}/orders/cambiar-estado/${orderId}`, null);
