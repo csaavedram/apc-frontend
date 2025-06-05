@@ -55,14 +55,16 @@ export class AddProductoComponent implements OnInit {
       return;
     }
   
-    if (this.productoData.descripcion.trim() === '' || this.productoData.descripcion == null) {
-      this.snack.open('La descripción es requerida', '', {
+
+    if (this.productoData.sku.trim() === '' || this.productoData.sku == null) {
+      this.snack.open('El SKU es requerido', '', {
         duration: 3000
       });
       return;
     }
-    if (this.productoData.sku.trim() === '' || this.productoData.sku == null) {
-      this.snack.open('El SKU es requerido', '', {
+
+    if (this.productoData.descripcion.trim() === '' || this.productoData.descripcion == null) {
+      this.snack.open('La descripción es requerida', '', {
         duration: 3000
       });
       return;

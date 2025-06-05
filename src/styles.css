@@ -1,5 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 @import "@fortawesome/fontawesome-free/css/all.css";
+@import 'ngx-toastr/toastr';
 
 html,
 body {
@@ -58,6 +59,42 @@ body {
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
+
 .mat-mdc-progress-spinner {
     --mdc-circular-progress-active-indicator-color: #00CED1;
+
+.custom-toast {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
+}
+
+.toast-success {
+  background-color: #a8e6cf !important;
+  color: #2d5a3d !important;
+}
+
+.toast-error {
+  background-color: #ffb3b3 !important;
+  color: #8b0000 !important;
+}
+
+.toast-warning {
+  background-color: #ffe4b3 !important;
+  color: #b8860b !important;
+}
+
+.toast-info {
+  background-color: #b3d9ff !important;
+  color: #003d7a !important;
+}
+
+.toast-message {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 16px;
 }

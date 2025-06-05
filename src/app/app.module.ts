@@ -36,6 +36,7 @@ import  {MatExpansionModule } from "@angular/material/expansion";
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatStepperModule} from '@angular/material/stepper';
 import {MatNativeDateModule} from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 
 import { CarruselComponent } from './components/carrusel/carrusel.component';
@@ -90,9 +91,9 @@ import { ActualizarServicioComponent } from './pages/admin/actualizar-servicio/a
 import { MantenimientoComponent } from './pages/mantenimiento/mantenimiento.component';
 import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-pedido.component';
 import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
-import { ViewFacturaComponent } from './pages/admin/view-facturas/view-facturas.component';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AddFacturaComponent } from './pages/admin/add-factura/add-factura.component';
+
+// Importaciones para ngx-toastr
+import { ToastrModule } from 'ngx-toastr';
 
 
 @NgModule({ declarations: [
@@ -156,7 +157,7 @@ import { AddFacturaComponent } from './pages/admin/add-factura/add-factura.compo
         ActualizarServicioComponent,
         MantenimientoComponent,
         AtenderPedidoComponent,
-        ViewFacturaComponent,
+     
     ],
     exports: [MatToolbarModule, MatButtonModule, MatIconModule, MatExpansionModule],
     bootstrap: [AppComponent], imports: [BrowserModule,
@@ -176,10 +177,17 @@ import { AddFacturaComponent } from './pages/admin/add-factura/add-factura.compo
         MatDividerModule,
         MatSlideToggleModule,
         MatSelectModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
+        MatDatepickerModule,        MatNativeDateModule,
         MatStepperModule,
         ReactiveFormsModule,
-        MatDialogModule,
-        MatProgressSpinnerModule], providers: [authInterceptorProviders, MatDialog, provideHttpClient(withInterceptorsFromDi())] })
+        MatProgressSpinnerModule,
+        MatDialogModule,        ToastrModule.forRoot({
+          timeOut: 3000,
+          positionClass: 'toast-bottom-right',
+          preventDuplicates: true,
+          progressBar: true,
+          closeButton: true,
+          enableHtml: true,
+          toastClass: 'ngx-toastr custom-toast'
+        })], providers: [authInterceptorProviders, MatDialog, provideHttpClient(withInterceptorsFromDi())]})
 export class AppModule { }
