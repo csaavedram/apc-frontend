@@ -28,6 +28,27 @@ export class AddPlazosPagoComponent implements OnInit {
     this.plazos = Array.from({ length: this.nroPlazos }, () => ({ fechaInicio: null, fechaFin: null }));
   }
 
+  onFirstDateChange(newDate: Date | null): void {
+    if (newDate) {
+      // Calculate all payment terms based on the first date with 30-day intervals
+      for (let i = 0; i < this.plazos.length; i++) {
+        const startDate = new Date(newDate);
+        startDate.setDate(startDate.getDate() + (i * 30));
+        
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 29); // 30-day period (inclusive)
+        
+        this.plazos[i] = {
+          fechaInicio: startDate,
+          fechaFin: endDate
+        };
+      }
+    } else {
+      // Clear all dates if first date is cleared
+      this.plazos = Array.from({ length: this.nroPlazos }, () => ({ fechaInicio: null, fechaFin: null }));
+    }
+  }
+
   guardarPlazos(): void {
     console.log('Plazos guardados:', this.plazos); // Debugging output
     this.plazosGuardados.emit(this.plazos);
