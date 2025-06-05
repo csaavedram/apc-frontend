@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { AlmacenService } from 'src/app/services/almacen.service';
+import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -19,7 +19,7 @@ export class AddAlmacenComponent implements OnInit {
   };
 
   constructor(
-    private snack: MatSnackBar,
+    private toastr: ToastrService,
     private almacenService: AlmacenService,
     private router: Router) { }
   ngOnInit(): void {
@@ -30,17 +30,15 @@ export class AddAlmacenComponent implements OnInit {
   }
   guardarInformacion() {
     console.log(this.almacenData);
-    if (this.almacenData.direccion.trim() === '' || this.almacenData.direccion == null) {
-      this.snack.open('La dirección es requerida', '', {
-        duration: 3000
-      });
-      return;
-    }
+
   
     if (this.almacenData.descripcion.trim() === '' || this.almacenData.descripcion == null) {
-      this.snack.open('La descripción es requerida', '', {
-        duration: 3000
-      });
+      this.toastr.error('La descripción es requerida', 'Error');
+      return;
+    }
+
+    if (this.almacenData.direccion.trim() === '' || this.almacenData.direccion == null) {
+      this.toastr.error('La dirección es requerida', 'Error');
       return;
     }
 
@@ -54,9 +52,7 @@ export class AddAlmacenComponent implements OnInit {
         const existeDescripcion = almacenes.some((almacen: any) => almacen.descripcion.trim().toLowerCase() === this.almacenData.descripcion.trim().toLowerCase());
         const existeDireccion = almacenes.some((almacen: any) => almacen.direccion.trim().toLowerCase() === this.almacenData.direccion.trim().toLowerCase());
         if (existeDescripcion || existeDireccion) {
-          this.snack.open('Ya existe un almacén con esos datos', '', {
-            duration: 3000
-          });
+          this.toastr.error('Ya existe un almacén con esos datos', 'Error');
         } else {
           this.almacenService.agregarAlmacen(this.almacenData).subscribe(
             (data) => {
@@ -84,9 +80,7 @@ export class AddAlmacenComponent implements OnInit {
       },
       (error) => {
         console.error('Error al obtener la lista de almacenes:', error);
-        this.snack.open('Error al obtener la lista de almacenes', '', {
-          duration: 3000
-        });
+        this.toastr.error('Error al obtener la lista de almacenes', 'Error');
       }
     );
   }

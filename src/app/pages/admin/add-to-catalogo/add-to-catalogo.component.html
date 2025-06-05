@@ -48,17 +48,6 @@
                     >
                 </mat-form-field>
                 
-                <mat-form-field appearance="fill" class="w-100">
-                    <mat-label>Precio original del producto seleccionado</mat-label>
-                    <input
-                        [(ngModel)]="productoCatalogoData.producto.precio"
-                        type="number"
-                        name="precio"
-                        matInput
-                        disabled
-                    >
-                </mat-form-field>
-                
                 <div class="d-flex justify-content-center">
                     <button 
                         [disabled]="!skuChanged"

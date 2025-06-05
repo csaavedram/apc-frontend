@@ -17,7 +17,6 @@
             <th>Producto</th>
             <th>SKU</th>
             <th>Categoría</th>
-            <th>Precio Oferta</th>
             <th>Stock</th>
             <th>Operaciones</th>
         </tr>
@@ -26,12 +25,8 @@
             <td>{{ e.producto.nombreProducto }}</td>
             <td>{{ e.producto.sku }}</td>
             <td>{{ e.producto.categoria.nombre }}</td>
-            <td class="precio-oferta">{{ e.precioOferta !== null ? (e.precioOferta | currency:'S/. ':'symbol':'1.2-2') : '-' }}</td>
             <td>{{ e.producto.stock }}</td>
             <td>
-                <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono">
-                    <i [routerLink]="'/admin/actualizarcatalogo/'+e.catalogoId" class="fas fa-edit"></i>
-                </div>
                 <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="eliminarProducto(e.catalogoId)">
                     <i class="fas fa-trash-alt"></i>
                 </div>

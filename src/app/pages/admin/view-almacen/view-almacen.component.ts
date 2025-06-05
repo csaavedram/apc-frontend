@@ -52,8 +52,8 @@ export class ViewAlmacenComponent implements OnInit {
 
   eliminarAlmacen(almacenId: any): void {
     Swal.fire({
-      title: 'Eliminar Proveedor',
-      text: '¿Estás seguro de eliminar al proveedor de la lista?',
+      title: 'Eliminar Almacén',
+      text: '¿Estás seguro de eliminar el almacén de la lista?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -65,11 +65,11 @@ export class ViewAlmacenComponent implements OnInit {
         this.almacenService.eliminarAlmacen(almacenId).subscribe(
           (data) => {
             this.almacenes = this.almacenes.filter((almacen: any) => almacen.almacenId !== almacenId);
-            Swal.fire('Proveedor eliminado', 'El proveedor ha sido eliminado de la base de datos', 'success');
+            Swal.fire('Almacén eliminado', 'El almacén ha sido eliminado de la base de datos', 'success');
             this.calculateTotalPages1();
           },
           (error) => {
-            Swal.fire('Error', 'Error al eliminar el proveedor de la base de datos', 'error');
+            Swal.fire('Error', 'Error al eliminar el almacén de la base de datos', 'error');
           }
         );
       }

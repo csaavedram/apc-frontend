@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { CategoriaService } from 'src/app/services/categoria.service';
+import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -17,9 +17,8 @@ export class AddCategoriaComponent implements OnInit {
     dateCreated: '',
     status: ''
   };
-
   constructor(
-    private snack: MatSnackBar,
+    private toastr: ToastrService,
     private categoriaService: CategoriaService,
     private router: Router) { }
   ngOnInit(): void {
@@ -29,18 +28,12 @@ export class AddCategoriaComponent implements OnInit {
     this.router.navigate(['/admin/categorias']); 
   }
   guardarInformacion() {
-    console.log(this.categoriaData);
-    if (this.categoriaData.nombre.trim() === '' || this.categoriaData.nombre == null) {
-      this.snack.open('El nombre es requerido', '', {
-        duration: 3000
-      });
+    console.log(this.categoriaData);    if (this.categoriaData.nombre.trim() === '' || this.categoriaData.nombre == null) {
+      this.toastr.error('El nombre es requerido', 'Error');
       return;
     }
-  
     if (this.categoriaData.descripcion.trim() === '' || this.categoriaData.descripcion == null) {
-      this.snack.open('La descripción es requerida', '', {
-        duration: 3000
-      });
+      this.toastr.error('La descripción es requerida', 'Error');
       return;
     }
 
@@ -51,12 +44,8 @@ export class AddCategoriaComponent implements OnInit {
     // Continuar con el resto del código para guardar la categoría
     this.categoriaService.listarCategorias().subscribe(
       (categorias: any) => {
-        const existeNombre = categorias.some((categoria: any) => categoria.nombre.trim().toLowerCase() === this.categoriaData.nombre.trim().toLowerCase());
-
-        if (existeNombre) {
-          this.snack.open('Ya existe una categoría con el mismo nombre', '', {
-            duration: 3000
-          });
+        const existeNombre = categorias.some((categoria: any) => categoria.nombre.trim().toLowerCase() === this.categoriaData.nombre.trim().toLowerCase());        if (existeNombre) {
+          this.toastr.error('Ya existe una categoría con el mismo nombre', 'Error');
         } else {
           // Si no existe un producto con el mismo nombre ni SKU, proceder con la inserción
           this.categoriaService.agregarCategoria(this.categoriaData).subscribe(
@@ -76,12 +65,9 @@ export class AddCategoriaComponent implements OnInit {
             }
           );
         }
-      },
-      (error) => {
+      },      (error) => {
         console.error('Error al obtener la lista de categorías:', error);
-        this.snack.open('Error al obtener la lista de categorías', '', {
-          duration: 3000
-        });
+        this.toastr.error('Error al obtener la lista de categorías', 'Error');
       }
     );
   }
