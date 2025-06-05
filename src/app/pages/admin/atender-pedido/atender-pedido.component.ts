@@ -93,7 +93,6 @@ export class AtenderPedidoComponent implements OnInit {
             this.quotationData.total = totalP;
             this.userId = this.orderDetails[0].order.user.id;
 
-
             this.quotationData = {
               divisa: '',
               tipoPago: this.orders.tipoPago || '',
@@ -159,7 +158,6 @@ export class AtenderPedidoComponent implements OnInit {
   }
 
   EnviarCotizaYDetalles(): void {
-
     this.quotationData.estado = 'Por aceptar';
     console.log('Iniciando envío de cotización y detalles:', this.quotationData);
 
@@ -170,7 +168,6 @@ export class AtenderPedidoComponent implements OnInit {
         const ordenCotizacionData = {
           cotizacion: { cotizacionId: this.quotationData.quotationId },
           order: { orderId: this.orderId },
-
         };
 
         this.ordenCotizacionService.agregarOrdenCotizacion(ordenCotizacionData).subscribe(() => {});
@@ -201,24 +198,22 @@ export class AtenderPedidoComponent implements OnInit {
               this.ordersService.atenderOrder(this.orders.orderId, data).subscribe(() => {
                 const totalPorPlazo = this.quotationData.total / this.nroPlazos;
 
-                console.log(this.plazoPagoData);
-
                 const plazosPago = Array.isArray(this.plazoPagoData)
-                  ? this.plazoPagoData.map((plazo: any) => ({
+                  ? this.plazoPagoData.map((plazo: any, index: number) => ({
                       cantidad: totalPorPlazo,
-                      facturaId: null,
                       cotizacion: { cotizacionId: this.quotationData.quotationId },
                       fechaInicio: plazo.fechaInicio,
                       fechaFin: plazo.fechaFin,
-                      estado: "Pendiente"
+                      estado: "Pendiente",
+                      nroCuota: index + 1
                     }))
                   : [{
                       cantidad: totalPorPlazo,
-                      facturaId: null,
                       cotizacion: { cotizacionId: this.quotationData.quotationId },
                       fechaInicio: this.plazoPagoData.fechaInicio,
                       fechaFin: this.plazoPagoData.fechaFin,
-                      estado: "Pendiente"
+                      estado: "Pendiente",
+                      nroCuota: 1
                     }];
 
                 plazosPago.forEach((plazoPago) => {

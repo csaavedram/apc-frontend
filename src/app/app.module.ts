@@ -91,9 +91,12 @@ import { ActualizarServicioComponent } from './pages/admin/actualizar-servicio/a
 import { MantenimientoComponent } from './pages/mantenimiento/mantenimiento.component';
 import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-pedido.component';
 import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
+import { ViewFacturaComponent } from './pages/admin/view-facturas/view-facturas.component';
 
 // Importaciones para ngx-toastr
 import { ToastrModule } from 'ngx-toastr';
+
+
 
 
 @NgModule({ declarations: [
@@ -157,6 +160,7 @@ import { ToastrModule } from 'ngx-toastr';
         ActualizarServicioComponent,
         MantenimientoComponent,
         AtenderPedidoComponent,
+        ViewFacturaComponent,
      
     ],
     exports: [MatToolbarModule, MatButtonModule, MatIconModule, MatExpansionModule],
@@ -189,5 +193,6 @@ import { ToastrModule } from 'ngx-toastr';
           closeButton: true,
           enableHtml: true,
           toastClass: 'ngx-toastr custom-toast'
-        })], providers: [authInterceptorProviders, MatDialog, provideHttpClient(withInterceptorsFromDi())]})
+        }),
+        ],providers: [authInterceptorProviders, MatDialog, provideHttpClient(withInterceptorsFromDi())]})
 export class AppModule { }

@@ -113,7 +113,7 @@ export class PaymentComponent implements OnInit {
         },
       },
     };
-  
+
     this.paymentService.createPayment(payload).subscribe(
       (mpResponse: any) => {
         console.log('✅ Pago exitoso MP:', mpResponse);
@@ -124,7 +124,7 @@ export class PaymentComponent implements OnInit {
           user: { id: this.user.id },
           fechaEmision: new Date(),
           estado: 'Pagado',
-          orderId: this.data.orderId, // Usa el orderId aquí
+          orderId: this.data.orderId,
         };
         this.facturaService.agregarFactura(facturaPayload).subscribe(
           (facturaResp: any) => {

@@ -445,13 +445,14 @@ export class AddCotizacionComponent {
         console.log(this.plazoPagoData);
 
         const plazosPago = Array.isArray(this.plazoPagoData)
-          ? this.plazoPagoData.map((plazo: any) => ({
+          ? this.plazoPagoData.map((plazo: any, index: number) => ({
               cantidad: totalPorPlazo,
               facturaId: null,
               cotizacion: { cotizacionId: cotizacionId },
               fechaInicio: plazo.fechaInicio,
               fechaFin: plazo.fechaFin,
-              estado: "Pendiente"
+              estado: "Pendiente",
+              nroCuota: index + 1
             }))
           : [{
               cantidad: totalPorPlazo,
@@ -459,7 +460,8 @@ export class AddCotizacionComponent {
               cotizacion: { cotizacionId: cotizacionId },
               fechaInicio: this.plazoPagoData.fechaInicio,
               fechaFin: this.plazoPagoData.fechaFin,
-              estado: "Pendiente"
+              estado: "Pendiente",
+              nroCuota: 1
             }];
 
         plazosPago.forEach((plazoPago) => {
