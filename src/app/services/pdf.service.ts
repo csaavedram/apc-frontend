@@ -9,6 +9,7 @@ import { QuotationDetailsService } from 'src/app/services/quotation-details.serv
 import { UpperCasePipe } from '@angular/common';
 import { FacturaService } from './factura.service';
 import { FacturaDetailsService } from './factura-details.service';
+import { PaymentTermService } from './payment-term.service';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +20,8 @@ export class PdfService {
     private userService: UserService,
     private quotationDetailsService: QuotationDetailsService,
     private facturaService: FacturaService,
-    private facturaDetailsService: FacturaDetailsService
+    private facturaDetailsService: FacturaDetailsService,
+    private paymentTermService: PaymentTermService 
   ) {}
 
   generatePdf(orderData: any) {
@@ -510,28 +512,112 @@ export class PdfService {
       doc.setTextColor(0, 0, 0);
       doc.text(`S/. ${totalPrice.toFixed(2)}`, valueX, yTotales, { align: 'right' });
 
-      // Mensaje de cierre y firma
-      yTotales += 20;
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text(
-        'Agradeciendo anticipadamente la atención que le brinde la presente, es oportuno',
-        10,
-        yTotales
-      );
-      yTotales += 5;
-      doc.text(
-        'testimoniarle los sentimientos de consideración y estima personal.',
-        10,
-        yTotales + 5
-      );
-      yTotales += 15;
-      doc.text('Atentamente,', 10, yTotales);
+      //a
+      // Apartado de información de crédito SOLO si es de crédito
+      if (facturaData.tipoPago && facturaData.tipoPago === 'Credito') {
+        // Obtener los plazos de pago antes de guardar el PDF
+        this.paymentTermService.obtenerPlazosPagoPorFactura(facturaId).subscribe((plazos: any) => {
+          console.log(plazos);
+          if (Array.isArray(plazos) && plazos.length > 0) {
+            // Calcular monto pendiente y total de cuotas
+            const montoPendiente = plazos.reduce((acc, curr) => acc + (curr.cantidad || 0), 0);
+            const totalCuotas = plazos.length;
 
-      yTotales += 10;
-      doc.addImage('../../../assets/firma.png', 'PNG', 10, yTotales, 50, 50);
+            // Título
+            yTotales += 15;
+            doc.setFontSize(13);
+            doc.setTextColor(0, 206, 209);
+            doc.text('Información del crédito:', 10, yTotales);
 
-      // Footer en todas las páginas
+            // Monto pendiente y total cuotas
+            yTotales += 8;
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Monto neto pendiente de pago: S/ ${montoPendiente.toFixed(2)}`, 10, yTotales);
+            yTotales += 7;
+            doc.text(`Total de cuotas: ${totalCuotas}`, 10, yTotales);
+
+            // Encabezado de tabla
+            yTotales += 10;
+            doc.setFontSize(11);
+            doc.setTextColor(255, 255, 255);
+            doc.setFillColor(0, 206, 209);
+            doc.rect(10, yTotales - 6, 180, 8, 'F');
+            doc.text('NºCuota', 15, yTotales);
+            doc.text('Fec.Venc', 45, yTotales);
+            doc.text('Monto', 85, yTotales);
+            doc.text('NºCuota', 110, yTotales);
+            doc.text('Fec.Venc', 140, yTotales);
+            doc.text('Monto', 180, yTotales, { align: 'right' });
+
+            // Filas de cuotas (máximo 2 por fila)
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            let rowY = yTotales + 7;
+            for (let i = 0; i < Math.ceil(plazos.length / 2); i++) {
+              const cuota1 = plazos[i * 2];
+              const cuota2 = plazos[i * 2 + 1];
+              // Columna 1
+              doc.text(`${cuota1?.nroCuota ?? ''}`, 15, rowY);
+              doc.text(`${cuota1?.fechaFin ? new Date(cuota1.fechaFin).toLocaleDateString('es-PE') : ''}`, 45, rowY);
+              doc.text(`${cuota1?.cantidad ? cuota1.cantidad.toFixed(2) : ''}`, 85, rowY, { align: 'right' });
+              // Columna 2
+              doc.text(`${cuota2?.nroCuota ?? ''}`, 110, rowY);
+              doc.text(`${cuota2?.fechaFin ? new Date(cuota2.fechaFin).toLocaleDateString('es-PE') : ''}`, 140, rowY);
+              doc.text(`${cuota2?.cantidad ? cuota2.cantidad.toFixed(2) : ''}`, 180, rowY, { align: 'right' });
+              rowY += 8;
+            }
+
+            // Footer en todas las páginas
+            const pageCount = doc.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+              doc.setPage(i);
+              doc.setFontSize(10);
+              doc.setTextColor(0, 0, 0);
+              doc.line(10, 280, 200, 280);
+              doc.text(
+                'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+                30,
+                285,
+                { align: 'left' }
+              );
+              doc.text(
+                'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+                60,
+                290,
+                { align: 'left' }
+              );
+            }
+
+            doc.save(`factura-${codigoFactura}.pdf`);
+          } else {
+            // Si no hay plazos, solo guardar el PDF normalmente
+            const pageCount = doc.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+              doc.setPage(i);
+              doc.setFontSize(10);
+              doc.setTextColor(0, 0, 0);
+              doc.line(10, 280, 200, 280);
+              doc.text(
+                'Jr. Enrique Pallardelli Nº 554 - Urb. San Agustín - Comas / Central Telefónica: (511) 557 - 6015',
+                30,
+                285,
+                { align: 'left' }
+              );
+              doc.text(
+                'E-mail: apcemedicom@hotmail.com / Celular 970 181 638',
+                60,
+                290,
+                { align: 'left' }
+              );
+            }
+            doc.save(`factura-${codigoFactura}.pdf`);
+          }
+        });
+        return; // Importante: para que no se ejecute el guardado dos veces
+      }
+
+      // Footer en todas las páginas (caso contado)
       const pageCount = doc.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
