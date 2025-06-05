@@ -91,6 +91,9 @@ import { MantenimientoComponent } from './pages/mantenimiento/mantenimiento.comp
 import { AtenderPedidoComponent } from './pages/admin/atender-pedido/atender-pedido.component';
 import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizacion.component';
 
+// Importaciones para ngx-toastr
+import { ToastrModule } from 'ngx-toastr';
+
 
 @NgModule({ declarations: [
         SoloNumerosDirective,
@@ -173,9 +176,16 @@ import { AddCotizacionComponent } from './pages/admin/add-cotizacion/add-cotizac
         MatDividerModule,
         MatSlideToggleModule,
         MatSelectModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
+        MatDatepickerModule,        MatNativeDateModule,
         MatStepperModule,
         ReactiveFormsModule,
-        MatDialogModule], providers: [authInterceptorProviders, MatDialog, provideHttpClient(withInterceptorsFromDi())] })
+        MatDialogModule,        ToastrModule.forRoot({
+          timeOut: 3000,
+          positionClass: 'toast-bottom-right',
+          preventDuplicates: true,
+          progressBar: true,
+          closeButton: true,
+          enableHtml: true,
+          toastClass: 'ngx-toastr custom-toast'
+        })], providers: [authInterceptorProviders, MatDialog, provideHttpClient(withInterceptorsFromDi())]})
 export class AppModule { }

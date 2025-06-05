@@ -1,7 +1,7 @@
 import { Router } from '@angular/router';
 import { LoginService } from './../../services/login.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Component, OnInit } from '@angular/core';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -15,23 +15,19 @@ export class LoginComponent implements OnInit {
     "password" : '',
   }
 
-  constructor(private snack:MatSnackBar,private loginService:LoginService,private router:Router) { }
+  constructor(private toastService: ToastService, private loginService:LoginService,private router:Router) { }
 
   ngOnInit(): void {
   }
 
   formSubmit(){
     if(this.loginData.username.trim() == '' || this.loginData.username.trim() == null){
-      this.snack.open('El nombre de usuario es requerido !!','Aceptar',{
-        duration:3000
-      })
+      this.toastService.requiredField('DNI/RUC');
       return;
     }
 
     if(this.loginData.password.trim() == '' || this.loginData.password.trim() == null){
-      this.snack.open('La contraseña es requerida !!','Aceptar',{
-        duration:3000
-      })
+      this.toastService.requiredField('contraseña');
       return;
     }
 
@@ -61,9 +57,7 @@ export class LoginComponent implements OnInit {
         })
       },(error) => {
         console.log(error);
-        this.snack.open('Detalles inválidos , vuelva a intentar !!','Aceptar',{
-          duration:3000
-        })
+        this.toastService.error('Detalles inválidos, vuelva a intentar');
       }
     )
   }
