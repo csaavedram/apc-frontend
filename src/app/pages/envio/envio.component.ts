@@ -11,7 +11,6 @@ import Swal from 'sweetalert2';
 import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { AddAddressComponent } from 'src/app/components/modal/add-address/add-address.component';
-import { InventarioService } from 'src/app/services/inventario.service';
 
 @Component({
   selector: 'app-envio',
@@ -134,7 +133,6 @@ export class EnvioComponent implements OnInit {
     private orderDetailsService: OrdersDetailsService,
     private productoService: ProductoService,
     private http: HttpClient,
-    private inventarioService: InventarioService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -207,14 +205,6 @@ export class EnvioComponent implements OnInit {
           };
 
           console.log('Movimiento:', movimiento);
-
-          this.inventarioService.agregarProductoInventario(movimiento).subscribe(
-            (dataMovimiento) => {},
-            (errorMovimiento) => {
-              Swal.fire('Error en el sistema', 'No se ha podido registrar el movimiento', 'error');
-              console.log(errorMovimiento);
-            }
-          );
 
           element.stock = element.stock - this.orderDetailsData.quantity;
 

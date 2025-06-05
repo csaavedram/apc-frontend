@@ -28,7 +28,7 @@ export class AddProductoComponent implements OnInit {
 
   categorys: any[] = [];
   constructor(
-    private toastr: ToastrService,
+    private toastr: ToastrService, 
     private productoService: ProductoService,
     private categoriaService: CategoriaService,
     private router: Router) { }
