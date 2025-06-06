@@ -198,20 +198,25 @@ export class PdfService {
           ruc: cotizacionData.user.ruc,
           tipoUsuario: cotizacionData.user.tipoUsuario,
         };
-        const razonsocial = cotizacionData.user.razonSocial;
+        const razonsocial = cotizacionData.user.username;
         const fullName = `${userDetails.nombre} ${userDetails.apellido}`;
-        const ruc = cotizacionData.user.ruc;
-
+        const ruc = cotizacionData.user.ruc;        
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacionId).subscribe(
           (quotationDetailsData: any) => {
             const cotizacionesDe = quotationDetailsData.map(
-              (item: any, index: number) => [
-                index + 1,
-                item.producto?.nombreProducto || item.tipoServicio,
-                item.cantidad,
-                item.producto === null ? `S/. ${parseFloat(item.precioUnitario).toFixed(2)}` : `S/. ${parseFloat(item.precioNuevo).toFixed(2)}`,
-                `S/. ${parseFloat(item.precioTotal).toFixed(2)}`,
-              ]
+              (item: any, index: number) => {
+                // Calculate total price as precioNuevo * cantidad
+                const precioUnitario = item.producto === null ? parseFloat(item.precioUnitario) : parseFloat(item.precioNuevo);
+                const precioTotal = precioUnitario * item.cantidad;
+                
+                return [
+                  index + 1,
+                  item.producto?.nombreProducto || item.tipoServicio,
+                  item.cantidad,
+                  `S/. ${precioUnitario.toFixed(2)}`,
+                  `S/. ${precioTotal.toFixed(2)}`,
+                ];
+              }
             );
 
             const doc = new jsPDF();

@@ -37,7 +37,7 @@
               @if (tipoBusqueda === 'ruc') {
                 <mat-form-field appearance="fill" class="w-100">
                   <mat-label>Nombre del Cliente o Empresa</mat-label>
-                  <input [ngModel]="usuario.tipoUsuario === 'persona_natural' ? nombreCompleto : usuario.razonSocial" name="nombreCompleto" type="text" placeholder="Digite el nombre completo" matInput disabled="true"/>
+                  <input [ngModel]="usuario.tipoUsuario === 'persona_natural' ? nombreCompleto : usuario.nombre + ' ' + usuario.apellido" name="nombreCompleto" type="text" placeholder="Digite el nombre completo" matInput disabled="true"/>
                 </mat-form-field>
               }
             </div>
@@ -50,7 +50,7 @@
                   </div>
                 </button>
               }
-              @if (this.usuario.razonSocial !== '' && this.tipoBusqueda === 'razon_social') {
+              @if (this.usuario.nombre !== '' && this.tipoBusqueda === 'nombre') {
                 <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" (click)="eliminarCliente()">
                   <div class="d-flex justify-content-between align-items-center gap-1">
                     <i class="fa-solid fa-trash" style="color: #ffffff; font-size: 12px;"></i>

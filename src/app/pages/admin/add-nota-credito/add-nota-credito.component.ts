@@ -58,6 +58,9 @@ export class AddNotaCreditoComponent {
 
   codigoFactura = '';
 
+  // Store the invoice ID for cancellation
+  facturaId: number | null = null;
+
   usuario = {
     id: '',
     nombre: '',
@@ -88,6 +91,9 @@ export class AddNotaCreditoComponent {
   busquedaRealizada: boolean = false;
   busquedaExitosa: boolean = false;
 
+  // Additional text field that doesn't save data (display only)
+  additionalTextField: string = '';
+
   constructor(
     private snack: MatSnackBar,
     private facturaService: FacturaService,
@@ -112,10 +118,11 @@ export class AddNotaCreditoComponent {
       });
       this.busquedaRealizada = false;
       return;
-    }
-
-    this.facturaService.obtenerFacturaPorCodigo(codigo).subscribe(
+    }    this.facturaService.obtenerFacturaPorCodigo(codigo).subscribe(
       (factura: any) => {
+        // Store the invoice ID for later cancellation
+        this.facturaId = factura.facturaId;
+        
         this.notaData = {
           ...this.notaData,
           divisa: factura.divisa,
@@ -273,11 +280,24 @@ export class AddNotaCreditoComponent {
             () => console.log('Detalle de servicio guardado'),
             (error) => console.error('Error al guardar detalle de servicio:', error)
           );
-        });
-
-        Swal.fire('Éxito', 'La nota de credito y sus detalles han sido guardados correctamente', 'success')
+        });        Swal.fire('Éxito', 'La nota de credito y sus detalles han sido guardados correctamente', 'success')
           .then(() => {
-            this.router.navigate(['/admin/notascredito']);
+            // Change invoice status to "Anulada" after successful credit note creation
+            if (this.facturaId) {
+              this.facturaService.anularFactura(this.facturaId).subscribe(
+                () => {
+                  console.log('Factura anulada correctamente');
+                  this.router.navigate(['/admin/notascredito']);
+                },
+                (error) => {
+                  console.error('Error al anular la factura:', error);
+                  // Navigate anyway since credit note was created successfully
+                  this.router.navigate(['/admin/notascredito']);
+                }
+              );
+            } else {
+              this.router.navigate(['/admin/notascredito']);
+            }
           });
       },
       (error) => {
