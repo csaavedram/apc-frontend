@@ -405,7 +405,7 @@ export class PdfService {
         doc.text(`Presente: ${nombreCompleto}`, 10, y);
       }
       y += 5;
-      doc.text(`RUC/DNI: ${(facturaData.user?.ruc || facturaData.user?.dni || '').toUpperCase()}`, 10, y);
+      doc.text(`RUC/DNI: ${(facturaData.user?.username || facturaData.user?.username || '').toUpperCase()}`, 10, y);
       doc.setFont('helvetica', 'normal');
       y += 10;
 
