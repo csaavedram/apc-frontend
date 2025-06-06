@@ -56,10 +56,9 @@ export class AddCotizacionComponent {
 
   usuario = {
     id: '',
+    username: '',
     nombre: '',
     apellido: '',
-    razonSocial: '',
-    ruc: '',
     tipoUsuario: ''
   };
 
@@ -500,7 +499,7 @@ export class AddCotizacionComponent {
       return;
     }
 
-    this.userService.obtenerUsuarioPorRuc(ruc).subscribe(
+    this.userService.obtenerUsuario(ruc).subscribe(
       (usuario: any) => {
         if (usuario) {
           this.usuario = usuario;
@@ -563,19 +562,17 @@ export class AddCotizacionComponent {
       this.cotizacionData.usuarioId = '';
       this.usuario = {
         id: '',
+        username: '',
         nombre: '',
         apellido: '',
-        razonSocial: '',
-        ruc: '',
         tipoUsuario: ''
       };
     } else {
       this.usuario = {
         id: '',
+        username: '',
         nombre: '',
         apellido: '',
-        razonSocial: '',
-        ruc: '',
         tipoUsuario: ''
       };
     }
@@ -583,12 +580,11 @@ export class AddCotizacionComponent {
 
   eliminarCliente(): void {
     this.usuario = {
-      id: '',
-      nombre: '',
-      apellido: '',
-      razonSocial: '',
-      ruc: '',
-      tipoUsuario: ''
+        id: '',
+        username: '',
+        nombre: '',
+        apellido: '',
+        tipoUsuario: ''
     };
     this.usuarioInput = '';
     this.filteredSuggestions = [];

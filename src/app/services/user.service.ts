@@ -20,6 +20,9 @@ export class UserService {
     public actualizarUsuario(id:any, user: any){
       return this.httpClient.put(`${baserUrl}/usuarios/${id}`, user);
     }
+      public obtenerUsuarioPorUsername(username: string) {
+      return this.httpClient.get(`${baserUrl}/usuarios/username/${username}`);
+    }
     public obtenerUsuarioPorRuc(ruc: string) {
       return this.httpClient.get(`${baserUrl}/usuarios/ruc/${ruc}`);
     }
