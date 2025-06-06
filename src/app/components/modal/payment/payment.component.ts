@@ -98,6 +98,7 @@ export class PaymentComponent implements OnInit {
   sendPayment(data: any) {
     const installments = Number(data.installments);
     const totalAmount = Number(data.amount);
+
     const payload = {
       token: data.token,
       issuer_id: data.issuerId,
@@ -117,6 +118,7 @@ export class PaymentComponent implements OnInit {
     this.paymentService.createPayment(payload).subscribe(
       (mpResponse: any) => {
         console.log('✅ Pago exitoso MP:', mpResponse);
+
         const facturaPayload = {
           divisa: 'Soles',
           tipoPago: installments > 1 ? 'Credito' : 'Contado',
@@ -124,8 +126,9 @@ export class PaymentComponent implements OnInit {
           user: { id: this.user.id },
           fechaEmision: new Date(),
           estado: 'Pagado',
-          orderId: this.data.orderId,
+          orderId: this.data.orderId, // Usa el orderId aquí
         };
+
         this.facturaService.agregarFactura(facturaPayload).subscribe(
           (facturaResp: any) => {
             console.log('✅ Factura creada:', facturaResp);
@@ -149,5 +152,5 @@ export class PaymentComponent implements OnInit {
       }
     );
   }
-}
 
+}

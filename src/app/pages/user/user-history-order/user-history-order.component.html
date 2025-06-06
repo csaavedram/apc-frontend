@@ -27,6 +27,12 @@
                   <i [routerLink]="'/user/detalle-pedido/'+e.orderId" class="fas fa-info-circle"></i>
               </div>
               <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Atendido'">
+                  <i (click)="aceptarPedido(e.orderId)" class="fas fa-check-circle"></i>
+              </div>
+              <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Atendido'">
+                  <i (click)="rechazarPedido(e.orderId)" class="fas fa-times-circle"></i>
+              </div>
+              <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Aceptado'">
                   <i (click)="openPaymentModal(e.orderId)" class="fas fa-credit-card"></i>
               </div>
           </td>
