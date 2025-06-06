@@ -40,4 +40,12 @@ export class OrdersService {
   public atenderOrder(orderId: number, data: any) {
     return this.http.patch(`${baserUrl}/orders/atender/${orderId}`, data);
   }
+
+  public rechazarOrder(orderId: number) {
+    return this.http.patch(`${baserUrl}/orders/rechazar/${orderId}`, null);
+  }
+
+  public aceptarOrder(orderId: number) {
+    return this.http.patch(`${baserUrl}/orders/aceptar/${orderId}`, null);
+  }
 }

@@ -6,6 +6,8 @@ import { combineLatest } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { PaymentComponent } from '../../../components/modal/payment/payment.component';
 import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.service';
+import { InventarioService } from 'src/app/services/inventario.service';
+import { OrdersDetailsService } from 'src/app/services/ordersdetails.service';
 
 @Component({
   selector: 'app-user-history-order',
@@ -21,8 +23,10 @@ export class UserHistoryOrderComponent implements OnInit {
 
   constructor(
     private ordersService: OrdersService,
+    private ordersDetailsService: OrdersDetailsService,
     private loginService: LoginService,
     private ordenCotizacionService: OrdenCotizacionService,
+    private inventarioService: InventarioService,
     private dialog: MatDialog
   ) {}
 
@@ -67,6 +71,78 @@ export class UserHistoryOrderComponent implements OnInit {
         console.error('Error closing payment modal:', error);
       }
     );
+  }
+
+  rechazarPedido(orderId: number): void {
+    Swal.fire({
+      title: '¿Está seguro de rechazar el pedido?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, rechazar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ordersService.rechazarOrder(orderId).subscribe(
+          () => {
+            this.ordersDetailsService.listarOrdersDetailsByOrder(orderId).subscribe(
+              (orderDetails: any) => {
+                const movimientos = orderDetails.map((detalle: any) => ({
+                  producto: {
+                    productoId: detalle.product.productoId
+                  },
+                  cantidad: detalle.quantity,
+                  tipo: 'Devuelto',
+                  dateCreated: new Date().toISOString().split('T')[0]
+                }));
+
+                movimientos.forEach((movimiento: any) => {
+                  this.inventarioService.agregarProductoInventario(movimiento).subscribe(
+                    () => console.log('Movimiento registrado:', movimiento),
+                    (error: any) => console.error('Error al registrar movimiento:', error)
+                  );
+                });
+
+                Swal.fire('Pedido Rechazado', 'El pedido ha sido rechazado correctamente', 'success');
+                this.listarOrdersByUser();
+              },
+              (error: any) => {
+                Swal.fire('Error', 'No se pudieron obtener los detalles de la orden', 'error');
+                console.error(error);
+              }
+            );
+          },
+          (error: any) => {
+            Swal.fire('Error', 'No se pudo rechazar el pedido', 'error');
+            console.error(error);
+          }
+        );
+      }
+    });
+  }
+
+  aceptarPedido(orderId: number): void {
+    Swal.fire({
+      title: '¿Está seguro de aceptar el pedido?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, aceptar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ordersService.aceptarOrder(orderId).subscribe(
+          () => {
+            Swal.fire('Pedido Aceptado', 'El pedido ha sido aceptado correctamente', 'success');
+            this.listarOrdersByUser();
+          },
+          (error: any) => {
+            Swal.fire('Error', 'No se pudo aceptar el pedido', 'error');
+            console.error(error);
+          }
+        );
+      }
+    });
   }
 
   listarOrdersByUser() {
