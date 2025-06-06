@@ -32,8 +32,8 @@
                 ? e.user.razonSocial
                 : (e.user.apellido ? e.user.apellido + ', ' : '') + (e.user.nombre || 'Sin información') }}
           </td>
-          <td>{{ e.divisa === 'DOLAR' ? 'Dolar' : 'Soles' }}</td>
-          <td>{{ e.tipoPago === 'CONTADO' ? 'Contado' : 'Credito' }}</td>
+          <td>{{ e.divisa }}</td>
+          <td>{{ e.tipoPago }}</td>
           <td>{{ convertirFecha(e.plazoEntrega) }}</td>
           <td>{{ convertirFecha(e.validezOferta) }}</td>
           <td>{{ e.total | currency:'S/. ':'symbol':'1.2-2' }}</td>
