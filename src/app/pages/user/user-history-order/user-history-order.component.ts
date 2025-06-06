@@ -62,10 +62,8 @@ export class UserHistoryOrderComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(
-      (result) => {
-        if (result) {
-          this.listarOrdersByUser();
-        }
+      () => {
+        this.listarOrdersByUser();
       },
       (error) => {
         console.error('Error closing payment modal:', error);
