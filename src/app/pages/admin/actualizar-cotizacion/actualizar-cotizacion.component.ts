@@ -18,6 +18,9 @@ import { QuotationDetailsService } from 'src/app/services/quotation-details.serv
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AddPlazosPagoComponent } from 'src/app/components/modal/add-plazos-pago/add-plazos-pago.component';
+import { MatDialog } from '@angular/material/dialog';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 
 @Component({
   selector: 'app-add-cotizacion',
@@ -66,6 +69,11 @@ export class ActualizarCotizacionComponent {
     tipoUsuario: ''
   };
 
+  plazoPagoData = {
+    fechaInicio: '',
+    fechaFin: ''
+  }
+
   productos: any[] = [];
   servicios: any[] = [];
   detalleProductos: any[] = [];
@@ -83,14 +91,18 @@ export class ActualizarCotizacionComponent {
   nombreCompleto: string = '';
   loading = false;
 
+  nroPlazos: number = 0;
+
   constructor(
     private snack: MatSnackBar,
     private productoService: ProductoService,
     private route: ActivatedRoute,
     private quotationService: QuotationService,
+    private paymentTermService: PaymentTermService,
     private quotationDetailsService: QuotationDetailsService,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   onUsuarioInputChange(): void {
@@ -98,7 +110,7 @@ export class ActualizarCotizacionComponent {
     if (this.tipoBusqueda === 'razon_social' && input.length > 0) {
       this.filteredSuggestions = this.listaUsuarios
         .filter(usuario => usuario.razonSocial?.toLowerCase().includes(input))
-        .map(usuario => usuario.razonSocial);
+        .map(usuario => usuario.razonSocial || '');
     } else {
       this.filteredSuggestions = [];
     }
@@ -731,5 +743,26 @@ export class ActualizarCotizacionComponent {
     };
     this.usuarioInput = '';
     this.filteredSuggestions = [];
+  }
+
+  buscarPlazos(): void {
+    if (this.nroPlazos <= 1) {
+      this.snack.open('Debe ingresar mínimo 2 nros. de plazos', '', {
+        duration: 3000,
+        panelClass: ['snackbar-error']
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(AddPlazosPagoComponent, {
+      width: '500px',
+      data: { cantidadPlazos: this.nroPlazos },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.plazoPagoData = result;
+      }
+    });
   }
 }

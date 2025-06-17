@@ -18,6 +18,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import Swal from 'sweetalert2';
 import { FacturaService } from 'src/app/services/factura.service';
 import { FacturaDetailsService } from 'src/app/services/factura-details.service';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 
 @Component({
   selector: 'app-add-factura',
@@ -66,6 +67,21 @@ export class AddFacturaComponent {
     tipoUsuario: ''
   };
 
+  plazoPagoData = {
+    plazoPagoId: '',
+    cantidad: 0.0,
+    factura: {
+      facturaId: ''
+    },
+    cotizacion: {
+      cotizacionId: ''
+    },
+    fechaInicio: '',
+    fechaFin: '',
+    estado: '',
+    nroCuota: ''
+  }
+
   productos: any[] = [];
   servicios: any[] = [];
   detalleProductos: any[] = [];
@@ -91,7 +107,9 @@ export class AddFacturaComponent {
     private quotationService: QuotationService,
     private quotationDetailsService: QuotationDetailsService,
     private facturaService: FacturaService,
+    private paymentTermService: PaymentTermService,
     private facturaDetailService: FacturaDetailsService,
+    private plazoPagoService: PaymentTermService,
     private router: Router,
   ) {}
 
@@ -164,6 +182,21 @@ export class AddFacturaComponent {
               this.busquedaRealizada = false;
             }
           );
+
+          this.plazoPagoService.obtenerPlazosPagoPorCotizacion(cotizacion.cotizacionId).subscribe(
+            (plazosPago: any) => {
+              this.busquedaRealizada = false;
+              console.log(plazosPago)
+            },
+            (error) => {
+              console.error('Error al obtener detalles de la cotización:', error);
+              this.snack.open('Error al obtener detalles de la cotización', '', {
+                duration: 3000
+              });
+              this.busquedaRealizada = false;
+            }
+          )
+
           this.snack.open('Cotización encontrada', '', {
             duration: 3000
           });
@@ -221,6 +254,12 @@ export class AddFacturaComponent {
                 () => console.log('Detalle de producto guardado'),
                 (error) => console.error('Error al guardar detalle de producto:', error)
               );
+
+              // this.paymentTermService.obtenerPlazosPagoPorCotizacion(facturaId).subscribe(
+              //   (data: any) => {
+              //     this.plaza
+              //   }
+              // )
             });
 
             this.detalleServicios.forEach((detalle) => {
