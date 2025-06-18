@@ -8,6 +8,7 @@ import { PaymentComponent } from '../../../components/modal/payment/payment.comp
 import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.service';
 import { InventarioService } from 'src/app/services/inventario.service';
 import { OrdersDetailsService } from 'src/app/services/ordersdetails.service';
+import { ViewTipoPagoComponent } from 'src/app/components/modal/view-tipo-pago/view-tipo-pago.component';
 
 @Component({
   selector: 'app-user-history-order',
@@ -57,6 +58,22 @@ export class UserHistoryOrderComponent implements OnInit {
 
   openPaymentModal(orderId: string) {
     const dialogRef = this.dialog.open(PaymentComponent, {
+      width: '500px',
+      data: { orderId },
+    });
+
+    dialogRef.afterClosed().subscribe(
+      () => {
+        this.listarOrdersByUser();
+      },
+      (error) => {
+        console.error('Error closing payment modal:', error);
+      }
+    );
+  }
+
+  openPaymentTypeModal(orderId: string) {
+    const dialogRef = this.dialog.open(ViewTipoPagoComponent, {
       width: '500px',
       data: { orderId },
     });

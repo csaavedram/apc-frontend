@@ -50,7 +50,7 @@
                   </div>
                 </button>
               }
-              @if (this.usuario.nombre !== '' && this.tipoBusqueda === 'nombre') {
+              @if (this.usuario.nombre !== '' && this.tipoBusqueda !== 'ruc' && usuarioInput !== '') {
                 <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" (click)="eliminarCliente()">
                   <div class="d-flex justify-content-between align-items-center gap-1">
                     <i class="fa-solid fa-trash" style="color: #ffffff; font-size: 12px;"></i>
@@ -314,6 +314,29 @@
               Guardar Cotización
             </button>
           </div>
+        </div>
+
+        <!-- Section for listing payment terms -->
+        <div *ngIf="cotizacionData.tipoPago === 'Credito' && plazoPagoData.length > 0" class="mt-4">
+          <h3>Plazos de Pago</h3>
+          <table class="table table-bordered text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Nro Cuota</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let plazo of plazoPagoData">
+                <td>{{ plazo.nroCuota }}</td>
+                <td>{{ plazo.fechaInicio | date:'dd/MM/yyyy' }}</td>
+                <td>{{ plazo.fechaFin | date:'dd/MM/yyyy' }}</td>
+                <td>{{ plazo.monto === '-' ? '-' : ('S/. ' + plazo.monto) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

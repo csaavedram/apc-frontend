@@ -24,4 +24,8 @@ export class PaymentTermService {
   public actualizarPlazoPago(plazoPagoId: any, data: any) {
     return this.http.patch(`${baserUrl}/plazospago/${plazoPagoId}`, data);
   }
+
+  public listarPlazos(): Observable<any[]> {
+    return this.http.get<any[]>(`${baserUrl}/plazospago`);
+  }
 }

@@ -15,15 +15,13 @@
             <th>N°</th>
             <th>Username</th>
             <th>Nombre</th>
-            <th>Apellido</th>
             <th>Email</th>
             <th>Teléfono</th>
         </tr>
         <tr *ngFor="let i = index; let e of displayedUsuarios()" mat-subheader>
             <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
             <td>{{ e.username }}</td>
-            <td>{{ e.nombre }}</td>
-            <td>{{ e.apellido }}</td>
+            <td>{{ e.tipoUsuario === 'persona_natural' ? e.nombre + ' ' + e.apellido : e.nombre }}</td>
             <td>{{ e.email }}</td>
             <td>{{ e.telefono }}</td>
         </tr>

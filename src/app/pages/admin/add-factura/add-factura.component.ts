@@ -67,20 +67,7 @@ export class AddFacturaComponent {
     tipoUsuario: ''
   };
 
-  plazoPagoData = {
-    plazoPagoId: '',
-    cantidad: 0.0,
-    factura: {
-      facturaId: ''
-    },
-    cotizacion: {
-      cotizacionId: ''
-    },
-    fechaInicio: '',
-    fechaFin: '',
-    estado: '',
-    nroCuota: ''
-  }
+  plazoPagoData: any[] = [];
 
   productos: any[] = [];
   servicios: any[] = [];
@@ -173,6 +160,20 @@ export class AddFacturaComponent {
               }));
 
               this.busquedaRealizada = false;
+
+              this.plazoPagoService.obtenerPlazosPagoPorCotizacion(cotizacion.cotizacionId).subscribe(
+                (plazosPago: any) => {
+                  this.plazoPagoData = plazosPago;
+                  console.log(this.plazoPagoData)
+                },
+                (error) => {
+                  console.error('Error al obtener detalles de la cotización:', error);
+                  this.snack.open('Error al obtener detalles de la cotización', '', {
+                    duration: 3000
+                  });
+                }
+              );
+
             },
             (error) => {
               console.error('Error al obtener detalles de la cotización:', error);
@@ -182,20 +183,6 @@ export class AddFacturaComponent {
               this.busquedaRealizada = false;
             }
           );
-
-          this.plazoPagoService.obtenerPlazosPagoPorCotizacion(cotizacion.cotizacionId).subscribe(
-            (plazosPago: any) => {
-              this.busquedaRealizada = false;
-              console.log(plazosPago)
-            },
-            (error) => {
-              console.error('Error al obtener detalles de la cotización:', error);
-              this.snack.open('Error al obtener detalles de la cotización', '', {
-                duration: 3000
-              });
-              this.busquedaRealizada = false;
-            }
-          )
 
           this.snack.open('Cotización encontrada', '', {
             duration: 3000
@@ -255,11 +242,6 @@ export class AddFacturaComponent {
                 (error) => console.error('Error al guardar detalle de producto:', error)
               );
 
-              // this.paymentTermService.obtenerPlazosPagoPorCotizacion(facturaId).subscribe(
-              //   (data: any) => {
-              //     this.plaza
-              //   }
-              // )
             });
 
             this.detalleServicios.forEach((detalle) => {
@@ -276,6 +258,24 @@ export class AddFacturaComponent {
               this.facturaDetailService.agregarFacturaDetail(detalleServicioPayload).subscribe(
                 () => console.log('Detalle de servicio guardado'),
                 (error) => console.error('Error al guardar detalle de servicio:', error)
+              );
+            });
+
+            // Si plazoPagoData es un solo objeto, no un array
+            console.log(this.plazoPagoData);
+
+            this.plazoPagoData.forEach((plazoPago) => {
+              const plazoPagoPayload = {
+                facturaId: factura.facturaId
+              };
+
+              this.paymentTermService.actualizarPlazoPago(plazoPago.plazoPagoId, plazoPagoPayload).subscribe(
+                (data: any) => {
+                  console.log('Plazo de pago actualizado:', data);
+                },
+                (error) => {
+                  console.error('Error al actualizar plazo de pago:', error);
+                }
               );
             });
 

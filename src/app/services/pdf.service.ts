@@ -9,12 +9,9 @@ import { QuotationDetailsService } from 'src/app/services/quotation-details.serv
 import { UpperCasePipe } from '@angular/common';
 import { FacturaService } from './factura.service';
 import { FacturaDetailsService } from './factura-details.service';
-<<<<<<< HEAD
 import { PaymentTermService } from './payment-term.service';
-=======
 import { NotaCreditoService } from './nota-credito.service';
 import { NotaCreditoDetailsService } from './nota-credito-details.service';
->>>>>>> origin/rafael
 
 @Injectable({
   providedIn: 'root',
@@ -26,12 +23,9 @@ export class PdfService {
     private quotationDetailsService: QuotationDetailsService,
     private facturaService: FacturaService,
     private facturaDetailsService: FacturaDetailsService,
-<<<<<<< HEAD
-    private paymentTermService: PaymentTermService
-=======
+    private paymentTermService: PaymentTermService,
     private notaCreditoService: NotaCreditoService,
     private notaCreditoDetailsService: NotaCreditoDetailsService,
->>>>>>> origin/rafael
   ) {}
 
   generatePdf(orderData: any) {
@@ -210,7 +204,7 @@ export class PdfService {
         };
         const razonsocial = cotizacionData.user.username;
         const fullName = `${userDetails.nombre} ${userDetails.apellido}`;
-        const ruc = cotizacionData.user.ruc;        
+        const ruc = cotizacionData.user.ruc;
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacionId).subscribe(
           (quotationDetailsData: any) => {
             const cotizacionesDe = quotationDetailsData.map(
@@ -218,7 +212,7 @@ export class PdfService {
                 // Calculate total price as precioNuevo * cantidad
                 const precioUnitario = item.producto === null ? parseFloat(item.precioUnitario) : parseFloat(item.precioNuevo);
                 const precioTotal = precioUnitario * item.cantidad;
-                
+
                 return [
                   index + 1,
                   item.producto?.nombreProducto || item.tipoServicio,

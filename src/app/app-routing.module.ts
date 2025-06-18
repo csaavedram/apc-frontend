@@ -61,8 +61,6 @@ import { ViewFacturaDetailComponent } from './pages/admin/view-factura-detail/vi
 import { ViewNotasCreditoComponent } from './pages/admin/view-notas-credito/view-notas-credito.component';
 import { AddNotaCreditoComponent } from './pages/admin/add-nota-credito/add-nota-credito.component';
 import { ViewNotaCreditoDetailComponent } from './pages/admin/view-nota-credito-detail/view-nota-credito-detail.component';
-import { UserPaymentComponent } from './pages/user/user-payment/user-payment.component';
-
 
 const routes: Routes = [
   {
@@ -318,10 +316,6 @@ const routes: Routes = [
       {
         path: 'pagar-solicitud/:orderId',
         component: UserPayRequestComponent
-      },
-      {
-        path: 'pago/:orderId',
-        component: UserPaymentComponent
       }
     ]
   },
