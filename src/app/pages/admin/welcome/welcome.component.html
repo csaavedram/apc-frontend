@@ -1,60 +1,121 @@
 <mat-card>
   
     <h1 class="container">Bienvenido al panel de administrador</h1>
-  
+    <div class="dashboard-tabs">
+  <span 
+    class="dashboard-tab" 
+    [ngClass]="{'active-tab': tabSeleccionado === 'mes'}"
+    (click)="tabSeleccionado = 'mes'"
+  >
+    Ultimo mes
+  </span>
+  <span>|</span>
+  <span 
+    class="dashboard-tab" 
+    [ngClass]="{'active-tab': tabSeleccionado === '6meses'}"
+    (click)="tabSeleccionado = '6meses'"
+    
+    >
+    Ultimos 6 meses
+  </span>
+  <span>|</span>
+  <span 
+    class="dashboard-tab" 
+    [ngClass]="{'active-tab': tabSeleccionado === 'anio'}"
+    (click)="tabSeleccionado = 'anio'">
+    Ultimo año
+  </span>
+</div>
+<div class="seleccione">
+  <div class="mesesyanios">
+    <mat-form-field class="selectorr">
+    <mat-label >Buscar Ganancia por mes</mat-label>
+      <mat-select [(ngModel)]="selectedValue" name="mes" (selectionChange)="actualizarGraficoTipoPago()"required>
+         <mat-option *ngFor="let mes of meses" [value]="mes.value">{{ mes.viewValue }}</mat-option>
+        <mat-option>
 
+        </mat-option>
+      </mat-select>
+  </mat-form-field>
+  
+  <mat-form-field class="selectorr">
+    <mat-label>Seleccionar año</mat-label>
+    <mat-select [(ngModel)]="selectedYear" (selectionChange)="actualizarGraficoTipoPago()">
+      <mat-option *ngFor="let anio of anios" [value]="anio">{{ anio }}</mat-option>
+    </mat-select>
+</mat-form-field>
+</div>
+</div>
   <div class='featured'>
     <div class='featuredItem'>
-      <span class='featuredTitle'>Ganancia</span>
-      <div class='featuredMoneyContainer'>
-        <span class='featuredMoney'>s/ 5,000.00</span>
-        <span class='featuredMoneyRate'>-200.00 <i class="material-icons">arrow_drop_up</i></span>
-      </div>
-      <span class='featuredSub'>en comparacion con el mes pasado</span>
+      
+     <span class='featuredTitle'>GANANCIA</span>
+  <!-- Mostrar GANANCIA mensual -->
+  <ng-container *ngIf="tabSeleccionado === 'mes'">
+    <div class='featuredMoneyContainer'>
+    <div class='featuredMoney'>Monto: {{ getGananciaActual() | currency:'PEN ' }}</div>
+    <div class='featuredMoneyRate'>
+      {{ getDiferenciaGanancia() >= 0 ? '+' : '' }}{{ getDiferenciaGanancia() | number:'1.0-2' }} Mes antes
     </div>
+    </div>
+    <span class='featuredSub'>en comparación a otra fecha</span>
+  </ng-container>
+
+  <!-- Mostrar GANANCIA en rango -->
+  <ng-container *ngIf="tabSeleccionado !== 'mes'">
+    <div class='featuredMoney'>Monto: {{ getGananciaPorRango() | currency:'PEN ' }}</div>
+  
+    <span class='featuredSub'>
+      en {{ tabSeleccionado === '6meses' ? 'los últimos 6 meses' : 'el último año' }}
+    </span>
+  </ng-container>
+  
+
+  </div>
+    
     <div class='featuredItem'>
-      <span class='featuredTitle'>Cantidad de Compras</span>
-      <div class='featuredMoneyContainer'>
-        <span class='featuredMoney'>20</span>
-        <span class='featuredMoneyRate'>-10 <i class="material-icons">arrow_drop_down</i></span>
+      <div class='featuredTitle'>TOP PRODUCTOS VENDIDOS</div>
+      <div class='featuredMoney' *ngFor="let prod of getProductosVendidos()">
+        {{ prod.nombreProducto }} - {{ prod.cantidad }}
       </div>
-      <span class='featuredSub'>en comparacion con el mes pasado</span>
-    </div>
-    <div class='featuredItem'>
-      <span class='featuredTitle'>Costos</span>
-      <div class='featuredMoneyContainer'>
-        <span class='featuredMoney'>s/ 3,000.00</span>
-        <span class='featuredMoneyRate'>+1,000.00 <i class="material-icons">arrow_drop_up</i></span>
-      </div>
-      <span class='featuredSub'>en comparacion con el mes pasado</span>
-    </div>
+      <span class='featuredSub'>de todos nuestro productos</span>
+    </div> 
+  
   </div>
 
   <div class='featured'>
     <div class='featuredItem'>
-      <span class='featuredTitle'>Ganancia</span>
-      <div class='featuredMoneyContainer'>
-        <span class='featuredMoney'>s/ 5,000.00</span>
-        <span class='featuredMoneyRate'>-200.00 <i class="material-icons">arrow_drop_down</i></span>
+     <span class='featuredTitle'>FACTURAS MÁS CARAS</span>
+     
+      <div class='featuredMoney' *ngFor="let f of getFacturasMasCaras()">
+        {{ f.codigo }} - {{ f.total | currency:'PEN' }}
       </div>
       <span class='featuredSub'>en comparacion con el mes pasado</span>
-    </div>
+    </div> 
+    
     <div class='featuredItem'>
-      <span class='featuredTitle'>Cantidad de Compras</span>
+      <span class='featuredTitle'>CANTIDAD DE FACTURAS</span>
+      <!-- Mensual -->
+      
+    <ng-container *ngIf="tabSeleccionado === 'mes'">
       <div class='featuredMoneyContainer'>
-        <span class='featuredMoney'>20</span>
-        <span class='featuredMoneyRate'>-10 <i class="material-icons">arrow_drop_down</i></span>
+      <div class='featuredMoney'>Facturas: {{ getCantidadFacturasActual() }}</div>
+      <div class='featuredMoneyRate'>
+        {{ getDiferenciaCantidadFacturas() >= 0 ? '+' : '' }}{{ getDiferenciaCantidadFacturas() }} Mes antes
       </div>
-      <span class='featuredSub'>en comparacion con el mes pasado</span>
-    </div>
-    <div class='featuredItem'>
-      <span class='featuredTitle'>Costos</span>
-      <div class='featuredMoneyContainer'>
-        <span class='featuredMoney'>s/ 3,000.00</span>
-        <span class='featuredMoneyRate'>+1,000.00 <i class="material-icons">arrow_drop_up</i></span>
       </div>
-      <span class='featuredSub'>en comparacion con el mes pasado</span>
-    </div>
+      <span class='featuredSub'>en comparación con el mes pasado</span>
+    </ng-container>
+
+    <!-- Rango -->
+    <ng-container *ngIf="tabSeleccionado !== 'mes'">
+      <div class='featuredMoney'>Facturas: {{ getCantidadFacturasPorRango() }}</div>
+      <span class='featuredSub'>
+        en {{ tabSeleccionado === '6meses' ? 'los últimos 6 meses' : 'el último año' }}
+      </span>
+    </ng-container>
+    
+  </div>
   </div>
 
   <div class="contenedor-flex">
@@ -88,67 +149,25 @@
     <div class="elemento-65">
       <div class='widgetLg'>
         <h3 class='widgetLgTitle'>Listado de Pedidos</h3>
+        <div class="tabla-scroll">
         <table class='widgetLgTable'>
           <tr class='widgetLgTr'>
             <th class='widgetLgTh'>Cliente</th>
-            <th class='widgetLgTh'>Fecha</th>
+            <th class='widgetLgTh'>Fecha Emision</th>
             <th class='widgetLgTh'>N° de Pedido</th>
             <th class='widgetLgTh'>Estado</th>
           </tr>
-          <tr class='widgetLgTr'>
-            <td class='widgetLgUser'>
-              <img
-                src="https://static.vecteezy.com/system/resources/previews/006/329/798/non_2x/client-symbol-member-profile-icon-vector.jpg"
-                alt="" class='widgetLgImg' />
-              <span class='widgetLgImg'>Gastón Rodriguez</span>
-            </td>
-            <td class='widgetLgDate'> 17/04/2024</td>
-            <td class='widgetLgAmount'>000005982</td>
-            <td class='widgetLdstatus'>
-              <span class='widgetLgImg'>Pendiente</span>
-            </td>
-          </tr>
-          <tr class='widgetLgTr'>
-            <td class='widgetLgUser'>
-              <img
-                src="https://static.vecteezy.com/system/resources/previews/006/329/798/non_2x/client-symbol-member-profile-icon-vector.jpg"
-                alt="" class='widgetLgImg' />
-              <span class='widgetLgImg'>Camila Blanco</span>
-            </td>
-            <td class='widgetLgDate'> 13/04/2024</td>
-            <td class='widgetLgAmount'>000005981</td>
-            <td class='widgetLdstatus'>
-              <span class='widgetLgImg'>Entregado</span>
-            </td>
-          </tr>
-          <tr class='widgetLgTr'>
-            <td class='widgetLgUser'>
-              <img
-                src="https://static.vecteezy.com/system/resources/previews/006/329/798/non_2x/client-symbol-member-profile-icon-vector.jpg"
-                alt="" class='widgetLgImg' />
-              <span class='widgetLgImg'>Carlos Montero</span>
-            </td>
-            <td class='widgetLgDate'> 09/04/2024</td>
-            <td class='widgetLgAmount'>000005980</td>
-            <td class='widgetLdstatus'>
-              <span class='widgetLgImg'>Entregado</span>
-            </td>
-          </tr>
-          <tr class='widgetLgTr'>
-            <td class='widgetLgUser'>
-              <img
-                src="https://static.vecteezy.com/system/resources/previews/006/329/798/non_2x/client-symbol-member-profile-icon-vector.jpg"
-                alt="" class='widgetLgImg' />
-              <span class='widgetLgImg'>Christian Saavedra</span>
-            </td>
-            <td class='widgetLgDate'> 01/04/2024</td>
-            <td class='widgetLgAmount'>000005979</td>
-            <td class='widgetLdstatus'>
-              <span class='widgetLgImg'>Entregado</span>
-            </td>
-          </tr>
+          <tr class='widgetLgTr'*ngFor="let tabla of getTablita()">
+            <td>{{tabla.cliente}}</td>
+            <td>{{tabla.fecha}}</td>
+            <td>{{tabla.codigo}}</td>
+            <td>{{tabla.estado}}</td>
+            </tr>
+          
         </table>
+        </div>
       </div>
     </div>
   </div>
+
 </mat-card>

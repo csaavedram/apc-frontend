@@ -109,7 +109,6 @@ import { ToastrModule } from 'ngx-toastr';
         DashboardComponent,
         ProfileComponent,
         SidebarComponent,
-        WelcomeComponent,
         CarruselComponent,
         UserSidebarComponent,
         UserWelcomeComponent,

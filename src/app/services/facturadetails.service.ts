@@ -20,4 +20,7 @@ export class FacturaDetailsService {
   public listarFacturaDetailsPorFactura(facturaId: number) {
     return this.http.get(`${baserUrl}/facturadetails/factura/${facturaId}`);
   }
+  public listarFacturaDetailsAll(){
+    return this.http.get(`${baserUrl}/facturadetails/`);
+  }
 }
