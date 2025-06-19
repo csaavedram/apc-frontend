@@ -71,6 +71,13 @@ export class AddCotizacionComponent {
     monto: any
   }[] = [];
 
+  plazaPagoTabla: {
+    nroCuota: number;
+    fechaInicio: string;
+    fechaFin: string;
+    monto: number;
+  }[] = [];
+
   productos: any[] = [];
   servicios: any[] = [];
   detalleProductos: any[] = [];
@@ -101,7 +108,7 @@ export class AddCotizacionComponent {
     const input = this.usuarioInput.trim().toLowerCase();
     if (this.tipoBusqueda === 'razon_social' && input.length > 0) {
       this.filteredSuggestions = this.listaUsuarios
-        .filter(usuario => usuario.nombre?.toLowerCase().includes(input))
+        .filter(usuario => usuario.tipoUsuario === 'empresa' && usuario.nombre?.toLowerCase().includes(input))
         .map(usuario => usuario.nombre);
       console.log('Filtered suggestions:', this.filteredSuggestions);
     } else {
@@ -296,8 +303,11 @@ export class AddCotizacionComponent {
       });
     }
 
+    this.actualizarPlazaPagoTabla();
     this.selectedProduct = null;
     this.cotizacionData.productoId = null;
+
+    console.log(this.plazaPagoTabla);
   }
 
   agregarDetalleServicio(price: number): void {
@@ -315,20 +325,23 @@ export class AddCotizacionComponent {
       serviceType: this.selectedServiceType.type,
       price
     };
-
     this.detalleServicios.push(detalle);
     Swal.fire('Detalle agregado', 'El detalle de servicio ha sido agregado', 'success');
     this.selectedServiceType = { type: '', price: 0 };
+
+    this.actualizarPlazaPagoTabla();
   }
 
   eliminarDetalleProducto(index: number): void {
     this.detalleProductos.splice(index, 1);
     Swal.fire('Eliminado', 'El detalle del producto ha sido eliminado', 'success');
+    this.actualizarPlazaPagoTabla();
   }
 
   eliminarDetalleServicio(index: number): void {
     this.detalleServicios.splice(index, 1);
     Swal.fire('Eliminado', 'El detalle del servicio ha sido eliminado', 'success');
+    this.actualizarPlazaPagoTabla();
   }
 
   volverACategorias() {
@@ -446,41 +459,32 @@ export class AddCotizacionComponent {
           );
         });
 
-        const plazosPago = Array.isArray(this.plazoPagoData)
-          ? this.plazoPagoData.map((plazo: any, index) => ({
-              nroCuota: index + 1,
-              fechaInicio: plazo.fechaInicio,
-              fechaFin: plazo.fechaFin,
-              monto: 0,
-            }))
-          : [];
+        if(cotizacionPayload.tipoPago === 'Contado') {
+          const totalPorPlazo = this.calcularTotal() / this.nroPlazos;
+          this.plazoPagoData.forEach((plazoPago, index) => {
+            const payload = {
+              plazoPagoId: index + 1,
+              cantidad: totalPorPlazo,
+              facturaId: null,
+              cotizacion: {
+                cotizacionId: cotizacionId,
+              },
+              fechaInicio: plazoPago.fechaInicio,
+              fechaFin: plazoPago.fechaFin,
+              estado: 'Pendiente',
+              nroCuota: plazoPago.nroCuota,
+            };
 
-        const totalPorPlazo = this.calcularTotal() / this.nroPlazos;
-
-        console.log()
-        plazosPago.forEach((plazoPago, index) => {
-          const payload = {
-            plazoPagoId: index + 1,
-            cantidad: totalPorPlazo,
-            facturaId: null,
-            cotizacion: {
-              cotizacionId: cotizacionId, // Ensure cotizacionId is passed correctly
-            },
-            fechaInicio: plazoPago.fechaInicio,
-            fechaFin: plazoPago.fechaFin,
-            estado: 'Pendiente',
-            nroCuota: plazoPago.nroCuota,
-          };
-
-          this.paymentTermService.agregarPlazoPago(payload).subscribe(
-            () => {
-              console.log('Plazo de pago guardado:', payload);
-            },
-            (error) => {
-              console.error('Error al guardar plazo de pago:', error);
-            }
-          );
-        });
+            this.paymentTermService.agregarPlazoPago(payload).subscribe(
+              () => {
+                console.log('Plazo de pago guardado:', payload);
+              },
+              (error) => {
+                console.error('Error al guardar plazo de pago:', error);
+              }
+            );
+          });
+        }
 
         Swal.fire('Éxito', 'La cotización y sus detalles han sido guardados correctamente', 'success')
           .then(() => {
@@ -560,8 +564,9 @@ export class AddCotizacionComponent {
   }
 
   calcularTotal(): number {
-    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
-           this.detalleServicios.reduce((sum, detalle) => sum + detalle.price, 0); // Total is the sum of all new prices
+    const totalProductos = this.detalleProductos.reduce((sum, producto) => sum + producto.totalPrice, 0);
+    const totalServicios = this.detalleServicios.reduce((sum, servicio) => sum + servicio.price, 0);
+    return totalProductos + totalServicios;
   }
 
   onTipoBusquedaChange(): void {
@@ -636,11 +641,13 @@ export class AddCotizacionComponent {
       duration: 3000,
       panelClass: ['snackbar-success']
     });
+
+    this.actualizarPlazaPagoTabla();
   }
 
   buscarPlazos(): void {
-    if (this.nroPlazos <= 1) {
-      this.snack.open('Debe ingresar mínimo 2 nros. de plazos', '', {
+    if (this.nroPlazos <= 0) {
+      this.snack.open('Debe ingresar minimo 1 nro. de plazo', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
       });
@@ -655,7 +662,31 @@ export class AddCotizacionComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.plazoPagoData = result;
+        if(this.calcularTotal() === 0) {
+          this.plazaPagoTabla = this.plazoPagoData.map((plazo, index) => ({
+            nroCuota: index + 1,
+            fechaInicio: plazo.fechaInicio,
+            fechaFin: plazo.fechaFin,
+            monto: 0
+          }));
+        } else {
+          const totalPorPlazo = (this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
+                                this.detalleServicios.reduce((sum, detalle) => sum + detalle.price, 0)) / this.nroPlazos;
+          this.plazaPagoTabla = this.plazoPagoData.map((plazo, index) => ({
+            nroCuota: index + 1,
+            fechaInicio: plazo.fechaInicio,
+            fechaFin: plazo.fechaFin,
+            monto: totalPorPlazo
+          }));
+        }
       }
+    });
+  }
+
+  actualizarPlazaPagoTabla(): void {
+    const total = this.calcularTotal();
+    this.plazaPagoTabla.forEach((plazo, index) => {
+      plazo.monto = total / this.nroPlazos;
     });
   }
 }

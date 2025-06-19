@@ -21,11 +21,15 @@ export class PaymentTermService {
     return this.http.get(`${baserUrl}/plazospago/cotizacion/${cotizacionId}`);
   }
 
-  public actualizarPlazoPago(plazoPagoId: any, data: any) {
+  public actualizarFacturaDePlazoPago(plazoPagoId: any, data: any) {
     return this.http.patch(`${baserUrl}/plazospago/${plazoPagoId}`, data);
   }
 
-  public listarPlazos(): Observable<any[]> {
-    return this.http.get<any[]>(`${baserUrl}/plazospago`);
+  public actualizarPlazoPago(data: any) {
+    return this.http.put(`${baserUrl}/plazospago/`, data);
+  }
+
+  public eliminarPlazoPago(plazoPagoId: any) {
+    return this.http.delete(`${baserUrl}/plazospago/${plazoPagoId}`);
   }
 }

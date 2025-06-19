@@ -269,7 +269,7 @@ export class AddFacturaComponent {
                 facturaId: factura.facturaId
               };
 
-              this.paymentTermService.actualizarPlazoPago(plazoPago.plazoPagoId, plazoPagoPayload).subscribe(
+              this.paymentTermService.actualizarFacturaDePlazoPago(plazoPago.plazoPagoId, plazoPagoPayload).subscribe(
                 (data: any) => {
                   console.log('Plazo de pago actualizado:', data);
                 },

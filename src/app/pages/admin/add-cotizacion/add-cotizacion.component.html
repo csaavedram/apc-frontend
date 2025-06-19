@@ -307,17 +307,10 @@
               </tr>
             </tbody>
           </table>
-
-          <div class="d-flex justify-content-end mt-4">
-            <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
-              (click)="guardarInformacion()">
-              Guardar Cotización
-            </button>
-          </div>
         </div>
 
         <!-- Section for listing payment terms -->
-        <div *ngIf="cotizacionData.tipoPago === 'Credito' && plazoPagoData.length > 0" class="mt-4">
+        <div *ngIf="cotizacionData.tipoPago === 'Credito' && plazoPagoData.length > 0 && (detalleProductos.length > 0 || detalleServicios.length > 0)" class="mt-4">
           <h3>Plazos de Pago</h3>
           <table class="table table-bordered text-center">
             <thead class="table-dark">
@@ -329,14 +322,21 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let plazo of plazoPagoData">
+              <tr *ngFor="let plazo of plazaPagoTabla">
                 <td>{{ plazo.nroCuota }}</td>
                 <td>{{ plazo.fechaInicio | date:'dd/MM/yyyy' }}</td>
                 <td>{{ plazo.fechaFin | date:'dd/MM/yyyy' }}</td>
-                <td>{{ plazo.monto === '-' ? '-' : ('S/. ' + plazo.monto) }}</td>
+                <td>{{ plazo.monto === 0 ? '-' : ('S/. ' + (plazo.monto | number:'1.2-2')) }}</td>
               </tr>
             </tbody>
           </table>
+
+          <div class="d-flex justify-content-end mt-4">
+            <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+              (click)="guardarInformacion()">
+              Guardar Cotización
+            </button>
+          </div>
         </div>
       </div>
     </div>
