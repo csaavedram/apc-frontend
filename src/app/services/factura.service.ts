@@ -32,4 +32,12 @@ export class FacturaService {
   public obtenerFacturaPorCodigo(codigo: string) {
     return this.http.get(`${baserUrl}/factura/codigo/${codigo}`);
   }
+
+  public obtenerFacturaPorCotizacion(cotizacionId: any) {
+    return this.http.get(`${baserUrl}/factura/cotizacion/id/${cotizacionId}`);
+  }
+
+  public listarFacturasPorCodigoCotizacion(codigoCotizacion: string) {
+    return this.http.get(`${baserUrl}/factura/cotizacion/${codigoCotizacion}`);
+  }
 }

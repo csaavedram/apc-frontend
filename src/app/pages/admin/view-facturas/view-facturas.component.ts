@@ -53,43 +53,6 @@ export class ViewFacturaComponent implements OnInit {
       factura.codigo.toLowerCase().includes(this.searchTerm1.toLowerCase().trim()));
   }
 
-  anularFactura(facturaId: any): void {
-    this.facturaService.obtenerFactura(facturaId).subscribe(
-      (factura: any) => {
-        console.log(factura)
-        const facturaInfo = `Código: ${factura.codigo} | Total: S/.${factura.total}`;
-        Swal.fire({
-          title: 'Anular factura',
-          html: `<p>¿Estás seguro de anular esta factura?</p><p>${facturaInfo}</p>`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#d33',
-          cancelButtonColor: '#3085d6',
-          confirmButtonText: 'Anular factura',
-          cancelButtonText: 'Volver'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.facturaService.anularFactura(facturaId).subscribe(
-              (data: any) => {
-                console.log(data);
-                Swal.fire('Factura anulada', 'La factura ha sido anulada con éxito', 'success');
-                this.listarFacturas();
-              },
-              (error) => {
-                console.log(error);
-                Swal.fire('Error', 'Ocurrió un error al anular la factura', 'error');
-              }
-            );
-          }
-        });
-      },
-      (error: any) => {
-        console.log(error);
-        Swal.fire('Error', 'No se pudo obtener la información de la factura', 'error');
-      }
-    )
-  }
-
   verFacturaPDF(facturaId: any) {
     this.pdfService.generatePdfFactura(facturaId);
   }

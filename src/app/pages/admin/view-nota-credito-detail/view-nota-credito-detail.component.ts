@@ -12,6 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { NotaCreditoDetailsService } from 'src/app/services/nota-credito-details.service';
 import { NotaCreditoService } from 'src/app/services/nota-credito.service';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 
 @Component({
   selector: 'app-view-nota-credito-detail',
@@ -55,11 +56,20 @@ export class ViewNotaCreditoDetailComponent {
     rucEmpresa: '',
   };
 
+  plazaPagoTabla: {
+    nroCuota: number;
+    fechaInicio: string;
+    fechaFin: string;
+    monto: number;
+  }[] = [];
+
+
   constructor(
     private snack: MatSnackBar,
     private route: ActivatedRoute,
     private notaCreditoService: NotaCreditoService,
     private notaCreditoDetailService: NotaCreditoDetailsService,
+    private plazoPagoService: PaymentTermService,
     private router: Router,
   ) {}
 
@@ -84,11 +94,12 @@ export class ViewNotaCreditoDetailComponent {
           apellido: nota.user.apellido,
           razonSocial: nota.user.razonSocial,
           ruc: nota.user.ruc,
-          tipoUsuario: nota.user.tipoUsuario
+          tipoUsuario: nota.user.tipoUsuario,
+          username: nota.user.username
         };
 
-        this.nombreCliente = this.usuario.tipoUsuario === 'cliente_empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
-        this.ruc = this.usuario.ruc;
+        this.nombreCliente = this.usuario.tipoUsuario === 'empresa' ? this.usuario.nombre : `${this.usuario.nombre} ${this.usuario.apellido}`;
+        this.ruc = this.usuario.username;
 
         this.notaCreditoDetailService.listarNotasCreditoDetailsPorNotaCredito(nota.notaCreditoId).subscribe(
           (detalles: any) => {
@@ -111,6 +122,27 @@ export class ViewNotaCreditoDetailComponent {
             }));
 
             this.loading = false;
+
+            if(nota.tipoPago === 'Credito') {
+              this.plazoPagoService.obtenerPlazosPagoPorNotaCredito(nota.notaCreditoId).subscribe(
+                (plazosPago: any) => {
+                  const totalPorPlazo = (this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0) +
+                                this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0)) / plazosPago.length;
+                  this.plazaPagoTabla = plazosPago.map((plazo: any, index: any) => ({
+                    nroCuota: index + 1,
+                    fechaInicio: plazo.fechaInicio,
+                    fechaFin: plazo.fechaFin,
+                    monto: totalPorPlazo
+                  }));
+                },
+                (error) => {
+                  console.error('Error al obtener detalles de la cotización:', error);
+                  this.snack.open('Error al obtener detalles de la cotización', '', {
+                    duration: 3000
+                  });
+                }
+              );
+            }
           },
           (error) => {
             console.error('Error al obtener detalles de la nota de crédito:', error);

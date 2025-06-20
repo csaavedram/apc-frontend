@@ -5,6 +5,41 @@
   margin: 10px;
   transition: 1s;
 }
+.container{
+  margin-left: 20px;
+}
+.selectorr{
+  
+  margin-right: 20px;
+  width: 20%;
+  transition: 1s;
+}
+.seleccione{
+  margin-left: 30px;
+}
+.selectorr mat-select {
+  border-radius: 20px;}
+  .dashboard-tabs {
+  
+  margin: 10px;
+  margin-left: 30px;
+  font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dashboard-tab {
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.dashboard-tab.active-tab {
+  background: #fff;
+  font-weight: bold;
+  border: 1px solid #1976d2;
+  color: #1976d2;
+}
 
 .featuredItem {
   flex: 1;
@@ -15,7 +50,16 @@
   -webkit-box-shadow: 0px 0px 15px -10px #000000;
   box-shadow: 0px 0px 15px -10px #000000;
   transition: 1s;
+  width: 50%;
 }
+
+.tabla-scroll {
+  overflow-y: auto;
+  display: block;
+  max-height: 250px; /* Ajusta la altura máxima según tus necesidades */
+}
+
+
 
 .featuredItem:hover {
   transform: scale(1.05);
@@ -25,7 +69,11 @@
 .featuredTitle {
   font-size: 20px;
 }
-
+.mesesyanios{
+  justify-content: space-between;
+  margin-right: 10px;
+ 
+}
 .featuredMoneyContainer {
   margin: 10px 0px;
   display: flex;
@@ -33,8 +81,10 @@
 }
 
 .featuredMoney {
-  font-size: 30px;
+  font-size: 25px;
   font-weight: 600;
+  margin: 10px;
+  padding: 10px;
 }
 
 .featuredMoneyRate {
@@ -51,6 +101,9 @@
 
 .featuredIcon.negative {
   color: red;
+}
+.featuredSub{
+  display: flex;
 }
 
 h1,

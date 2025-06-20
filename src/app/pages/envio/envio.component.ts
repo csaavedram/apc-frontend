@@ -195,17 +195,6 @@ export class EnvioComponent implements OnInit {
             }
           );
 
-          const movimiento = {
-            cantidad: this.orderDetailsData.quantity,
-            tipo: 'Reservado',
-            dateCreated: this.getCurrentDate(),
-            producto: {
-              productoId: this.orderDetailsData.product.productoId
-            },
-          };
-
-          console.log('Movimiento:', movimiento);
-
           element.stock = element.stock - this.orderDetailsData.quantity;
 
           this.productoService.actualizarProducto(element).subscribe(

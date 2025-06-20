@@ -9,6 +9,8 @@ import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.servic
 import { InventarioService } from 'src/app/services/inventario.service';
 import { OrdersDetailsService } from 'src/app/services/ordersdetails.service';
 import { ViewTipoPagoComponent } from 'src/app/components/modal/view-tipo-pago/view-tipo-pago.component';
+import { QuotationService } from 'src/app/services/quotation.service';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 
 @Component({
   selector: 'app-user-history-order',
@@ -21,6 +23,9 @@ export class UserHistoryOrderComponent implements OnInit {
   currentPage1 = 1;
   rowsPerPage1 = 10;
   totalPages1 = 0;
+  cotizacion: any = [];
+  ordenCotizacion: any = [];
+  nroCuotaActual: number = 1;
 
   constructor(
     private ordersService: OrdersService,
@@ -28,6 +33,8 @@ export class UserHistoryOrderComponent implements OnInit {
     private loginService: LoginService,
     private ordenCotizacionService: OrdenCotizacionService,
     private inventarioService: InventarioService,
+    private cotizacionService: QuotationService,
+    private plazosPagoService: PaymentTermService,
     private dialog: MatDialog
   ) {}
 
@@ -56,18 +63,104 @@ export class UserHistoryOrderComponent implements OnInit {
     return this.orders.slice(startIndex, endIndex);
   }
 
-  openPaymentModal(orderId: string) {
-    const dialogRef = this.dialog.open(PaymentComponent, {
-      width: '500px',
-      data: { orderId },
-    });
+  openPaymentModal(orderId: any) {
+    this.ordenCotizacionService.obtenerOrdenCotizacionPorOrderId(orderId).subscribe(
+      async (ordenCotizacion: any) => {
+        console.log(ordenCotizacion);
+        const cotizacionId = ordenCotizacion[0].cotizacion.cotizacionId;
 
-    dialogRef.afterClosed().subscribe(
-      () => {
-        this.listarOrdersByUser();
+        this.plazosPagoService.obtenerPlazosPagoPorCotizacion(cotizacionId).subscribe(
+          async (plazosPago: any) => {
+            const fechaActual = new Date();
+            let plazoActual = null;
+
+            for (const plazo of plazosPago) {
+              const fechaInicio = new Date(plazo.fechaInicio);
+              const fechaFin = new Date(plazo.fechaFin);
+
+              if (fechaActual >= fechaInicio && fechaActual <= fechaFin) {
+                plazoActual = plazo;
+                this.nroCuotaActual = plazo.nroCuota;
+                break;
+              }
+            }
+
+            const dialogRef = this.dialog.open(PaymentComponent, {
+              width: '500px',
+              data: { orderId, plazoPago: plazoActual, nroCuota: this.nroCuotaActual },
+            });
+
+            dialogRef.afterClosed().subscribe(
+              () => {
+                window.location.reload();
+              },
+              (error) => {
+                console.error('Error closing payment modal:', error);
+              }
+            );
+          },
+          (error) => {
+            console.error('Error fetching payment terms:', error);
+          }
+        );
       },
       (error) => {
-        console.error('Error closing payment modal:', error);
+        console.error('Error fetching order quotation:', error);
+      }
+    );
+  }
+
+  listarOrdersByUser() {
+    this.user = this.loginService.getUser();
+    combineLatest([this.ordersService.listarOrdersByUser(this.user.id)]).subscribe(
+      ([orders]: [any]) => {
+        this.orders = orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        this.calculateTotalPages1();
+
+        this.orders.forEach((order: any) => {
+          this.ordenCotizacionService.obtenerOrdenCotizacionPorOrderId(order.orderId).subscribe(
+            (ordenCotizacion: any) => {
+              const cotizacion = ordenCotizacion[0].cotizacion;
+
+              if (cotizacion.tipoPago === 'Contado') {
+                order.mostrarBotonPagar = cotizacion.estado === 'Aceptado';
+              } else {
+                this.plazosPagoService.obtenerPlazosPagoPorCotizacion(cotizacion.cotizacionId).subscribe(
+                  (plazosPago: any) => {
+                    const fechaActual = new Date();
+                    let plazoActual = null;
+
+                    for (const plazo of plazosPago) {
+                      const fechaInicio = new Date(plazo.fechaInicio);
+                      const fechaFin = new Date(plazo.fechaFin);
+
+                      if (fechaActual >= fechaInicio && fechaActual <= fechaFin) {
+                        plazoActual = plazo;
+                        break;
+                      }
+                    }
+
+                    if (plazoActual && plazoActual.estado === 'Pendiente') {
+                      order.mostrarBotonPagar = true;
+                    } else {
+                      order.mostrarBotonPagar = false;
+                    }
+                  },
+                  (error) => {
+                    console.error('Error fetching payment terms:', error);
+                  }
+                );
+              }
+            },
+            (error) => {
+              console.error('Error fetching order quotation:', error);
+            }
+          );
+        });
+      },
+      (error) => {
+        console.log(error);
+        Swal.fire('Error', 'Error al cargar los datos', 'error');
       }
     );
   }
@@ -101,23 +194,7 @@ export class UserHistoryOrderComponent implements OnInit {
         this.ordersService.rechazarOrder(orderId).subscribe(
           () => {
             this.ordersDetailsService.listarOrdersDetailsByOrder(orderId).subscribe(
-              (orderDetails: any) => {
-                const movimientos = orderDetails.map((detalle: any) => ({
-                  producto: {
-                    productoId: detalle.product.productoId
-                  },
-                  cantidad: detalle.quantity,
-                  tipo: 'Devuelto',
-                  dateCreated: new Date().toISOString().split('T')[0]
-                }));
-
-                movimientos.forEach((movimiento: any) => {
-                  this.inventarioService.agregarProductoInventario(movimiento).subscribe(
-                    () => console.log('Movimiento registrado:', movimiento),
-                    (error: any) => console.error('Error al registrar movimiento:', error)
-                  );
-                });
-
+              () => {
                 Swal.fire('Pedido Rechazado', 'El pedido ha sido rechazado correctamente', 'success');
                 this.listarOrdersByUser();
               },
@@ -148,33 +225,52 @@ export class UserHistoryOrderComponent implements OnInit {
       if (result.isConfirmed) {
         this.ordersService.aceptarOrder(orderId).subscribe(
           () => {
-            Swal.fire('Pedido Aceptado', 'El pedido ha sido aceptado correctamente', 'success');
-            this.listarOrdersByUser();
+            this.ordersDetailsService.listarOrdersDetailsByOrder(orderId).subscribe(
+              (details: any) => {
+                const movimientos = details.map((detalle: any) => ({
+                  producto: {
+                    productoId: detalle.product.productoId
+                  },
+                  cantidad: detalle.quantity,
+                  tipo: 'Reservado',
+                  dateCreated: new Date().toISOString().split('T')[0]
+                }));
+
+                movimientos.forEach((movimiento: any) => {
+                  this.inventarioService.agregarProductoInventario(movimiento).subscribe(
+                    () => console.log('Movimiento registrado:', movimiento),
+                    (error: any) => console.error('Error al registrar movimiento:', error)
+                  );
+                });
+
+                this.ordenCotizacionService.obtenerOrdenCotizacionPorOrderId(orderId).subscribe(
+                  (ordenCotizacion: any) => {
+                    console.log(ordenCotizacion)
+                    const cotizacionId = ordenCotizacion[0].cotizacion.cotizacionId;
+                    this.cotizacionService.aceptarCotizacion(cotizacionId).subscribe(
+                      () => console.log('Cotización aceptada correctamente'),
+                      (error: any) => {
+                        console.log('Error al aceptar la cotización:', error);
+                      }
+                    );
+                  }
+                )
+
+                Swal.fire('Pedido Aceptado', 'El pedido ha sido aceptado correctamente', 'success');
+                this.listarOrdersByUser();
+              },
+              (error: any) => {
+                console.log(error);
+              }
+            );
           },
           (error: any) => {
             Swal.fire('Error', 'No se pudo aceptar el pedido', 'error');
-            console.error(error);
+            console.log(error);
           }
         );
       }
     });
-  }
-
-  listarOrdersByUser() {
-    this.user = this.loginService.getUser();
-    combineLatest([this.ordersService.listarOrdersByUser(this.user.id)]).subscribe(
-      ([orders]: [any]) => {
-        // Ordenar los pedidos por fecha de creación, de más reciente a más antiguo
-        this.orders = orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        this.calculateTotalPages1();
-
-        this.ordenCotizacionService.obtenerOrdenCotizacionPorOrderId(orders.orderId)
-      },
-      (error) => {
-        console.log(error);
-        Swal.fire('Error', 'Error al cargar los datos', 'error');
-      }
-    );
   }
 
   ngOnInit(): void {

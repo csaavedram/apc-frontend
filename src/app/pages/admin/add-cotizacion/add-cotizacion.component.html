@@ -330,13 +330,12 @@
               </tr>
             </tbody>
           </table>
-
-          <div class="d-flex justify-content-end mt-4">
-            <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
-              (click)="guardarInformacion()">
-              Guardar Cotización
-            </button>
-          </div>
+        </div>
+        <div *ngIf="(detalleProductos.length > 0 || detalleServicios.length > 0) && ((cotizacionData.tipoPago === 'Contado' && (detalleProductos.length > 0 || detalleServicios.length > 0)) || (cotizacionData.tipoPago === 'Credito' && plazoPagoData.length > 0))" class="d-flex justify-content-end mt-4">
+          <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+            (click)="guardarInformacion()">
+            Guardar Cotización
+          </button>
         </div>
       </div>
     </div>

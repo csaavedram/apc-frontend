@@ -9,11 +9,14 @@ import { PaymentService } from '../../../services/mercado-pago.service';
 import { PaymentTermService } from 'src/app/services/payment-term.service';
 import { FacturaService } from 'src/app/services/factura.service';
 import { FacturaDetailsService } from 'src/app/services/factura-details.service';
-import { LoginService } from 'src/app/services/login.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { OrdersService } from 'src/app/services/orders.service';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Inject } from '@angular/core';
+import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.service';
+import { QuotationService } from 'src/app/services/quotation.service';
+import { QuotationDetailsService } from 'src/app/services/quotation-details.service';
+import { LoginService } from 'src/app/services/login.service';
 
 @Component({
   selector: 'app-payment',
@@ -31,124 +34,243 @@ import { Inject } from '@angular/core';
 })
 export class PaymentComponent implements OnInit {
   private mp: any;
-  private cardForm: any;
   user: any = null;
+  email: string = '';
+  cotizacion: any = [];
+  cantidadPorPlazo: number = 0;
+  cantidadPlazos: number = 0;
 
   loading = false;
 
   constructor(
     private dialogRef: MatDialogRef<PaymentComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { orderId: number }, // Recibe el orderId
+    @Inject(MAT_DIALOG_DATA) public data: { orderId: number, nroCuota: number, plazoPago: any },
     private paymentService: PaymentService,
     private facturaService: FacturaService,
     private facturaDetailsService: FacturaDetailsService,
-    private paymentTermService: PaymentTermService,
+    private plazosPagoService: PaymentTermService,
+    private ordersService: OrdersService,
+    private cotizacionDetailsService: QuotationDetailsService,
+    private ordenCotizacionService: OrdenCotizacionService,
     private loginService: LoginService,
-    private ordersService: OrdersService
+    private cotizacionService: QuotationService
   ) {}
 
   async ngOnInit() {
     this.loading = true;
-    setTimeout(async () => {
-      this.mp = await this.paymentService.initializeMercadoPago();
-      this.user = this.loginService.getUser();
+    this.user = this.loginService.getUser();
+    this.ordenCotizacionService.obtenerOrdenCotizacionPorOrderId(this.data.orderId).subscribe(
+      (ordenCotizacion: any) => {
+        this.cotizacion = ordenCotizacion[0].cotizacion;
+        this.plazosPagoService.obtenerPlazosPagoPorCotizacion(this.cotizacion.cotizacionId).subscribe(
+          (plazosPago: any) => {
+            if (this.cotizacion.tipoPago === 'Credito') {
+              this.cantidadPlazos = plazosPago.length;
+              this.cantidadPorPlazo = plazosPago[0].cantidad;
+            }
+            this.initializeBrick();
+          },
+          (error) => {
+            console.error('❌ Error obteniendo plazos de pago:', error);
+            this.loading = false;
+          }
+        );
+      },
+      (error: any) => {
+        console.error('❌ Error obteniendo orden de cotización:', error);
+        this.loading = false;
+      }
+    );
+  }
 
-      this.cardForm = this.mp.cardForm({
-        amount: '100.5',
-        iframe: true,
-        form: {
-          id: 'form-checkout',
-          cardNumber: { id: 'form-checkout__cardNumber', placeholder: 'Número de tarjeta' },
-          expirationDate: { id: 'form-checkout__expirationDate', placeholder: 'MM/YY' },
-          securityCode: { id: 'form-checkout__securityCode', placeholder: 'Código de seguridad' },
-          cardholderName: { id: 'form-checkout__cardholderName', placeholder: 'Titular de la tarjeta' },
-          issuer: { id: 'form-checkout__issuer', placeholder: 'Banco emisor' },
-          installments: { id: 'form-checkout__installments', placeholder: 'Cuotas' },
-          identificationType: { id: 'form-checkout__identificationType', placeholder: 'Tipo de documento' },
-          identificationNumber: { id: 'form-checkout__identificationNumber', placeholder: 'Número del documento' },
-          cardholderEmail: { id: 'form-checkout__cardholderEmail', placeholder: 'E-mail' },
+  async initializeBrick() {
+    try {
+      this.mp = await this.paymentService.initializeMercadoPago();
+      const bricksBuilder = this.mp.bricks();
+
+      const amountToPay = this.cantidadPorPlazo || this.cotizacion.total;
+
+      const settings = {
+        initialization: {
+          amount: amountToPay,
+          payer: {
+            email: ''
+          }
+        },
+        customization: {
+          visual: {
+            style: {
+              theme: 'default',
+            },
+          },
+          paymentMethods: {
+            maxInstallments: 1,
+          },
         },
         callbacks: {
-          onFormMounted: (error: any) => {
+          onReady: () => {
             this.loading = false;
-            if (error) {
-              console.warn('Error montando formulario:', error);
-              return;
+            console.log('✅ Brick listo');
+          },
+          onSubmit: (cardFormData: any) => {
+            return new Promise((resolve, reject) => {
+              try {
+                this.sendPayment(cardFormData);
+                resolve('Pago procesado correctamente');
+              } catch (error) {
+                console.error('❌ Error en el pago:', error);
+                console.log(error)
+                reject(error);
+              }
+            });
+          },
+          onError: (error: any) => {
+            console.error('❌ Error en el Brick:', error);
+            if (error?.message || error?.cause) {
+              console.error('📩 Detalles:', JSON.stringify(error, null, 2));
             }
-            console.log('✅ Formulario montado');
-          },
-          onSubmit: (event: Event) => {
-            event.preventDefault();
-            const formData = this.cardForm.getCardFormData();
-            this.sendPayment(formData);
-          },
-          onFetching: (resource: string) => {
-            console.log('📡 Fetching:', resource);
-            return () => {
-              this.loading = false;
-            };
           },
         },
+      };
+
+      bricksBuilder.create('cardPayment', 'cardPaymentBrick_container', settings).then(() => {
+        console.log('✅ Brick creado exitosamente');
+      }).catch((error: any) => {
+        console.error('❌ Error creando el Brick:', error);
       });
-    }, 0);
+    } catch (error) {
+      console.error('❌ Error inicializando MercadoPago:', error);
+      this.loading = false;
+    }
   }
 
   closeModel() {
     this.dialogRef.close();
   }
 
+  addFactura(facturaPayload: any) {
+    this.facturaService.agregarFactura(facturaPayload).subscribe(
+      (factura: any) => {
+        this.cotizacionDetailsService.listarQuotationsDetailsByQuotation(this.cotizacion.cotizacionId).subscribe(
+          (cotizacionDetail: any) => {
+            const detalleProductos = cotizacionDetail.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
+              cantidad: detalle.cantidad,
+              precioTotal: detalle.precioTotal,
+              precioUnitario: detalle.precioUnitario,
+              tipoServicio: null,
+              producto: { productoId: detalle.producto.productoId },
+              factura: { facturaId: factura.facturaId },
+              createdAt: new Date(),
+            }));
+
+            const detalleServicios = cotizacionDetail.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
+              cantidad: 1,
+              precioTotal: detalle.precioTotal,
+              precioUnitario: detalle.precioUnitario,
+              productoId: null,
+              factura: { facturaId: factura.facturaId },
+              createdAt: new Date(),
+              tipoServicio: detalle.tipoServicio,
+            }));
+
+            detalleProductos.forEach((detalle: any) => {
+              this.facturaDetailsService.agregarFacturaDetail(detalle).subscribe(
+                () => console.log('✅ Detalle de producto guardado'),
+                (error) => console.error('❌ Error al guardar detalle de producto:', error)
+              );
+            });
+
+            detalleServicios.forEach((detalle: any) => {
+              this.facturaDetailsService.agregarFacturaDetail(detalle).subscribe(
+                () => console.log('✅ Detalle de servicio guardado'),
+                (error) => console.error('❌ Error al guardar detalle de servicio:', error)
+              );
+            });
+          },
+          (error: any) => {
+            console.error('❌ Error obteniendo detalles de la cotización:', error);
+          }
+        );
+      },
+      (err: any) => {
+        console.error('❌ Error creando factura:', err);
+      }
+    );
+  }
+
   sendPayment(data: any) {
-    const installments = Number(data.installments);
-    const totalAmount = Number(data.amount);
+    console.log(data);
 
     const payload = {
-      token: data.token,
-      issuer_id: data.issuerId,
-      payment_method_id: data.paymentMethodId,
-      transaction_amount: totalAmount,
-      installments: installments,
       description: 'Pago aprobado',
+      installments: data.installments,
       payer: {
-        email: data.cardholderEmail,
+        email: data.payer.email,
         identification: {
-          type: data.identificationType,
-          number: data.identificationNumber,
+          type: data.payer.identification.type,
+          number: data.payer.identification.number,
         },
       },
+      token: data.token,
+      transaction_amount: data.transaction_amount,
+      payment_method_id: data.payment_method_id,
     };
 
     this.paymentService.createPayment(payload).subscribe(
-      (mpResponse: any) => {
-        console.log('✅ Pago exitoso MP:', mpResponse);
+      async (response: any) => {
+        console.log('✅ Pago exitoso:', response);
 
-        const facturaPayload = {
-          divisa: 'Soles',
-          tipoPago: installments > 1 ? 'Credito' : 'Contado',
-          total: totalAmount,
-          user: { id: this.user.id },
-          fechaEmision: new Date(),
-          estado: 'Pagado',
-        };
+        const promises = [];
 
-        console.log(facturaPayload)
+        if (this.cotizacion.tipoPago === 'Credito') {
+          if (this.data.nroCuota === 1) {
+            promises.push(this.ordersService.pagarParcialmenteOrder(this.data.orderId).toPromise());
+            promises.push(this.cotizacionService.pagarParcialmenteCotizacion(this.cotizacion.cotizacionId).toPromise());
 
-        this.facturaService.agregarFactura(facturaPayload).subscribe(
-          (facturaResp: any) => {
-            console.log('✅ Factura creada:', facturaResp);
-            this.ordersService.cambiarEstadoOrder(this.data.orderId).subscribe(
-              () => {
-                console.log('✅ Estado de la orden actualizado a "Pagado"');
-                this.closeModel();
-              },
-              (err: any) => {
-                console.error('❌ Error al cambiar el estado de la orden:', err);
-              }
-            );
-          },
-          (err: any) => {
-            console.error('❌ Error creando factura:', err);
+            const facturaPayload = {
+              divisa: this.cotizacion.divisa,
+              tipoPago: this.cotizacion.tipoPago,
+              total: this.cotizacion.total,
+              user: { id: this.user.id },
+              fechaEmision: new Date(),
+              estado: 'Pagado',
+              cotizacion: { cotizacionId: this.cotizacion.cotizacionId },
+            };
+            this.addFactura(facturaPayload);
+
+            promises.push(this.plazosPagoService.cambiarEstadoAPagado(this.data.plazoPago.plazoPagoId).toPromise());
           }
-        );
+
+          if (this.data.nroCuota > 1 && this.data.nroCuota < this.cantidadPlazos) {
+            promises.push(this.plazosPagoService.cambiarEstadoAPagado(this.data.plazoPago.plazoPagoId).toPromise());
+          }
+
+          if (this.cantidadPlazos === this.data.nroCuota) {
+            promises.push(this.ordersService.pagarOrder(this.data.orderId).toPromise());
+            promises.push(this.cotizacionService.pagarCotizacion(this.cotizacion.cotizacionId).toPromise());
+            promises.push(this.plazosPagoService.cambiarEstadoAPagado(this.data.plazoPago.plazoPagoId).toPromise());
+          }
+        }
+
+        if (this.cotizacion.tipoPago === 'Contado') {
+          promises.push(this.ordersService.pagarOrder(this.data.orderId).toPromise());
+          promises.push(this.cotizacionService.pagarCotizacion(this.cotizacion.cotizacionId).toPromise());
+
+          const facturaPayload = {
+            divisa: this.cotizacion.divisa,
+            tipoPago: this.cotizacion.tipoPago,
+            total: this.cantidadPorPlazo,
+            user: { id: this.user.id },
+            fechaEmision: new Date(),
+            estado: 'Pagado',
+            cotizacion: { cotizacionId: this.cotizacion.cotizacionId },
+          };
+          this.addFactura(facturaPayload);
+        }
+
+        await Promise.all(promises);
+        console.log('✅ Todas las operaciones completadas');
+        this.closeModel();
       },
       (error: any) => {
         console.error('❌ Error en el pago MP:', error);

@@ -33,8 +33,12 @@ export class OrdersService {
     return this.http.get(`${baserUrl}/orders/user/${userId}`);
   }
 
-  public cambiarEstadoOrder(orderId: number) {
-    return this.http.patch(`${baserUrl}/orders/cambiar-estado/${orderId}`, null);
+  public pagarOrder(orderId: number) {
+    return this.http.patch(`${baserUrl}/orders/pagar/${orderId}`, null);
+  }
+
+  public pagarParcialmenteOrder(orderId: number) {
+    return this.http.patch(`${baserUrl}/orders/pagar-parcialmente/${orderId}`, null);
   }
 
   public atenderOrder(orderId: number, data: any) {

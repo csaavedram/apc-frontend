@@ -32,7 +32,7 @@
               <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Atendido'">
                   <i (click)="rechazarPedido(e.orderId)" class="fas fa-times-circle"></i>
               </div>
-              <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono">
+              <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.tipoPago === 'Credito' && e.status !== 'Solicitado'">
                   <i (click)="openPaymentTypeModal(e.orderId)" class="fas fa-calendar-check"></i>
               </div>
               <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono" *ngIf="e.status === 'Aceptado'">

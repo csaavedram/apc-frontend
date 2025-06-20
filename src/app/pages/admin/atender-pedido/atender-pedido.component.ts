@@ -220,29 +220,7 @@ export class AtenderPedidoComponent implements OnInit {
 
                 plazosPago.forEach((plazoPago) => {
                   this.paymentTermService.agregarPlazoPago(plazoPago).subscribe(
-                    () => {
-                      console.log(this.orderDetails)
-                      const movimientos = this.orderDetails.map((detalle: any) => ({
-                        producto: {
-                          productoId: detalle.product.productoId
-                        },
-                        cantidad: detalle.quantity,
-                        tipo: 'Reservado',
-                        dateCreated: this.getCurrentDate()
-                      }));
-
-                      movimientos.forEach((movimiento: any) => {
-                        console.log('Movimiento:', movimiento);
-
-                        this.inventarioService.agregarProductoInventario(movimiento).subscribe(
-                          (dataMovimiento) => {},
-                          (errorMovimiento) => {
-                            Swal.fire('Error en el sistema', 'No se ha podido registrar el movimiento', 'error');
-                            console.log(errorMovimiento);
-                          }
-                        );
-                      });
-                    },
+                    () => {},
                     (error) => {
                       console.error('Error al guardar plazo de pago:', error);
                     }
