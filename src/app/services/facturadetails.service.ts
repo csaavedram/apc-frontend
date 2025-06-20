@@ -39,4 +39,8 @@ export class FacturaDetailsService {
   public liberarSeriesDeFacturaDetalle(facturaDetailsId: number): Observable<any> {
     return this.http.delete(`${baserUrl}/facturadetails/${facturaDetailsId}/liberar-series`);
   }
+
+  public listarFacturaDetailsAll(){
+    return this.http.get(`${baserUrl}/facturadetails/`);
+  }
 }

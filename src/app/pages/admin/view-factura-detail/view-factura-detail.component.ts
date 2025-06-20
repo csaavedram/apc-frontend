@@ -97,7 +97,6 @@ export class ViewFacturaDetailComponent {
           apellido: factura.user.apellido,
           razonSocial: factura.user.razonSocial,
           ruc: factura.user.ruc,
-<<<<<<< HEAD
           tipoUsuario: factura.user.tipoUsuario,
           username: factura.user.username
         };
@@ -105,16 +104,11 @@ export class ViewFacturaDetailComponent {
         this.nombreCliente = this.usuario.tipoUsuario === 'empresa' ? this.usuario.nombre : `${this.usuario.nombre} ${this.usuario.apellido}`;
         this.ruc = this.usuario.username;
 
-=======
-          tipoUsuario: factura.user.tipoUsuario
-        };        this.nombreCliente = this.usuario.tipoUsuario === 'cliente_empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
-        this.ruc = this.usuario.ruc;        // Intentar cargar con números de serie, si falla usar método estándar
->>>>>>> origin/gaston
         this.facturaDetailService.listarFacturaDetailsPorFactura(factura.facturaId).subscribe(
           (detalles: any) => {
             this.allDetails = detalles;
             console.log('Detalles con series:', this.allDetails);
-            
+
             this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
               cotizacionDetalleId: detalle.cotizacionDetalleId,
               productoId: detalle.producto.productoId,
