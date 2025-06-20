@@ -63,7 +63,6 @@ import { ViewNotasCreditoComponent } from './pages/admin/view-notas-credito/view
 import { AddNotaCreditoComponent } from './pages/admin/add-nota-credito/add-nota-credito.component';
 import { ViewNotaCreditoDetailComponent } from './pages/admin/view-nota-credito-detail/view-nota-credito-detail.component';
 
-
 const routes: Routes = [
   {
     path: '',

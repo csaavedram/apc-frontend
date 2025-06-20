@@ -37,24 +37,24 @@
               @if (tipoBusqueda === 'ruc') {
                 <mat-form-field appearance="fill" class="w-100">
                   <mat-label>Nombre del Cliente o Empresa</mat-label>
-                  <input [ngModel]="usuario.tipoUsuario === 'persona_natural' ? nombreCompleto : usuario.razonSocial" name="nombreCompleto" type="text" placeholder="Digite el nombre completo" matInput disabled="true"/>
+                  <input [ngModel]="usuario.tipoUsuario === 'persona_natural' ? nombreCompleto : usuario.nombre" name="nombreCompleto" type="text" placeholder="Digite el nombre completo" matInput disabled="true"/>
                 </mat-form-field>
               }
             </div>
             <div class="col-2">
               @if (tipoBusqueda === 'ruc') {
-                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2 px-2" (click)="tipoBusqueda === 'ruc' ? buscarClientePorRuc() : buscarClientePorRazonSocial()">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <i class="fa-solid fa-magnifying-glass fs-6" style="color: #ffffff;"></i>
-                    <span style="color: #ffffff;">Buscar</span>
+                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" (click)="tipoBusqueda === 'ruc' ? buscarClientePorRuc() : buscarClientePorRazonSocial()">
+                  <div class="d-flex justify-content-between align-items-center gap-1">
+                    <i class="fa-solid fa-magnifying-glass" style="color: #ffffff; font-size: 12px;"></i>
+                    <span style="color: #ffffff; font-size: 14px;">Buscar</span>
                   </div>
                 </button>
               }
-              @if (this.usuario.razonSocial !== '' && this.tipoBusqueda === 'razon_social') {
-                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2 px-2" (click)="eliminarCliente()">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <i class="fa-solid fa-trash fs-6" style="color: #ffffff;"></i>
-                    <span style="color: #ffffff;">Borrar</span>
+              @if (this.usuario.nombre !== '' && this.tipoBusqueda !== 'ruc' && usuarioInput !== '') {
+                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" (click)="eliminarCliente()">
+                  <div class="d-flex justify-content-between align-items-center gap-1">
+                    <i class="fa-solid fa-trash" style="color: #ffffff; font-size: 12px;"></i>
+                    <span style="color: #ffffff; font-size: 14px;">Borrar</span>
                   </div>
                 </button>
               }
@@ -85,12 +85,36 @@
                   </mat-form-field>
                 </div>
               </div>
+            </div>
+            <div class="col-2">
+              <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 5px;">
+              </div>
+            </div>
 
+            @if(cotizacionData.tipoPago === 'Credito') {
+              <div style="display: flex; align-items: center;">
+                <div style="flex-grow: 1;">
+                  <mat-form-field appearance="fill" class="w-100">
+                    <mat-label>Ingresar la cantidad de plazos de pago</mat-label>
+                    <input [(ngModel)]="nroPlazos" name="plazos" type="text" placeholder="Ingrese la cantidad de plazos de pago" matInput />
+                  </mat-form-field>
+                </div>
+                <div style="flex-grow: 0; margin-left: 30px; margin-top: -20px;">
+                  <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" style="flex-grow: 1;" (click)="buscarPlazos()">
+                    <div class="d-flex justify-content-between align-items-center gap-1">
+                      <span style="color: #ffffff; font-size: 14px;">+ Plazos</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            }
+
+            <div class="col-10">
               <div class="row">
                 <div class="col-md-6">
                   <mat-form-field appearance="fill" class="w-100">
                     <mat-label>Plazo de Entrega</mat-label>
-                    <input matInput [matDatepicker]="plazoEntregaPicker" [(ngModel)]="cotizacionData.plazoEntrega" name="plazoEntrega" [min]="getCurrentDate()" />
+                    <input matInput [matDatepicker]="plazoEntregaPicker" [(ngModel)]="cotizacionData.plazoEntrega" name="plazoEntrega" />
                     <mat-datepicker-toggle matSuffix [for]="plazoEntregaPicker"></mat-datepicker-toggle>
                     <mat-datepicker #plazoEntregaPicker></mat-datepicker>
                   </mat-form-field>
@@ -98,7 +122,7 @@
                 <div class="col-md-6">
                   <mat-form-field appearance="fill" class="w-100">
                     <mat-label>Validez de Oferta</mat-label>
-                    <input matInput [matDatepicker]="validezOfertaPicker" [(ngModel)]="cotizacionData.validezOferta" name="validezOferta" [min]="getCurrentDate()" />
+                    <input matInput [matDatepicker]="validezOfertaPicker" [(ngModel)]="cotizacionData.validezOferta" name="validezOferta" />
                     <mat-datepicker-toggle matSuffix [for]="validezOfertaPicker"></mat-datepicker-toggle>
                     <mat-datepicker #validezOfertaPicker></mat-datepicker>
                   </mat-form-field>
@@ -128,13 +152,11 @@
               </mat-form-field>
             </div>
             <div class="col-2">
-              <div class="d-flex justify-content-center align-items-center h-full"
-                style="margin-top: 10px; margin-bottom: 10px;">
-                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2 px-2"
-                  (click)="buscarProductoPorSku()">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <i class="fa-solid fa-magnifying-glass fs-6" style="color: #ffffff;"></i>
-                    <span style="color: #ffffff;">Buscar</span>
+              <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 10px;">
+                <button type="button" class="fw-normal btn btn-dark rounded w-100 py-2" (click)="buscarProductoPorSku()">
+                  <div class="d-flex justify-content-between align-items-center gap-1">
+                    <i class="fa-solid fa-magnifying-glass" style="color: #ffffff; font-size: 12px;"></i>
+                    <span style="color: #ffffff; font-size: 14px;">Buscar</span>
                   </div>
                 </button>
               </div>
@@ -280,6 +302,29 @@
                 <td>S/. {{ calcularOpGravadas() | number:'1.0-2' }}</td>
                 <td>S/. {{ calcularIgv() | number:'1.0-2' }}</td>
                 <td>S/. {{ calcularTotal() | number:'1.0-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section for listing payment terms -->
+        <div *ngIf="cotizacionData.tipoPago === 'Credito' && (detalleProductos.length > 0 || detalleServicios.length > 0)" class="mt-4">
+          <h3>Plazos de Pago</h3>
+          <table class="table table-bordered text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Nro Cuota</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let plazo of plazoPagoTabla">
+                <td>{{ plazo.nroCuota }}</td>
+                <td>{{ plazo.fechaInicio | date:'dd/MM/yyyy' }}</td>
+                <td>{{ plazo.fechaFin | date:'dd/MM/yyyy' }}</td>
+                <td>{{ plazo.monto === 0 ? '-' : ('S/. ' + (plazo.monto | number:'1.2-2')) }}</td>
               </tr>
             </tbody>
           </table>

@@ -18,6 +18,9 @@ import { QuotationDetailsService } from 'src/app/services/quotation-details.serv
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AddPlazosPagoComponent } from 'src/app/components/modal/add-plazos-pago/add-plazos-pago.component';
+import { MatDialog } from '@angular/material/dialog';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 
 @Component({
   selector: 'app-add-cotizacion',
@@ -66,6 +69,15 @@ export class ActualizarCotizacionComponent {
     tipoUsuario: ''
   };
 
+  plazoPagoData: any[] = [];
+
+  plazoPagoTabla: {
+    nroCuota: number;
+    fechaInicio: string;
+    fechaFin: string;
+    monto: number;
+  }[] = [];
+
   productos: any[] = [];
   servicios: any[] = [];
   detalleProductos: any[] = [];
@@ -83,31 +95,39 @@ export class ActualizarCotizacionComponent {
   nombreCompleto: string = '';
   loading = false;
 
+  nroPlazos: number = 0;
+
+  private originalPaymentTermIds: number[] = []; // Store original payment term IDs
+
   constructor(
     private snack: MatSnackBar,
     private productoService: ProductoService,
     private route: ActivatedRoute,
     private quotationService: QuotationService,
+    private paymentTermService: PaymentTermService,
     private quotationDetailsService: QuotationDetailsService,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   onUsuarioInputChange(): void {
     const input = this.usuarioInput.trim().toLowerCase();
     if (this.tipoBusqueda === 'razon_social' && input.length > 0) {
       this.filteredSuggestions = this.listaUsuarios
-        .filter(usuario => usuario.razonSocial?.toLowerCase().includes(input))
-        .map(usuario => usuario.razonSocial);
+        .filter(usuario => usuario.tipoUsuario === 'empresa' && usuario.nombre?.toLowerCase().includes(input))
+        .map(usuario => usuario.nombre);
+      console.log('Filtered suggestions:', this.filteredSuggestions);
     } else {
       this.filteredSuggestions = [];
+      console.log('No suggestions found');
     }
   }
 
   selectSuggestion(suggestion: string): void {
     this.usuarioInput = suggestion;
     this.usuario = this.listaUsuarios.find(
-      usuario => usuario.razonSocial?.toLowerCase() === suggestion.toLowerCase()
+      usuario => usuario.nombre?.toLowerCase() === suggestion.toLowerCase()
     );
     this.filteredSuggestions = [];
   }
@@ -136,7 +156,7 @@ export class ActualizarCotizacionComponent {
           createdAt: cotizacion.createdAt
         };
 
-        this.usuarioInput = cotizacion.user.ruc;
+        this.usuarioInput = cotizacion.user.username;
 
         // Set user data
         this.usuario = {
@@ -154,6 +174,8 @@ export class ActualizarCotizacionComponent {
         // List quotation details
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(this.cotizacionId).subscribe(
           (detalles: any) => {
+            console.log('Detalles obtenidos:', detalles);
+
             this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
               cotizacionDetalleId: detalle.cotizacionDetalleId,
               productoId: detalle.producto.productoId,
@@ -165,12 +187,54 @@ export class ActualizarCotizacionComponent {
               igv: detalle.igv
             }));
 
+            console.log('Detalles de productos:', this.detalleProductos);
+
             this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
-              cotizacionDetalleId: detalle.cotizacionDetalleId, // Incluye el ID del detalle
+              cotizacionDetalleId: detalle.cotizacionDetalleId,
               tipoServicio: detalle.tipoServicio,
               precioTotal: detalle.precioTotal,
               precioUnitario: detalle.precioUnitario,
             }));
+
+            console.log('Detalles de servicios:', this.detalleServicios);
+
+            this.paymentTermService.obtenerPlazosPagoPorCotizacion(this.cotizacionId).subscribe(
+              (data: any) => {
+                console.log('Plazos de pago obtenidos:', data);
+                this.nroPlazos = data.length;
+                this.plazoPagoTabla = data.map((plazo: any, index: number) => ({
+                  nroCuota: plazo.nroCuota,
+                  fechaInicio: plazo.fechaInicio,
+                  fechaFin: plazo.fechaFin,
+                  monto: plazo.cantidad
+                }));
+
+                this.plazoPagoData = data.map((plazo: any) => ({
+                  plazaPagoId: plazo.plazoPagoId,
+                  nroCuota: plazo.nroCuota,
+                  cotizacion: {
+                    cotizacionId: plazo.cotizacion.cotizacionId
+                  },
+                  facturaId: null,
+                  fechaInicio: plazo.fechaInicio,
+                  fechaFin: plazo.fechaFin,
+                  cantidad: plazo.cantidad,
+                  estado: plazo.estado
+                }));
+
+                this.plazoPagoData = this.plazoPagoData.sort((a, b) => a.nroCuota - b.nroCuota); // Sort by quota number
+
+                this.plazoPagoTabla = this.plazoPagoData.map((plazo) => ({
+                  nroCuota: plazo.nroCuota,
+                  fechaInicio: plazo.fechaInicio,
+                  fechaFin: plazo.fechaFin,
+                  monto: plazo.cantidad
+                }));
+
+                this.originalPaymentTermIds = data.map((plazo: any) => plazo.plazoPagoId); // Store IDs
+              }
+            );
+
             this.loading = false;
           },
           (error) => {
@@ -364,6 +428,8 @@ export class ActualizarCotizacionComponent {
       });
     }
 
+    this.actualizarPlazoPagoTabla();
+
     this.selectedProduct = null;
     this.cotizacionData.productoId = null;
   }
@@ -406,6 +472,8 @@ export class ActualizarCotizacionComponent {
       duration: 3000,
       panelClass: ['snackbar-success']
     });
+
+    this.actualizarPlazoPagoTabla();
   }
 
   agregarDetalleServicio(price: number): void {
@@ -428,11 +496,14 @@ export class ActualizarCotizacionComponent {
     this.detalleServicios.push(detalle);
     Swal.fire('Detalle agregado', 'El detalle de servicio ha sido agregado', 'success');
     this.selectedServiceType = { type: '', price: 0 };
+
+    this.actualizarPlazoPagoTabla();
   }
 
   eliminarDetalleProducto(index: number): void {
     this.detalleProductos.splice(index, 1);
     Swal.fire('Eliminado', 'El detalle del producto ha sido eliminado', 'success');
+    this.actualizarPlazoPagoTabla();
   }
 
   eliminarDetalleServicio(index: number): void {
@@ -440,6 +511,7 @@ export class ActualizarCotizacionComponent {
     this.detalleServicios.splice(index, 1);
     console.log('After deleting service:', this.detalleServicios);
     Swal.fire('Eliminado', 'El detalle del servicio ha sido eliminado', 'success');
+    this.actualizarPlazoPagoTabla();
   }
 
   volverACategorias() {
@@ -536,6 +608,15 @@ export class ActualizarCotizacionComponent {
               (detailId) => this.quotationDetailsService.eliminarQuotationDetail(detailId)
             );
 
+            // Sync payment terms
+            this.syncPaymentTerms(
+              originalDetails,
+              this.plazoPagoData,
+              (term) => this.paymentTermService.agregarPlazoPago(term),
+              (term) => this.paymentTermService.actualizarPlazoPago(term),
+              (termId) => this.paymentTermService.eliminarPlazoPago(termId)
+            );
+
             Swal.fire('Éxito', 'La cotización y sus detalles han sido actualizados correctamente', 'success')
               .then(() => {
                 this.router.navigate(['/admin/cotizaciones']);
@@ -630,6 +711,99 @@ export class ActualizarCotizacionComponent {
     });
   }
 
+  private syncPaymentTerms(
+    originalTerms: any[],
+    currentTerms: any[],
+    addFn: (term: any) => any,
+    updateFn: (term: any) => any,
+    deleteFn: (termId: any) => any
+  ): void {
+    console.log('Original payment terms:', originalTerms);
+    console.log('Current payment terms:', currentTerms);
+
+    const originalMap = new Map(originalTerms.map((term) => {
+      const mapKey = term.plazoPagoId;
+      return [mapKey, term];
+    }));
+
+    currentTerms.forEach((current, index) => {
+      const mapKey = current.plazoPagoId || `new-${index}`; // Use a unique key for new terms
+
+      const original = originalMap.get(mapKey);
+
+      if (original) {
+        if (
+          original.fechaInicio !== current.fechaInicio ||
+          original.fechaFin !== current.fechaFin ||
+          original.cantidad !== current.cantidad ||
+          original.estado !== current.estado ||
+          original.nroCuota !== current.nroCuota
+        ) {
+          const updatePayload = {
+            plazoPagoId: original.plazoPagoId,
+            cantidad: current.cantidad,
+            facturaId: current.factura?.facturaId || null,
+            cotizacion: { cotizacionId: current.cotizacion.cotizacionId },
+            fechaInicio: current.fechaInicio,
+            fechaFin: current.fechaFin,
+            estado: current.estado,
+            nroCuota: current.nroCuota
+          };
+
+          updateFn(updatePayload).subscribe(
+            () => console.log(`Payment term updated: ${mapKey}`),
+            (error: any) => console.error('Error updating payment term:', error)
+          );
+        }
+        originalMap.delete(mapKey);
+      } else {
+        console.log(`Adding new payment term: ${mapKey}`);
+        const addPayload = {
+          cantidad: current.cantidad,
+          facturaId: current.factura?.facturaId || null,
+          cotizacion: { cotizacionId: current.cotizacion.cotizacionId },
+          fechaInicio: current.fechaInicio,
+          fechaFin: current.fechaFin,
+          estado: current.estado,
+          nroCuota: current.nroCuota
+        };
+
+        addFn(addPayload).subscribe(
+          () => console.log(`Payment term added: ${mapKey}`),
+          (error: any) => console.error('Error adding payment term:', error)
+        );
+      }
+    });
+
+    originalMap.forEach((original, key) => {
+      const isStillPresent = currentTerms.some(
+        (current) => current.plazoPagoId && current.plazoPagoId === key
+      );
+
+      if (!isStillPresent) {
+        console.log(`Deleting outdated payment term: ${key}`, original);
+        deleteFn(key).subscribe(
+          () => console.log(`Outdated payment term deleted successfully: ${key}`),
+          (error: any) => console.error('Error deleting outdated payment term:', error)
+        );
+      }
+    });
+
+    this.originalPaymentTermIds.forEach((id) => {
+      const isStillPresent = currentTerms.some(
+        (current) => current.plazoPagoId === id
+      );
+
+      if (!isStillPresent) {
+        console.log(`Deleting outdated payment term: ${id}`);
+        deleteFn(id).subscribe(
+          () => console.log(`Outdated payment term deleted successfully: ${id}`),
+          (error: any) => console.error('Error deleting outdated payment term:', error)
+        );
+      }
+    });
+  }
+
   getCurrentDate(): string {
     const currentDate = new Date();
     return currentDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
@@ -681,19 +855,19 @@ export class ActualizarCotizacionComponent {
 
   calcularOpGravadas(): number {
     const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad * 0.82, 0); // 82% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioTotal * 0.82, 0); // 82% of total price for services
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.82, 0); // 82% of total price for services
     return totalProductos + totalServicios;
   }
 
   calcularIgv(): number {
     const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad * 0.18, 0); // 18% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioTotal * 0.18, 0); // 18% of total price for services
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.18, 0); // 18% of total price for services
     return totalProductos + totalServicios;
   }
 
   calcularTotal(): number {
     return this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad, 0) +
-           this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioTotal, 0); // Total is the sum of all new prices
+           this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0); // Total is the sum of all new prices
   }
 
   onTipoBusquedaChange(): void {
@@ -731,5 +905,91 @@ export class ActualizarCotizacionComponent {
     };
     this.usuarioInput = '';
     this.filteredSuggestions = [];
+  }
+
+    buscarPlazos(): void {
+    if (this.nroPlazos <= 0) {
+      this.snack.open('Debe ingresar minimo 1 nro. de plazo', '', {
+        duration: 3000,
+        panelClass: ['snackbar-error']
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(AddPlazosPagoComponent, {
+      width: '500px',
+      data: { cantidadPlazos: this.nroPlazos },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && Array.isArray(result)) {
+        const total = this.calcularTotal();
+        const montoPorPlazo = total / this.nroPlazos;
+
+        this.plazoPagoData = result.map((plazo, index) => ({
+          plazaPagoId: null, // IDs are not retained after modal closure
+          nroCuota: index + 1, // Sequentially generated
+          cotizacion: { cotizacionId: this.cotizacionId },
+          factura: null, // Always null
+          fechaInicio: plazo.fechaInicio || '',
+          fechaFin: plazo.fechaFin || '',
+          cantidad: montoPorPlazo, // Calculated based on total and number of terms
+          estado: 'pendiente' // Default state
+        }));
+
+        this.plazoPagoData = this.plazoPagoData.sort((a, b) => a.nroCuota - b.nroCuota); // Sort by quota number
+
+        this.plazoPagoTabla = this.plazoPagoData.map((plazo) => ({
+          nroCuota: plazo.nroCuota,
+          fechaInicio: plazo.fechaInicio,
+          fechaFin: plazo.fechaFin,
+          monto: plazo.cantidad
+        }));
+      } else {
+        console.error('Invalid result from modal:', result);
+        this.plazoPagoData = [];
+      }
+
+      if(this.calcularTotal() === 0) {
+        this.plazoPagoTabla = this.plazoPagoData.map((plazo, index) => ({
+          nroCuota: index + 1,
+          fechaInicio: plazo.fechaInicio,
+          fechaFin: plazo.fechaFin,
+          monto: 0
+        }));
+      } else {
+        const totalPorPlazo = (this.detalleProductos.length > 0
+          ? this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad, 0)
+          : 0) +
+          (this.detalleServicios.length > 0
+            ? this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0)
+            : 0);
+
+        console.log(this.detalleProductos, this.detalleServicios);
+
+        const montoPorPlazo = totalPorPlazo / this.nroPlazos;
+        console.log(totalPorPlazo, montoPorPlazo);
+        console.log(this.detalleProductos, this.detalleServicios);
+        this.plazoPagoTabla = this.plazoPagoData.map((plazo, index) => ({
+          nroCuota: index + 1,
+          fechaInicio: plazo.fechaInicio,
+          fechaFin: plazo.fechaFin,
+          monto: montoPorPlazo
+        }));
+      }
+    });
+  }
+
+  actualizarPlazoPagoTabla(): void {
+    const total = this.calcularTotal();
+    this.plazoPagoTabla.forEach((plazo, index) => {
+      const montoPorPlazo = total / this.nroPlazos;
+      plazo.monto = montoPorPlazo;
+      if (this.plazoPagoData[index]) {
+        this.plazoPagoData[index].cantidad = montoPorPlazo;
+      }
+    });
+    console.log(this.plazoPagoTabla);
+    console.log(this.plazoPagoData);
   }
 }

@@ -20,6 +20,7 @@ import Swal from 'sweetalert2';
 import { AddPlazosPagoComponent } from 'src/app/components/modal/add-plazos-pago/add-plazos-pago.component';
 import { MatDialog } from '@angular/material/dialog';
 import { PaymentTermService } from 'src/app/services/payment-term.service';
+import { MatTableModule } from '@angular/material/table';
 
 @Component({
   selector: 'app-add-cotizacion',
@@ -36,7 +37,8 @@ import { PaymentTermService } from 'src/app/services/payment-term.service';
     MatSelectModule,
     MatRadioModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatTableModule
   ],
   templateUrl: './add-cotizacion.component.html',
   styleUrls: ['./add-cotizacion.component.css']
@@ -62,10 +64,19 @@ export class AddCotizacionComponent {
     tipoUsuario: ''
   };
 
-  plazoPagoData = {
-    fechaInicio: '',
-    fechaFin: ''
-  }
+  plazoPagoData: {
+    nroCuota: number;
+    fechaInicio: string;
+    fechaFin: string;
+    monto: any
+  }[] = [];
+
+  plazaPagoTabla: {
+    nroCuota: number;
+    fechaInicio: string;
+    fechaFin: string;
+    monto: number;
+  }[] = [];
 
   productos: any[] = [];
   servicios: any[] = [];
@@ -97,18 +108,21 @@ export class AddCotizacionComponent {
     const input = this.usuarioInput.trim().toLowerCase();
     if (this.tipoBusqueda === 'razon_social' && input.length > 0) {
       this.filteredSuggestions = this.listaUsuarios
-        .filter(usuario => usuario.razonSocial?.toLowerCase().includes(input))
-        .map(usuario => usuario.razonSocial);
+        .filter(usuario => usuario.tipoUsuario === 'empresa' && usuario.nombre?.toLowerCase().includes(input))
+        .map(usuario => usuario.nombre);
+      console.log('Filtered suggestions:', this.filteredSuggestions);
     } else {
       this.filteredSuggestions = [];
+      console.log('No suggestions found');
     }
   }
 
   selectSuggestion(suggestion: string): void {
     this.usuarioInput = suggestion;
     this.usuario = this.listaUsuarios.find(
-      usuario => usuario.razonSocial?.toLowerCase() === suggestion.toLowerCase()
+      usuario => usuario.nombre?.toLowerCase() === suggestion.toLowerCase()
     );
+    console.log(this.usuario)
     this.filteredSuggestions = [];
   }
 
@@ -289,8 +303,11 @@ export class AddCotizacionComponent {
       });
     }
 
+    this.actualizarPlazaPagoTabla();
     this.selectedProduct = null;
     this.cotizacionData.productoId = null;
+
+    console.log(this.plazaPagoTabla);
   }
 
   agregarDetalleServicio(price: number): void {
@@ -308,20 +325,23 @@ export class AddCotizacionComponent {
       serviceType: this.selectedServiceType.type,
       price
     };
-
     this.detalleServicios.push(detalle);
     Swal.fire('Detalle agregado', 'El detalle de servicio ha sido agregado', 'success');
     this.selectedServiceType = { type: '', price: 0 };
+
+    this.actualizarPlazaPagoTabla();
   }
 
   eliminarDetalleProducto(index: number): void {
     this.detalleProductos.splice(index, 1);
     Swal.fire('Eliminado', 'El detalle del producto ha sido eliminado', 'success');
+    this.actualizarPlazaPagoTabla();
   }
 
   eliminarDetalleServicio(index: number): void {
     this.detalleServicios.splice(index, 1);
     Swal.fire('Eliminado', 'El detalle del servicio ha sido eliminado', 'success');
+    this.actualizarPlazaPagoTabla();
   }
 
   volverACategorias() {
@@ -439,40 +459,32 @@ export class AddCotizacionComponent {
           );
         });
 
-        const totalPorPlazo = quotation.total / this.nroPlazos;
-
-        console.log(this.plazoPagoData);
-
-        const plazosPago = Array.isArray(this.plazoPagoData)
-          ? this.plazoPagoData.map((plazo: any, index: number) => ({
+        if(cotizacionPayload.tipoPago === 'Contado') {
+          const totalPorPlazo = this.calcularTotal() / this.nroPlazos;
+          this.plazoPagoData.forEach((plazoPago, index) => {
+            const payload = {
+              plazoPagoId: index + 1,
               cantidad: totalPorPlazo,
               facturaId: null,
-              cotizacion: { cotizacionId: cotizacionId },
-              fechaInicio: plazo.fechaInicio,
-              fechaFin: plazo.fechaFin,
-              estado: "Pendiente",
-              nroCuota: index + 1
-            }))
-          : [{
-              cantidad: totalPorPlazo,
-              facturaId: null,
-              cotizacion: { cotizacionId: cotizacionId },
-              fechaInicio: this.plazoPagoData.fechaInicio,
-              fechaFin: this.plazoPagoData.fechaFin,
-              estado: "Pendiente",
-              nroCuota: 1
-            }];
+              cotizacion: {
+                cotizacionId: cotizacionId,
+              },
+              fechaInicio: plazoPago.fechaInicio,
+              fechaFin: plazoPago.fechaFin,
+              estado: 'Pendiente',
+              nroCuota: plazoPago.nroCuota,
+            };
 
-        plazosPago.forEach((plazoPago) => {
-          this.paymentTermService.agregarPlazoPago(plazoPago).subscribe(
-            () => {
-              console.log('Plazo de pago guardado:', plazoPago);
-            },
-            (error) => {
-              console.error('Error al guardar plazo de pago:', error);
-            }
-          );
-        });
+            this.paymentTermService.agregarPlazoPago(payload).subscribe(
+              () => {
+                console.log('Plazo de pago guardado:', payload);
+              },
+              (error) => {
+                console.error('Error al guardar plazo de pago:', error);
+              }
+            );
+          });
+        }
 
         Swal.fire('Éxito', 'La cotización y sus detalles han sido guardados correctamente', 'success')
           .then(() => {
@@ -524,7 +536,7 @@ export class AddCotizacionComponent {
     }
 
     const usuarioEncontrado = this.listaUsuarios.find(
-      (usuario) => usuario.razonSocial?.toLowerCase() === razonSocial.toLowerCase()
+      (usuario) => usuario.nombre?.toLowerCase() === razonSocial.toLowerCase()
     );
 
     if (usuarioEncontrado) {
@@ -552,8 +564,9 @@ export class AddCotizacionComponent {
   }
 
   calcularTotal(): number {
-    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
-           this.detalleServicios.reduce((sum, detalle) => sum + detalle.price, 0); // Total is the sum of all new prices
+    const totalProductos = this.detalleProductos.reduce((sum, producto) => sum + producto.totalPrice, 0);
+    const totalServicios = this.detalleServicios.reduce((sum, servicio) => sum + servicio.price, 0);
+    return totalProductos + totalServicios;
   }
 
   onTipoBusquedaChange(): void {
@@ -580,11 +593,11 @@ export class AddCotizacionComponent {
 
   eliminarCliente(): void {
     this.usuario = {
-        id: '',
-        username: '',
-        nombre: '',
-        apellido: '',
-        tipoUsuario: ''
+      id: '',
+      username: '',
+      nombre: '',
+      apellido: '',
+      tipoUsuario: ''
     };
     this.usuarioInput = '';
     this.filteredSuggestions = [];
@@ -628,11 +641,13 @@ export class AddCotizacionComponent {
       duration: 3000,
       panelClass: ['snackbar-success']
     });
+
+    this.actualizarPlazaPagoTabla();
   }
 
   buscarPlazos(): void {
-    if (this.nroPlazos <= 1) {
-      this.snack.open('Debe ingresar mínimo 2 nros. de plazos', '', {
+    if (this.nroPlazos <= 0) {
+      this.snack.open('Debe ingresar minimo 1 nro. de plazo', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
       });
@@ -647,7 +662,31 @@ export class AddCotizacionComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.plazoPagoData = result;
+        if(this.calcularTotal() === 0) {
+          this.plazaPagoTabla = this.plazoPagoData.map((plazo, index) => ({
+            nroCuota: index + 1,
+            fechaInicio: plazo.fechaInicio,
+            fechaFin: plazo.fechaFin,
+            monto: 0
+          }));
+        } else {
+          const totalPorPlazo = (this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
+                                this.detalleServicios.reduce((sum, detalle) => sum + detalle.price, 0)) / this.nroPlazos;
+          this.plazaPagoTabla = this.plazoPagoData.map((plazo, index) => ({
+            nroCuota: index + 1,
+            fechaInicio: plazo.fechaInicio,
+            fechaFin: plazo.fechaFin,
+            monto: totalPorPlazo
+          }));
+        }
       }
+    });
+  }
+
+  actualizarPlazaPagoTabla(): void {
+    const total = this.calcularTotal();
+    this.plazaPagoTabla.forEach((plazo, index) => {
+      plazo.monto = total / this.nroPlazos;
     });
   }
 }

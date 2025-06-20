@@ -4,6 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PaymentService } from '../../../services/mercado-pago.service';
 import { PaymentTermService } from 'src/app/services/payment-term.service';
 import { FacturaService } from 'src/app/services/factura.service';
@@ -23,9 +24,10 @@ import { Inject } from '@angular/core';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './payment.component.html',
-  styleUrl: './payment.component.css',
+  styleUrls: ['./payment.component.css'],
 })
 export class PaymentComponent implements OnInit {
   private mp: any;
@@ -46,8 +48,8 @@ export class PaymentComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    this.loading = true;
     setTimeout(async () => {
-      this.loading = true;
       this.mp = await this.paymentService.initializeMercadoPago();
       this.user = this.loginService.getUser();
 

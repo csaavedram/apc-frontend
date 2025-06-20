@@ -1,0 +1,43 @@
+<div class="flex flex-column p-3">
+  <h2 class="mb-3">Detalles del Tipo de Pago</h2>
+
+  <div *ngIf="loading" class="d-flex justify-content-center align-items-center w-100" style="height: 200px;">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+    <div *ngIf="ordenCotizacionData[0]?.cotizacion?.tipoPago === 'Contado'">
+      <p><strong>Tipo de Pago:</strong> Contado</p>
+      <p>El pago se realiza en una sola cuota.</p>
+    </div>
+
+    <div *ngIf="ordenCotizacionData[0]?.cotizacion?.tipoPago === 'Credito'">
+      <p><strong>Tipo de Pago:</strong> Crédito</p>
+      <p>Detalles de los plazos de pago:</p>
+      <div style="max-height: 300px; overflow-y: auto;">
+        <table class="table table-bordered table-striped text-center">
+          <thead class="table-dark">
+            <tr>
+              <th>Cuota N°</th>
+              <th>Cantidad</th>
+              <th>Estado</th>
+              <th>Fecha Inicio</th>
+              <th>Fecha Fin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let plazo of ordenCotizacionData[0]?.plazoPagoData">
+              <td>{{ plazo.nroCuota }}</td>
+              <td>S/. {{ plazo.cantidad }}</td>
+              <td>{{ plazo.estado }}</td>
+              <td>{{ plazo.fechaInicio | date:'yyyy-MM-dd' }}</td>
+              <td>{{ plazo.fechaFin | date:'yyyy-MM-dd' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <button mat-raised-button style="background-color: #00CED1; color: white; display: flex; width: 100%;" (click)="closeModel()">Cerrar</button>
+  </div>
+</div>

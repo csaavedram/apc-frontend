@@ -16,4 +16,20 @@ export class PaymentTermService {
   public obtenerPlazosPagoPorFactura(facturaId: any) {
     return this.http.get(`${baserUrl}/plazospago/factura/${facturaId}`);
   }
+
+  public obtenerPlazosPagoPorCotizacion(cotizacionId: any) {
+    return this.http.get(`${baserUrl}/plazospago/cotizacion/${cotizacionId}`);
+  }
+
+  public actualizarFacturaDePlazoPago(plazoPagoId: any, data: any) {
+    return this.http.patch(`${baserUrl}/plazospago/${plazoPagoId}`, data);
+  }
+
+  public actualizarPlazoPago(data: any) {
+    return this.http.put(`${baserUrl}/plazospago/`, data);
+  }
+
+  public eliminarPlazoPago(plazoPagoId: any) {
+    return this.http.delete(`${baserUrl}/plazospago/${plazoPagoId}`);
+  }
 }
