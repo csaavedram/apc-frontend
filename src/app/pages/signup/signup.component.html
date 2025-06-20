@@ -21,14 +21,14 @@
             <div class="form-outline mb-3 text-start">
               <label class="form-label">Tipo de Usuario</label>
               <div class="mt-2 d-flex gap-3">
-                <div class="form-check">
-                  <input 
+                <div class="form-check">                  <input 
                     class="form-check-input" 
                     type="radio" 
                     name="tipoUsuario" 
                     id="personaNatural" 
                     value="persona_natural"
                     [(ngModel)]="user.tipoUsuario"
+                    (change)="onTipoUsuarioChange()"
                   >
                   <label class="form-check-label" for="personaNatural">
                     Persona Natural
@@ -42,28 +42,55 @@
                     id="empresa" 
                     value="empresa"
                     [(ngModel)]="user.tipoUsuario"
+                    (change)="onTipoUsuarioChange()"
                   >
                   <label class="form-check-label" for="empresa">
                     Empresa
                   </label>
                 </div>
               </div>
-            </div>              <!-- Campo de nombre de usuario -->
+            </div>            <!-- Campo de nombre de usuario -->
             <div class="form-outline mb-2 text-start">
               <label class="form-label" for="username">
                 {{ user.tipoUsuario === 'empresa' ? 'RUC' : 'DNI' }}
               </label>
-              <input 
-                type="text" 
-                id="username" 
-                class="form-control form-control-lg" 
-                [(ngModel)]="user.username" 
-                name="username" 
-                required 
-                [placeholder]="user.tipoUsuario === 'empresa' ? 'Ingrese RUC de 11 dígitos' : 'Ingrese DNI de 8 dígitos'"
-                style="font-size: 1rem;"
-              />
-            </div>            <!-- Campo de nombre -->
+              <div class="position-relative">                <input 
+                  type="text" 
+                  id="username" 
+                  class="form-control form-control-lg" 
+                  [(ngModel)]="user.username" 
+                  name="username" 
+                  required 
+                  [placeholder]="user.tipoUsuario === 'empresa' ? 'Ingrese RUC de 11 dígitos' : 'Ingrese DNI de 8 dígitos'"
+                  style="font-size: 1rem;"
+                  (input)="onUsernameInput()"
+                  (blur)="verificarUsernameDisponible()"
+                  [class.border-danger]="usernameStatus === 'taken'"
+                  [class.border-success]="usernameStatus === 'available'"
+                />
+                <!-- Indicador de estado del username -->
+                <div class="mt-1" *ngIf="usernameStatus && user.username.length > 0">
+                  <small 
+                    *ngIf="usernameStatus === 'checking'" 
+                    class="text-info"
+                  >
+                    <i class="fas fa-spinner fa-spin"></i> Verificando disponibilidad...
+                  </small>
+                  <small 
+                    *ngIf="usernameStatus === 'available'" 
+                    class="text-success"
+                  >
+                    <i class="fas fa-check-circle"></i> {{ user.tipoUsuario === 'empresa' ? 'RUC' : 'DNI' }} disponible
+                  </small>
+                  <small 
+                    *ngIf="usernameStatus === 'taken'" 
+                    class="text-danger"
+                  >
+                    <i class="fas fa-times-circle"></i> Este {{ user.tipoUsuario === 'empresa' ? 'RUC' : 'DNI' }} ya está registrado
+                  </small>
+                </div>
+              </div>
+            </div><!-- Campo de nombre -->
             <div class="form-outline mb-2 text-start">
               <label class="form-label" for="nombre">
                 {{ user.tipoUsuario === 'empresa' ? 'Razón Social' : 'Nombre' }}

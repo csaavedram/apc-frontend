@@ -13,6 +13,7 @@ import { ViewProductoComponent } from './pages/admin/view-producto/view-producto
 import { AddProductoComponent } from './pages/admin/add-producto/add-producto.component';
 import { DetalleProductoComponent } from './pages/admin/detalle-producto/detalle-producto.component';
 import { ActualizarProductoComponent } from './pages/admin/actualizar-producto/actualizar-producto.component';
+import { ProductoSeriesComponent } from './pages/admin/producto-series/producto-series.component';
 import { UserDashboardComponent } from './pages/user/user-dashboard/user-dashboard.component';
 import { ListaProductosComponent } from './pages/catalogo/lista-productos/lista-productos.component';
 import { ViewCategoriaComponent } from './pages/admin/view-categoria/view-categoria.component';
@@ -134,10 +135,14 @@ const routes: Routes = [
       {
         path: 'detalleproducto/:productoId',
         component: DetalleProductoComponent
-      },
-      {
+      },      {
         path: 'actualizarproducto/:productoId',
         component: ActualizarProductoComponent
+      },
+      {
+        path: 'producto-series/:productoId',
+        component: ProductoSeriesComponent,
+        canActivate: [AdminGuard]
       },
       {
         path: 'categorias',

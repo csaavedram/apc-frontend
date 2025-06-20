@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AlmacenService } from 'src/app/services/almacen.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
 import { combineLatest } from 'rxjs';
 
@@ -14,9 +15,15 @@ export class ViewAlmacenComponent implements OnInit {
   rowsPerPage1 = 10;
   totalPages1 = 0;
   searchTerm1: string = '';
+  
+  // Modal properties
+  showMapModal: boolean = false;
+  selectedAddress: string = '';
+  mapUrl: SafeResourceUrl = '';
 
   constructor(
-    private almacenService: AlmacenService
+    private almacenService: AlmacenService,
+    private sanitizer: DomSanitizer
   ) {}
 
   prevPage1(): void {
@@ -74,6 +81,39 @@ export class ViewAlmacenComponent implements OnInit {
         );
       }
     });
+  }
+
+  openInGoogleMaps(address: string): void {
+    if (!address || address.trim() === '') {
+      Swal.fire('Error', 'La dirección no está disponible', 'error');
+      return;
+    }
+
+    this.selectedAddress = address.trim();
+    
+    // Create Google Maps embed URL without API key (using q parameter)
+    const encodedAddress = encodeURIComponent(this.selectedAddress);
+    const embedUrl = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    
+    // Sanitize the URL for security
+    this.mapUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+    
+    // Show the modal
+    this.showMapModal = true;
+  }
+
+  closeMapModal(): void {
+    this.showMapModal = false;
+    this.selectedAddress = '';
+    this.mapUrl = '';
+  }
+
+  openInGoogleMapsExternal(): void {
+    if (this.selectedAddress) {
+      const encodedAddress = encodeURIComponent(this.selectedAddress);
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+      window.open(googleMapsUrl, '_blank');
+    }
   }
 
   ngOnInit(): void {

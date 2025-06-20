@@ -1,0 +1,341 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>
+            <h2>Números de Serie - {{ producto.nombreProducto }}</h2>
+          </mat-card-title>
+          <mat-card-subtitle>
+            SKU: {{ producto.sku }} | Stock: {{ producto.stock }}
+          </mat-card-subtitle>
+        </mat-card-header>        <mat-card-content>
+          <!-- Botones de acción -->
+          <div class="action-buttons mb-3">
+            <button 
+              mat-raised-button 
+              color="primary" 
+              (click)="abrirModalAgregar()">
+              <i class="fas fa-plus"></i> Agregar Serie
+            </button>
+            <button 
+              mat-raised-button 
+              color="accent" 
+              (click)="abrirModalLote()" 
+              class="ml-2">
+              <i class="fas fa-list"></i> Agregar Lote
+            </button>
+            <button 
+              mat-raised-button 
+              (click)="volver()" 
+              class="ml-2">
+              <i class="fas fa-arrow-left"></i> Volver
+            </button>
+          </div>
+
+          <!-- Estadísticas -->
+          <div class="stats-row mb-3">
+            <div class="stat-card">
+              <h4>Total Series</h4>
+              <span class="stat-number">{{ series.length }}</span>
+            </div>
+            <div class="stat-card">
+              <h4>Disponibles</h4>
+              <span class="stat-number text-success">{{ seriesDisponibles.length }}</span>
+            </div>            <div class="stat-card">
+              <h4>Vendidas</h4>
+              <span class="stat-number text-primary">{{ getSeriesVendidas() }}</span>
+            </div>
+            <div class="stat-card">
+              <h4>Vencidas</h4>
+              <span class="stat-number text-danger">{{ getSeriesVencidas() }}</span>
+            </div>
+          </div>
+
+          <!-- Tabla de números de serie -->
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>                <tr>
+                  <th>#</th>
+                  <th>Número de Serie</th>
+                  <th>Estado</th>
+                  <th>Cantidad</th>
+                  <th>Fecha Vencimiento</th>
+                  <th>Fecha Creación</th>
+                  <th>Fecha Venta</th>
+                  <th>Observaciones</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let serie of series; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td>
+                    <strong>{{ serie.numeroSerie }}</strong>
+                  </td>                  <td>
+                    <span class="badge" [ngClass]="getEstadoClass(serie.estado)">
+                      {{ serie.estado }}
+                    </span>
+                  </td>
+                  <td>
+                    <strong>{{ serie.cantidad }}</strong>
+                  </td>
+                  <td>
+                    <span *ngIf="serie.fechaVencimiento" 
+                          [ngClass]="{'text-danger': isVencido(serie.fechaVencimiento)}">
+                      {{ serie.fechaVencimiento | date:'dd/MM/yyyy' }}
+                    </span>
+                    <span *ngIf="!serie.fechaVencimiento" class="text-muted">
+                      Sin vencimiento
+                    </span>
+                  </td>
+                  <td>{{ serie.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <span *ngIf="serie.fechaVenta">
+                      {{ serie.fechaVenta | date:'dd/MM/yyyy' }}
+                    </span>
+                    <span *ngIf="!serie.fechaVenta" class="text-muted">
+                      No vendido
+                    </span>
+                  </td>
+                  <td>{{ serie.observaciones || '-' }}</td>
+                  <td>
+                    <button 
+                      mat-icon-button 
+                      color="primary" 
+                      (click)="editarSerie(serie)"
+                      [disabled]="serie.estado === 'VENDIDO'"
+                      title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      color="warn" 
+                      (click)="eliminarSerie(serie)"
+                      [disabled]="serie.estado === 'VENDIDO'"
+                      title="Eliminar">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="series.length === 0" class="text-center p-4">
+            <i class="fas fa-barcode fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No hay números de serie registrados</h5>
+            <p class="text-muted">Comience agregando números de serie para este producto</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agregar Serie Individual -->
+<div class="modal fade" [class.show]="showAgregarModal" [style.display]="showAgregarModal ? 'block' : 'none'">
+  <div class="modal-dialog">
+    <div class="modal-content">      <div class="modal-header">
+        <h4 class="modal-title">Agregar Número de Serie Individual</h4>
+        <button type="button" class="close" (click)="cerrarModalAgregar()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">        <div class="alert alert-info">
+          <strong>Información:</strong> Un número de serie representa una unidad individual del producto.
+        </div>
+        
+        <form>
+          <div class="form-group">
+            <label for="numeroSerie">Número de Serie *</label>
+            <input 
+              type="text" 
+              id="numeroSerie"
+              class="form-control" 
+              [(ngModel)]="nuevaSerie.numeroSerie"
+              name="numeroSerie"
+              placeholder="Ingrese el número de serie único"
+              required>
+            <small class="form-text text-muted">Cada número de serie representa una unidad individual</small>
+          </div>          <div class="form-group" *ngIf="producto && producto.esPerecible === true">
+            <label for="fechaVencimiento">Fecha de Vencimiento</label>
+            <input 
+              type="date" 
+              id="fechaVencimiento"
+              class="form-control" 
+              [(ngModel)]="nuevaSerie.fechaVencimiento"
+              name="fechaVencimiento">
+          </div>
+          
+          <div class="form-group">
+            <label for="observaciones">Observaciones</label>
+            <textarea 
+              id="observaciones"
+              class="form-control" 
+              [(ngModel)]="nuevaSerie.observaciones"
+              name="observaciones"
+              rows="3"
+              placeholder="Observaciones adicionales (opcional)"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalAgregar()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="agregarSerie()">
+          Agregar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agregar Series en Lote -->
+<div class="modal fade" [class.show]="showLoteModal" [style.display]="showLoteModal ? 'block' : 'none'">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">      <div class="modal-header">
+        <h4 class="modal-title">Agregar Lote de Productos</h4>
+        <button type="button" class="close" (click)="cerrarModalLote()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <strong>Información:</strong> Un lote representa múltiples unidades del mismo producto con características similares (fecha de vencimiento, origen, etc.).
+        </div><form>
+          <div class="form-group">
+            <label for="numeroLote">Número de Lote *</label>
+            <input 
+              type="text"
+              id="numeroLote"
+              class="form-control" 
+              [(ngModel)]="loteData.numeroSerie"
+              name="numeroLote"
+              placeholder="Ej: LOTE001, BATCH2024, etc."
+              required>
+            <small class="form-text text-muted">Un lote representa múltiples unidades del mismo producto</small>
+          </div>
+
+          <div class="form-group">
+            <label for="cantidadLote">Cantidad en el Lote *</label>
+            <input 
+              type="number"
+              id="cantidadLote"
+              class="form-control" 
+              [(ngModel)]="loteData.cantidad"
+              name="cantidadLote"
+              min="2"
+              placeholder="Ej: 100, 50, etc."
+              required>
+            <small class="form-text text-muted">Número de unidades que contiene este lote</small>
+          </div>
+            <div class="form-group" *ngIf="producto && producto.esPerecible === true">
+            <label for="fechaVencimientoLote">Fecha de Vencimiento</label>
+            <input 
+              type="date" 
+              id="fechaVencimientoLote"
+              class="form-control" 
+              [(ngModel)]="loteData.fechaVencimiento"
+              name="fechaVencimientoLote">
+            <small class="form-text text-muted">Todas las unidades de este lote tendrán la misma fecha de vencimiento</small>
+          </div>
+
+          <div class="form-group">
+            <label for="observacionesLote">Observaciones</label>
+            <textarea 
+              id="observacionesLote"
+              class="form-control" 
+              [(ngModel)]="loteData.observaciones"
+              name="observacionesLote"
+              rows="3"
+              placeholder="Observaciones adicionales (opcional)"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalLote()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="agregarSeriesLote()">
+          Crear Lote
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Serie -->
+<div class="modal fade" [class.show]="showEditarModal" [style.display]="showEditarModal ? 'block' : 'none'">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Editar Número de Serie</h4>
+        <button type="button" class="close" (click)="cerrarModalEditar()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="numeroSerieEditar">Número de Serie *</label>
+            <input 
+              type="text" 
+              id="numeroSerieEditar"
+              class="form-control" 
+              [(ngModel)]="serieEditando.numeroSerie"
+              name="numeroSerieEditar"
+              required>
+          </div>
+          
+          <div class="form-group">
+            <label for="estadoEditar">Estado</label>
+            <select 
+              id="estadoEditar"
+              class="form-control" 
+              [(ngModel)]="serieEditando.estado"
+              name="estadoEditar">
+              <option value="DISPONIBLE">Disponible</option>
+              <option value="DEFECTUOSO">Defectuoso</option>
+              <option value="VENCIDO">Vencido</option>
+            </select>
+          </div>
+            <div class="form-group" *ngIf="producto && producto.esPerecible === true">
+            <label for="fechaVencimientoEditar">Fecha de Vencimiento</label>
+            <input 
+              type="date" 
+              id="fechaVencimientoEditar"
+              class="form-control" 
+              [(ngModel)]="serieEditando.fechaVencimiento"
+              name="fechaVencimientoEditar">
+          </div>
+          
+          <div class="form-group">
+            <label for="observacionesEditar">Observaciones</label>
+            <textarea 
+              id="observacionesEditar"
+              class="form-control" 
+              [(ngModel)]="serieEditando.observaciones"
+              name="observacionesEditar"
+              rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalEditar()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="actualizarSerie()">
+          Actualizar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay para modales -->
+<div class="modal-backdrop fade" 
+     [class.show]="showAgregarModal || showLoteModal || showEditarModal"
+     *ngIf="showAgregarModal || showLoteModal || showEditarModal">
+</div>
