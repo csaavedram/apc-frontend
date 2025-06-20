@@ -98,6 +98,22 @@ table {
     color: #00adef;
     transform: scale(1.2);
   }
+  
+  .maps-icono {
+    display: inline-block;
+    cursor: pointer;
+  }
+  
+  .maps-icono i {
+    color: black;
+    transition: color 0.3s, transform 0.3s;
+  }
+  
+  .maps-icono:hover i {
+    color: #1a73e8;
+    transform: scale(1.2);
+  }
+  
   .detalle-icono {
     display: inline-block;
     cursor: pointer;
@@ -166,4 +182,120 @@ table {
   
   .pagination button:hover i {
     transform: translateX(5px);
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+  }
+
+  .close-btn:hover {
+    background-color: #e0e0e0;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .address-info {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .map-container {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: center;
+  }
+
+  .open-external-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .open-external-btn:hover {
+    background-color: #1a73e8;
+    transform: translateY(-2px);
+  }
+
+  .open-external-btn i {
+    font-size: 0.9rem;
+  }
+
+  /* Responsive modal */
+  @media (max-width: 768px) {
+    .modal-content {
+      width: 95%;
+      margin: 10px;
+    }
+    
+    .modal-header h3 {
+      font-size: 1.2rem;
+    }
+    
+    .map-container iframe {
+      height: 300px !important;
+    }
   }

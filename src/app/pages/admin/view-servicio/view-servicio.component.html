@@ -16,10 +16,10 @@
             <th>N°</th>
             <th>Nombre</th>
             <th>Descripción</th>
-            <th>Costo</th>
-            <th>Garantía (Meses)</th>
+            <th>Costo</th>            <th>Garantía (Meses)</th>
             <th>Realización</th>
             <th>Fin de Garantía</th>
+            <th>Detalles</th>
             <th>Operaciones</th>
         </tr>
         <tr *ngFor="let i = index; let e of displayedProductos()" mat-subheader>
@@ -28,8 +28,16 @@
             <td>{{ e.descripcion }}</td>
             <td>{{ 'S/.' + e.costo }}</td>
             <td>{{ e.garantia }}</td>
-            <td>{{ e.fechaRealizado | date: 'dd-MM-yyyy' }}</td>
-            <td>{{ e.fechaFinGarantia | date:'dd-MM-yyyy' }}</td>
+            <td>{{ e.fechaRealizado | date: 'dd-MM-yyyy' }}</td>            <td>{{ e.fechaFinGarantia | date:'dd-MM-yyyy' }}</td>
+            <td>
+                <button 
+                    mat-icon-button 
+                    (click)="verDetalles(e.servicioId)" 
+                    title="Ver detalles del servicio"
+                    style="color: #4CAF50;">
+                    <i class="fas fa-list-ul"></i>
+                </button>
+            </td>
             <td>
                 <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
                     <i [routerLink]="'/admin/actualizarservicio/'+e.servicioId" class="fas fa-edit"></i>
@@ -45,7 +53,175 @@
             <i class="fa fa-chevron-left"></i> Anterior
         </button>
         <button (click)="nextPage1()" [disabled]="currentPage1 === totalPages1">
-            Siguiente <i class="fa fa-chevron-right"></i>
-        </button>
+            Siguiente <i class="fa fa-chevron-right"></i>        </button>
+    </div>
+
+    <!-- Modal para ver detalles del servicio -->
+    <div *ngIf="showDetallesModal" class="modal-overlay" (click)="cerrarDetallesModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Detalles del Servicio: {{ servicioSeleccionado?.nombre }}</h3>
+                <button class="close-btn" (click)="cerrarDetallesModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Información básica del servicio -->
+                <div class="servicio-info">
+                    <h4>Información del Servicio</h4>
+                    <div class="info-grid">
+                        <div><strong>Nombre:</strong> {{ servicioSeleccionado?.nombre }}</div>
+                        <div><strong>Descripción:</strong> {{ servicioSeleccionado?.descripcion }}</div>
+                        <div><strong>Costo:</strong> S/. {{ servicioSeleccionado?.costo }}</div>
+                        <div><strong>Garantía:</strong> {{ servicioSeleccionado?.garantia }} meses</div>
+                        <div><strong>Fecha Realizado:</strong> {{ servicioSeleccionado?.fechaRealizado | date:'dd-MM-yyyy' }}</div>
+                        <div><strong>Fin de Garantía:</strong> {{ servicioSeleccionado?.fechaFinGarantia | date:'dd-MM-yyyy' }}</div>
+                    </div>
+                </div>
+
+                <!-- Lista de detalles -->
+                <div class="detalles-section">
+                    <div class="detalles-header">
+                        <h4>Detalles de Equipos</h4>
+                        <button 
+                            mat-raised-button 
+                            (click)="agregarDetalle()" 
+                            style="background-color: #00CED1; color: white;">
+                            <i class="fas fa-plus"></i> Agregar Detalle
+                        </button>
+                    </div>
+
+                    <div *ngIf="detalleServicios && detalleServicios.length === 0" class="no-detalles">
+                        <p>No hay detalles de equipos registrados para este servicio.</p>
+                    </div>
+
+                    <div *ngIf="detalleServicios && detalleServicios.length > 0" class="detalles-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Modelo</th>
+                                    <th>SKU</th>
+                                    <th>N° Serie</th>
+                                    <th>Garantía</th>
+                                    <th>Observación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let detalle of detalleServicios">
+                                    <td>{{ detalle.modeloEquipo }}</td>
+                                    <td>{{ detalle.sku }}</td>
+                                    <td>{{ detalle.numeroSerie }}</td>
+                                    <td>{{ detalle.fechaGarantia | date:'dd-MM-yyyy' }}</td>
+                                    <td>{{ detalle.observacion }}</td>
+                                    <td>
+                                        <button 
+                                            mat-icon-button 
+                                            (click)="editarDetalle(detalle)" 
+                                            title="Editar detalle"
+                                            style="color: #2196F3; margin-right: 5px;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button 
+                                            mat-icon-button 
+                                            (click)="eliminarDetalle(detalle.detalleServicioId)" 
+                                            title="Eliminar detalle"
+                                            style="color: #f44336;">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar detalle -->
+    <div *ngIf="showDetalleModal" class="modal-overlay" (click)="cerrarDetalleModal()">
+        <div class="modal-content-small" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>{{ modoEdicion ? 'Editar' : 'Agregar' }} Detalle de Equipo</h3>
+                <button class="close-btn" (click)="cerrarDetalleModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="guardarDetalle()">
+                    <div class="form-group">
+                        <label for="modeloEquipo">Modelo del Equipo *</label>
+                        <input 
+                            type="text" 
+                            id="modeloEquipo" 
+                            [(ngModel)]="detalleForm.modeloEquipo" 
+                            name="modeloEquipo" 
+                            class="form-control" 
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sku">SKU *</label>
+                        <input 
+                            type="text" 
+                            id="sku" 
+                            [(ngModel)]="detalleForm.sku" 
+                            name="sku" 
+                            class="form-control" 
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numeroSerie">Número de Serie *</label>
+                        <input 
+                            type="text" 
+                            id="numeroSerie" 
+                            [(ngModel)]="detalleForm.numeroSerie" 
+                            name="numeroSerie" 
+                            class="form-control" 
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fechaGarantia">Fecha de Garantía *</label>
+                        <input 
+                            type="date" 
+                            id="fechaGarantia" 
+                            [(ngModel)]="detalleForm.fechaGarantia" 
+                            name="fechaGarantia" 
+                            class="form-control" 
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="observacion">Observación</label>
+                        <textarea 
+                            id="observacion" 
+                            [(ngModel)]="detalleForm.observacion" 
+                            name="observacion" 
+                            class="form-control" 
+                            rows="3" 
+                            placeholder="Observaciones adicionales..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button 
+                            type="button" 
+                            mat-button 
+                            (click)="cerrarDetalleModal()" 
+                            style="margin-right: 10px;">
+                            Cancelar
+                        </button>
+                        <button 
+                            type="submit" 
+                            mat-raised-button 
+                            style="background-color: #00CED1; color: white;">
+                            {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </mat-card>
