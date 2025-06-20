@@ -20,4 +20,8 @@ export class NotaCreditoService {
   public obtenerNotaCredito(notaCreditoId: any) {
     return this.http.get(`${baserUrl}/notacredito/${notaCreditoId}`);
   }
+
+  public listarNotaCreditoPorCodigoFactura(codigo: string) {
+    return this.http.get(`${baserUrl}/notacredito/factura/codigo/${codigo}`);
+  }
 }

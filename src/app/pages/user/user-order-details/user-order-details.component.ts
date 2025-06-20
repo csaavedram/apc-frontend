@@ -5,6 +5,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { combineLatest } from 'rxjs';
 import { PdfService } from 'src/app/services/pdf.service';
+import { FacturaService } from 'src/app/services/factura.service';
+import { OrdenCotizacionService } from 'src/app/services/orden-cotizacion.service';
+import { OrdersService } from 'src/app/services/orders.service';
 
 @Component({
   selector: 'app-user-order-details',
@@ -17,10 +20,14 @@ export class UserOrderDetailsComponent implements OnInit {
   currentPage1 = 1;
   rowsPerPage1 = 10;
   totalPages1 = 0;
+  buttonDisabled = false;
 
   constructor(
     private ordersDetailsService: OrdersDetailsService,
     private route: ActivatedRoute,
+    private facturaService: FacturaService,
+    private orderCotizacionService: OrdenCotizacionService,
+    private orderService: OrdersService,
     private router: Router,
     private pdfService: PdfService
   ) {}
@@ -68,10 +75,42 @@ export class UserOrderDetailsComponent implements OnInit {
   }
 
   downloadPdf() {
-    this.pdfService.generatePdf(this.ordersDetails);
+    this.orderCotizacionService.obtenerOrdenCotizacionPorOrderId(this.orderId).subscribe(
+      (ordenCotizacion: any) => {
+        const cotizacionId = ordenCotizacion[0].cotizacion.cotizacionId;
+        this.facturaService.obtenerFacturaPorCotizacion(cotizacionId).subscribe(
+          (factura: any) => {
+            this.pdfService.generatePdfFactura(factura[0].facturaId);
+          },
+          (error) => {
+            console.log(error);
+          }
+        );
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
   }
-  buttonDisabled = false;
+
   updateButtonState() {
-    this.buttonDisabled = this.ordersDetails.some(e => e.order.status === 'Rechazado' || e.order.status === 'Solicitado');
+    this.orderService.obtenerOrder(this.orderId).subscribe(
+      (order: any) => {
+        console.log(order)
+        if (order.status === 'Pagado') {
+          this.buttonDisabled = true;
+        } else {
+          this.buttonDisabled = false;
+        }
+      },
+      (error) => {
+        console.log(error);
+        this.buttonDisabled = false;
+      }
+    );
+  }
+
+  goBack(): void {
+    this.router.navigate(['user/historial-de-pedidos']);
   }
 }

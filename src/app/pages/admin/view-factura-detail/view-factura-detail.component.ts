@@ -14,6 +14,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FacturaService } from 'src/app/services/factura.service';
 import { FacturaDetailsService } from 'src/app/services/factura-details.service';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 
 @Component({
   selector: 'app-view-factura-detail',
@@ -59,11 +60,19 @@ export class ViewFacturaDetailComponent {
     rucEmpresa: '',
   };
 
+  plazaPagoTabla: {
+    nroCuota: number;
+    fechaInicio: string;
+    fechaFin: string;
+    monto: number;
+  }[] = [];
+
   constructor(
     private snack: MatSnackBar,
     private route: ActivatedRoute,
     private facturaService: FacturaService,
     private facturaDetailService: FacturaDetailsService,
+    private plazoPagoService: PaymentTermService,
     private router: Router,
   ) {}
 
@@ -72,6 +81,7 @@ export class ViewFacturaDetailComponent {
     this.facturaId = this.route.snapshot.params['facturaId'];
     this.facturaService.obtenerFactura(this.facturaId).subscribe(
       (factura: any) => {
+        console.log(factura);
         this.facturaData = {
           ...this.facturaData,
           divisa: factura.divisa,
@@ -87,11 +97,12 @@ export class ViewFacturaDetailComponent {
           apellido: factura.user.apellido,
           razonSocial: factura.user.razonSocial,
           ruc: factura.user.ruc,
-          tipoUsuario: factura.user.tipoUsuario
+          tipoUsuario: factura.user.tipoUsuario,
+          username: factura.user.username
         };
 
-        this.nombreCliente = this.usuario.tipoUsuario === 'cliente_empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
-        this.ruc = this.usuario.ruc;
+        this.nombreCliente = this.usuario.tipoUsuario === 'empresa' ? this.usuario.nombre : `${this.usuario.nombre} ${this.usuario.apellido}`;
+        this.ruc = this.usuario.username;
 
         this.facturaDetailService.listarFacturaDetailsPorFactura(factura.facturaId).subscribe(
           (detalles: any) => {
@@ -116,6 +127,27 @@ export class ViewFacturaDetailComponent {
             }));
 
             this.loading = false;
+
+            if(factura.tipoPago === 'Credito') {
+              this.plazoPagoService.obtenerPlazosPagoPorFactura(factura.facturaId).subscribe(
+                (plazosPago: any) => {
+                  const totalPorPlazo = (this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0) +
+                                this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0)) / plazosPago.length;
+                  this.plazaPagoTabla = plazosPago.map((plazo: any, index: any) => ({
+                    nroCuota: index + 1,
+                    fechaInicio: plazo.fechaInicio,
+                    fechaFin: plazo.fechaFin,
+                    monto: totalPorPlazo
+                  }));
+                },
+                (error) => {
+                  console.error('Error al obtener detalles de la cotización:', error);
+                  this.snack.open('Error al obtener detalles de la cotización', '', {
+                    duration: 3000
+                  });
+                }
+              );
+            }
           },
           (error) => {
             console.error('Error al obtener detalles de la cotización:', error);

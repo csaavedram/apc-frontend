@@ -33,11 +33,15 @@
       Siguiente <i class="fa fa-chevron-right"></i>
     </button>
   </div>
-  <div mat-dialog-actions align="center">
-    <button mat-button 
-            (click)="downloadPdf()" 
+  <div class="d-flex justify-content-center align-items-center gap-3">
+    <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+            (click)="downloadPdf()"
             [disabled]="buttonDisabled">
       Descargar Comprobante de Pago
+    </button>
+    <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+            (click)="goBack()">
+      Volver
     </button>
   </div>
 </mat-card>

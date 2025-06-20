@@ -64,15 +64,24 @@ export class AddFacturaComponent {
     apellido: '',
     razonSocial: '',
     ruc: '',
-    tipoUsuario: ''
+    tipoUsuario: '',
+    username: ''
   };
 
   plazoPagoData: any[] = [];
+
+  plazaPagoTabla: {
+    nroCuota: number;
+    fechaInicio: string;
+    fechaFin: string;
+    monto: number;
+  }[] = [];
 
   productos: any[] = [];
   servicios: any[] = [];
   detalleProductos: any[] = [];
   detalleServicios: any[] = [];
+  cotizacionEncontradaId = 0;
   allDetails: any[] = [];
   selectedProduct: any = null;
   selectedServiceType = { type: '', price: 0 };
@@ -114,92 +123,121 @@ export class AddFacturaComponent {
       return;
     }
 
-    this.quotationService.obtenerCotizacionPorCodigo(codigo).subscribe(
-      (cotizacion: any) => {
-        if (cotizacion) {
-          this.facturaData = {
-            ...this.facturaData,
-            divisa: cotizacion.divisa,
-            tipoPago: cotizacion.tipoPago,
-            fechaEmision: cotizacion.fechaEmision,
-            total: cotizacion.total,
-            userId: cotizacion.user.id,
-            codigo: cotizacion.codigo
-          };
-          this.usuario = {
-            id: cotizacion.user.id,
-            nombre: cotizacion.user.nombre,
-            apellido: cotizacion.user.apellido,
-            razonSocial: cotizacion.user.razonSocial,
-            ruc: cotizacion.user.ruc,
-            tipoUsuario: cotizacion.user.tipoUsuario
-          };
+    this.facturaService.listarFacturasPorCodigoCotizacion(codigo).subscribe(
+      (factura: any) => {
+        if (factura.length > 0) {
+          this.snack.open('Ya existe una factura con ese código de cotización', '', {
+            duration: 3000
+          });
+          this.busquedaRealizada = false;
+          return;
+        } else {
+          this.quotationService.obtenerCotizacionPorCodigo(codigo).subscribe(
+            (cotizacion: any) => {
+              if (cotizacion) {
+                this.cotizacionEncontradaId = cotizacion.cotizacionId;
+                this.facturaData = {
+                  ...this.facturaData,
+                  divisa: cotizacion.divisa,
+                  tipoPago: cotizacion.tipoPago,
+                  fechaEmision: cotizacion.fechaEmision,
+                  total: cotizacion.total,
+                  userId: cotizacion.user.id,
+                  codigo: cotizacion.codigo
+                };
+                this.usuario = {
+                  id: cotizacion.user.id,
+                  nombre: cotizacion.user.nombre,
+                  apellido: cotizacion.user.apellido,
+                  razonSocial: cotizacion.user.razonSocial,
+                  ruc: cotizacion.user.ruc,
+                  tipoUsuario: cotizacion.user.tipoUsuario,
+                  username: cotizacion.user.username
+                };
 
-          this.nombreCliente = this.usuario.tipoUsuario === 'cliente_empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
-          this.ruc = this.usuario.ruc;
+                this.nombreCliente = this.usuario.tipoUsuario === 'empresa' ? this.usuario.nombre : `${this.usuario.nombre} ${this.usuario.apellido}`;
+                this.ruc = this.usuario.username;
 
-          this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacion.cotizacionId).subscribe(
-            (detalles: any) => {
-              this.allDetails = detalles;
-              console.log('Detalles de la cotización:', detalles);
-              this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
-                cotizacionDetalleId: detalle.cotizacionDetalleId,
-                productoId: detalle.producto.productoId,
-                nombreProducto: detalle.producto.nombreProducto,
-                cantidad: detalle.cantidad,
-                precioUnitario: detalle.precioNuevo,
-                precioTotal: detalle.precioTotal,
-                igv: detalle.igv
-              }));
+                this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacion.cotizacionId).subscribe(
+                  (detalles: any) => {
+                    this.allDetails = detalles;
+                    console.log('Detalles de la cotización:', detalles);
+                    this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
+                      cotizacionDetalleId: detalle.cotizacionDetalleId,
+                      productoId: detalle.producto.productoId,
+                      nombreProducto: detalle.producto.nombreProducto,
+                      cantidad: detalle.cantidad,
+                      precioUnitario: detalle.precioNuevo,
+                      precioTotal: detalle.precioTotal,
+                      igv: detalle.igv
+                    }));
 
-              this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
-                cotizacionDetalleId: detalle.cotizacionDetalleId,
-                tipoServicio: detalle.tipoServicio,
-                precioTotal: detalle.precioTotal,
-                precioUnitario: detalle.precioUnitario
-              }));
+                    this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
+                      cotizacionDetalleId: detalle.cotizacionDetalleId,
+                      tipoServicio: detalle.tipoServicio,
+                      precioTotal: detalle.precioTotal,
+                      precioUnitario: detalle.precioUnitario
+                    }));
 
-              this.busquedaRealizada = false;
+                    this.busquedaRealizada = false;
 
-              this.plazoPagoService.obtenerPlazosPagoPorCotizacion(cotizacion.cotizacionId).subscribe(
-                (plazosPago: any) => {
-                  this.plazoPagoData = plazosPago;
-                  console.log(this.plazoPagoData)
-                },
-                (error) => {
-                  console.error('Error al obtener detalles de la cotización:', error);
-                  this.snack.open('Error al obtener detalles de la cotización', '', {
-                    duration: 3000
-                  });
-                }
-              );
+                    this.plazoPagoService.obtenerPlazosPagoPorCotizacion(cotizacion.cotizacionId).subscribe(
+                      (plazosPago: any) => {
+                        this.plazoPagoData = plazosPago;
+                        const totalPorPlazo = (this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0) +
+                                      this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0)) / plazosPago.length;
+                        this.plazaPagoTabla = this.plazoPagoData.map((plazo, index) => ({
+                          nroCuota: index + 1,
+                          fechaInicio: plazo.fechaInicio,
+                          fechaFin: plazo.fechaFin,
+                          monto: totalPorPlazo
+                        }));
+                      },
+                      (error) => {
+                        console.error('Error al obtener detalles de la cotización:', error);
+                        this.snack.open('Error al obtener detalles de la cotización', '', {
+                          duration: 3000
+                        });
+                      }
+                    );
 
+                  },
+                  (error) => {
+                    console.error('Error al obtener detalles de la cotización:', error);
+                    this.snack.open('Error al obtener detalles de la cotización', '', {
+                      duration: 3000
+                    });
+                    this.busquedaRealizada = false;
+                  }
+                );
+
+                this.snack.open('Cotización encontrada', '', {
+                  duration: 3000
+                });
+              } else {
+                this.snack.open('No se encontró una cotización con ese código', '', {
+                  duration: 3000
+                });
+                this.busquedaRealizada = false;
+              }
             },
             (error) => {
-              console.error('Error al obtener detalles de la cotización:', error);
-              this.snack.open('Error al obtener detalles de la cotización', '', {
+              console.error('Error al buscar la cotización:', error);
+              this.snack.open('Error al buscar la cotización', '', {
                 duration: 3000
               });
               this.busquedaRealizada = false;
             }
           );
-
-          this.snack.open('Cotización encontrada', '', {
-            duration: 3000
-          });
-        } else {
-          this.snack.open('No se encontró una cotización con ese código', '', {
-            duration: 3000
-          });
-          this.busquedaRealizada = false;
         }
       },
       (error) => {
-        console.error('Error al buscar la cotización:', error);
-        this.snack.open('Error al buscar la cotización', '', {
+        console.error('Error al buscar la factura por código:', error);
+        this.snack.open('Error al buscar la factura por código', '', {
           duration: 3000
         });
         this.busquedaRealizada = false;
+        return;
       }
     );
   }
@@ -209,86 +247,87 @@ export class AddFacturaComponent {
   }
 
   guardarInformacion(): void {
-    // FALTAN VALIDACIONES
+    const facturaPayload = {
+      divisa: this.facturaData.divisa,
+      tipoPago: this.facturaData.tipoPago,
+      fechaEmision: new Date(),
+      total: this.calcularTotal(),
+      user: {
+        id: this.usuario.id,
+      },
+      estado: 'Creado',
+      cotizacion: {
+        cotizacionId: this.cotizacionEncontradaId
+      }
+    };
 
-        const facturaPayload = {
-          divisa: this.facturaData.divisa,
-          tipoPago: this.facturaData.tipoPago,
-          fechaEmision: new Date(),
-          total: this.calcularTotal(),
-          user: {
-            id: this.usuario.id,
-          },
-          estado: 'Creado',
-        };
+    this.facturaService.agregarFactura(facturaPayload).subscribe(
+      (factura: any) => {
+        const facturaId = factura.facturaId;
 
-        this.facturaService.agregarFactura(facturaPayload).subscribe(
-          (factura: any) => {
-            const facturaId = factura.facturaId;
+        this.detalleProductos.forEach((detalle) => {
+          const detalleProductoPayload = {
+            cantidad: detalle.cantidad,
+            precioTotal: detalle.precioTotal,
+            precioUnitario: detalle.precioUnitario,
+            tipoServicio: null,
+            producto: { productoId: detalle.productoId },
+            factura: { facturaId: facturaId },
+            createdAt: new Date(),
+          };
 
-            this.detalleProductos.forEach((detalle) => {
-              const detalleProductoPayload = {
-                cantidad: detalle.cantidad,
-                precioTotal: detalle.precioTotal,
-                precioUnitario: detalle.precioUnitario,
-                tipoServicio: null,
-                producto: { productoId: detalle.productoId },
-                factura: { facturaId: facturaId },
-                createdAt: new Date()
-              };
+          this.facturaDetailService.agregarFacturaDetail(detalleProductoPayload).subscribe(
+            () => console.log('✅ Detalle de producto guardado'),
+            (error) => console.error('❌ Error al guardar detalle de producto:', error)
+          );
 
-              this.facturaDetailService.agregarFacturaDetail(detalleProductoPayload).subscribe(
-                () => console.log('Detalle de producto guardado'),
-                (error) => console.error('Error al guardar detalle de producto:', error)
-              );
+        });
 
-            });
+        this.detalleServicios.forEach((detalle) => {
+          const detalleServicioPayload = {
+            cantidad: 1,
+            precioTotal: detalle.precioTotal,
+            precioUnitario: detalle.precioUnitario,
+            productoId: null,
+            factura: { facturaId: facturaId },
+            createdAt: new Date(),
+            tipoServicio: detalle.tipoServicio,
+          };
 
-            this.detalleServicios.forEach((detalle) => {
-              const detalleServicioPayload = {
-                cantidad: 1,
-                precioTotal: detalle.precioTotal,
-                precioUnitario: detalle.precioUnitario,
-                productoId: null,
-                factura: { facturaId: facturaId },
-                createdAt: new Date(),
-                tipoServicio: detalle.tipoServicio,
-              };
+          this.facturaDetailService.agregarFacturaDetail(detalleServicioPayload).subscribe(
+            () => console.log('✅ Detalle de servicio guardado'),
+            (error) => console.error('❌ Error al guardar detalle de servicio:', error)
+          );
+        });
 
-              this.facturaDetailService.agregarFacturaDetail(detalleServicioPayload).subscribe(
-                () => console.log('Detalle de servicio guardado'),
-                (error) => console.error('Error al guardar detalle de servicio:', error)
-              );
-            });
+        // Si plazoPagoData es un solo objeto, no un array
+        console.log(this.plazoPagoData);
 
-            // Si plazoPagoData es un solo objeto, no un array
-            console.log(this.plazoPagoData);
+        this.plazoPagoData.forEach((plazoPago) => {
+          const plazoPagoPayload = {
+            facturaId: factura.facturaId
+          };
 
-            this.plazoPagoData.forEach((plazoPago) => {
-              const plazoPagoPayload = {
-                facturaId: factura.facturaId
-              };
+          this.paymentTermService.actualizarFacturaDePlazoPago(plazoPago.plazoPagoId, plazoPagoPayload).subscribe(
+            (data: any) => {
+              console.log('Plazo de pago actualizado:', data);
+            },
+            (error) => {
+              console.error('Error al actualizar plazo de pago:', error);
+            }
+          );
+        });
 
-              this.paymentTermService.actualizarFacturaDePlazoPago(plazoPago.plazoPagoId, plazoPagoPayload).subscribe(
-                (data: any) => {
-                  console.log('Plazo de pago actualizado:', data);
-                },
-                (error) => {
-                  console.error('Error al actualizar plazo de pago:', error);
-                }
-              );
-            });
-
-            Swal.fire('Éxito', 'La factura ha sido guardada correctamente', 'success')
-              .then(() => {
-                this.router.navigate(['/admin/facturas']);
-              });
-          },
-          (error) => {
-            console.error('Error al guardar la cotización:', error);
-            Swal.fire('Error', 'Ocurrió un error al guardar la cotización', 'error');
-          }
-        );
+        Swal.fire('Éxito', 'La factura ha sido guardada correctamente', 'success')
+          .then(() => {
+            this.router.navigate(['/admin/facturas']);
+          });
+      },
+      (error) => {
+        console.error('Error al guardar la cotización:', error);
+        Swal.fire('Error', 'Ocurrió un error al guardar la cotización', 'error');
+      }
+    );
   }
 
   calcularOpGravadas(): number {

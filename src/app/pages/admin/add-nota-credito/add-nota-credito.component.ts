@@ -16,6 +16,7 @@ import { FacturaDetailsService } from 'src/app/services/factura-details.service'
 import { FacturaService } from 'src/app/services/factura.service';
 import { NotaCreditoDetailsService } from 'src/app/services/nota-credito-details.service';
 import { NotaCreditoService } from 'src/app/services/nota-credito.service';
+import { PaymentTermService } from 'src/app/services/payment-term.service';
 import { ProductoService } from 'src/app/services/producto.service';
 import { UserService } from 'src/app/services/user.service';
 import Swal from 'sweetalert2';
@@ -67,8 +68,18 @@ export class AddNotaCreditoComponent {
     apellido: '',
     razonSocial: '',
     ruc: '',
-    tipoUsuario: ''
+    tipoUsuario: '',
+    username: ''
   };
+
+  plazoPagoData: any[] = [];
+
+  plazaPagoTabla: {
+    nroCuota: number;
+    fechaInicio: string;
+    fechaFin: string;
+    monto: number;
+  }[] = [];
 
   productos: any[] = [];
   servicios: any[] = [];
@@ -101,6 +112,7 @@ export class AddNotaCreditoComponent {
     private notaCreditoService: NotaCreditoService,
     private notaCreditoDetailService: NotaCreditoDetailsService,
     private productoService: ProductoService,
+    private plazoPagoService: PaymentTermService,
     private userService: UserService,
     private router: Router,
   ) {}
@@ -118,78 +130,120 @@ export class AddNotaCreditoComponent {
       });
       this.busquedaRealizada = false;
       return;
-    }    this.facturaService.obtenerFacturaPorCodigo(codigo).subscribe(
-      (factura: any) => {
-        // Store the invoice ID for later cancellation
-        this.facturaId = factura.facturaId;
-        
-        this.notaData = {
-          ...this.notaData,
-          divisa: factura.divisa,
-          tipoPago: factura.tipoPago,
-          fechaEmision: factura.fechaEmision,
-          total: factura.total,
-          userId: factura.user.id,
-          codigo: factura.codigo
-        };
-        this.usuario = {
-          id: factura.user.id,
-          nombre: factura.user.nombre,
-          apellido: factura.user.apellido,
-          razonSocial: factura.user.razonSocial,
-          ruc: factura.user.ruc,
-          tipoUsuario: factura.user.tipoUsuario
-        };
+    }
 
-        this.usuarioInput = this.usuario.ruc
-        this.nombreCliente = this.usuario.tipoUsuario === 'cliente_empresa' ? this.usuario.razonSocial : `${this.usuario.nombre} ${this.usuario.apellido}`;
-        this.ruc = this.usuario.ruc;
+    this.notaCreditoService.listarNotaCreditoPorCodigoFactura(codigo).subscribe(
+      (notaCredito: any) => {
 
-        this.facturaDetailsService.listarFacturaDetailsPorFactura(factura.facturaId).subscribe(
-          (detalles: any) => {
-            this.allDetails = detalles;
-            this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
-              facturaDetalleId: detalle.facturaDetalleId,
-              productoId: detalle.producto.productoId,
-              nombreProducto: detalle.producto.nombreProducto,
-              cantidad: detalle.cantidad,
-              precioUnitario: detalle.precioUnitario,
-              precioTotal: detalle.precioTotal,
-              precioNuevo: null
-            }));
+        console.log(notaCredito);
+        if (notaCredito.length > 0) {
+          this.snack.open('Ya existe una nota de crédito para esta factura', '', {
+            duration: 3000,
+          });
+          this.busquedaRealizada = false;
+          return;
+        } else {
+          this.facturaService.obtenerFacturaPorCodigo(codigo).subscribe(
+            (factura: any) => {
+              this.facturaId = factura.facturaId;
 
-            console.log(this.detalleProductos)
+              this.notaData = {
+                ...this.notaData,
+                divisa: factura.divisa,
+                tipoPago: factura.tipoPago,
+                fechaEmision: factura.fechaEmision,
+                total: factura.total,
+                userId: factura.user.id,
+                codigo: factura.codigo
+              };
+              this.usuario = {
+                id: factura.user.id,
+                nombre: factura.user.nombre,
+                apellido: factura.user.apellido,
+                razonSocial: factura.user.razonSocial,
+                ruc: factura.user.ruc,
+                tipoUsuario: factura.user.tipoUsuario,
+                username: factura.user.username
+              };
 
-            this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
-              facturaDetalleId: detalle.facturaDetalleId,
-              tipoServicio: detalle.tipoServicio,
-              precioTotal: detalle.precioTotal,
-              precioUnitario: detalle.precioUnitario
-            }));
+              this.usuarioInput = this.usuario.ruc
+              this.nombreCliente = this.usuario.tipoUsuario === 'empresa' ? this.usuario.nombre : `${this.usuario.nombre} ${this.usuario.apellido}`;
+              this.ruc = this.usuario.username;
 
-            this.busquedaRealizada = false;
-            this.busquedaExitosa = true;
-          },
-          (error) => {
-            console.error('Error al obtener detalles de la factura:', error);
-            this.snack.open('Error al obtener detalles de la factura', '', {
-              duration: 3000
-            });
-            this.busquedaRealizada = false;
-            this.busquedaExitosa = false;
-          }
-        );
-        this.snack.open('Factura encontrada', '', {
-          duration: 3000
-        });
+              this.facturaDetailsService.listarFacturaDetailsPorFactura(factura.facturaId).subscribe(
+                (detalles: any) => {
+                  this.allDetails = detalles;
+                  this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
+                    facturaDetalleId: detalle.facturaDetalleId,
+                    productoId: detalle.producto.productoId,
+                    nombreProducto: detalle.producto.nombreProducto,
+                    cantidad: detalle.cantidad,
+                    precioUnitario: detalle.precioUnitario,
+                    precioTotal: detalle.precioTotal,
+                    precioNuevo: null
+                  }));
+
+                  this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({
+                    facturaDetalleId: detalle.facturaDetalleId,
+                    tipoServicio: detalle.tipoServicio,
+                    precioTotal: detalle.precioTotal,
+                    precioUnitario: detalle.precioUnitario
+                  }));
+
+                  this.busquedaRealizada = false;
+                  this.busquedaExitosa = true;
+
+                  this.plazoPagoService.obtenerPlazosPagoPorFactura(this.facturaId).subscribe(
+                    (plazosPago: any) => {
+                      this.plazoPagoData = plazosPago;
+                      const totalPorPlazo = (this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0) +
+                                    this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0)) / plazosPago.length;
+                      this.plazaPagoTabla = this.plazoPagoData.map((plazo, index) => ({
+                        nroCuota: index + 1,
+                        fechaInicio: plazo.fechaInicio,
+                        fechaFin: plazo.fechaFin,
+                        monto: totalPorPlazo
+                      }));
+                    },
+                    (error) => {
+                      console.error('Error al obtener detalles de la cotización:', error);
+                      this.snack.open('Error al obtener detalles de la cotización', '', {
+                        duration: 3000
+                      });
+                    }
+                  );
+                },
+                (error) => {
+                  console.error('Error al obtener detalles de la factura:', error);
+                  this.snack.open('Error al obtener detalles de la factura', '', {
+                    duration: 3000
+                  });
+                  this.busquedaRealizada = false;
+                  this.busquedaExitosa = false;
+                }
+              );
+              this.snack.open('Factura encontrada', '', {
+                duration: 3000
+              });
+            },
+            (error) => {
+              console.error('Error al buscar la factura:', error);
+              this.snack.open('Error al buscar la factura', '', {
+                duration: 3000
+              });
+              this.busquedaRealizada = false;
+              this.busquedaExitosa = false;
+            }
+          );
+        }
       },
       (error) => {
-        console.error('Error al buscar la factura:', error);
-        this.snack.open('Error al buscar la factura', '', {
-          duration: 3000
+        console.log(error)
+        this.snack.open('Error al verificar nota de crédito existente', '', {
+          duration: 3000,
         });
         this.busquedaRealizada = false;
-        this.busquedaExitosa = false;
+        return;
       }
     );
   }
@@ -241,6 +295,9 @@ export class AddNotaCreditoComponent {
       },
       estado: 'Creado',
       fechaEmision: new Date(),
+      factura: {
+        facturaId: this.facturaId
+      }
     };
 
     this.notaCreditoService.agregarNotaCredito(notaPayload).subscribe(
@@ -280,9 +337,25 @@ export class AddNotaCreditoComponent {
             () => console.log('Detalle de servicio guardado'),
             (error) => console.error('Error al guardar detalle de servicio:', error)
           );
-        });        Swal.fire('Éxito', 'La nota de credito y sus detalles han sido guardados correctamente', 'success')
+        });
+
+        this.plazoPagoData.forEach((plazoPago) => {
+          const plazoPagoPayload = {
+            notaCreditoId: nota.notaCreditoId,
+          };
+
+          this.plazoPagoService.actualizarNotaCreditoEnPlazoPago(plazoPago.plazoPagoId, plazoPagoPayload).subscribe(
+            (data: any) => {
+              console.log('Plazo de pago actualizado:', data);
+            },
+            (error) => {
+              console.error('Error al actualizar plazo de pago:', error);
+            }
+          );
+        });
+
+        Swal.fire('Éxito', 'La nota de credito y sus detalles han sido guardados correctamente', 'success')
           .then(() => {
-            // Change invoice status to "Anulada" after successful credit note creation
             if (this.facturaId) {
               this.facturaService.anularFactura(this.facturaId).subscribe(
                 () => {
@@ -317,7 +390,8 @@ export class AddNotaCreditoComponent {
         apellido: '',
         razonSocial: '',
         ruc: '',
-        tipoUsuario: ''
+        tipoUsuario: '',
+        username: ''
       };
     } else {
       this.usuario = {
@@ -326,7 +400,8 @@ export class AddNotaCreditoComponent {
         apellido: '',
         razonSocial: '',
         ruc: '',
-        tipoUsuario: ''
+        tipoUsuario: '',
+        username: ''
       };
     }
   }
@@ -577,7 +652,8 @@ export class AddNotaCreditoComponent {
       apellido: '',
       razonSocial: '',
       ruc: '',
-      tipoUsuario: ''
+      tipoUsuario: '',
+      username: ''
     };
     this.usuarioInput = '';
     this.filteredSuggestions = [];

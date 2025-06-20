@@ -37,6 +37,18 @@ export class QuotationService {
     return this.http.patch(`${baserUrl}/quotation/anular/${quotationId}`, null);
   }
 
+  public aceptarCotizacion(quotationId: any) {
+    return this.http.patch(`${baserUrl}/quotation/aceptar/${quotationId}`, null);
+  }
+
+  public pagarCotizacion(quotationId: any) {
+    return this.http.patch(`${baserUrl}/quotation/pagar/${quotationId}`, null);
+  }
+
+  public pagarParcialmenteCotizacion(quotationId: any) {
+    return this.http.patch(`${baserUrl}/quotation/pagar-parcialmente/${quotationId}`, null);
+  }
+
   public obtenerCotizacionPorCodigo(codigo: string) {
     return this.http.get(`${baserUrl}/quotation/codigo/${codigo}`);
   }

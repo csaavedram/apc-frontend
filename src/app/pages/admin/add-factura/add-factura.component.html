@@ -62,18 +62,6 @@
                   </mat-form-field>
                 </div>
               </div>
-
-              <p>Plazos de Pago: </p>
-              <div style="height: 300px; overflow-y: auto;">
-                <div *ngFor="let plazo of plazoPagoData">
-                  <p><strong>Cuota N°:</strong> {{ plazo.nroCuota }}</p>
-                  <p><strong>Cantidad:</strong> {{ plazo.cantidad }}</p>
-                  <p><strong>Estado:</strong> {{ plazo.estado }}</p>
-                  <p><strong>Fecha inicial:</strong> {{ plazo.fechaInicio | date:'yyyy-MM-dd' }}</p>
-                  <p><strong>Fecha final:</strong> {{ plazo.fechaFin | date:'yyyy-MM-dd' }}</p>
-                  <hr>
-                </div>
-              </div>
             </div>
             <div class="col-2">
               <div class="d-flex justify-content-center align-items-center h-full" style="margin-top: 10px; margin-bottom: 5px;">
@@ -154,13 +142,35 @@
               </tr>
             </tbody>
           </table>
+        </div>
 
-          <div class="d-flex justify-content-end mt-4">
-            <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
-              (click)="guardarInformacion()">
-              Agregar Factura
-            </button>
-          </div>
+        <div *ngIf="facturaData.tipoPago === 'Credito' && plazoPagoData.length > 0 && (detalleProductos.length > 0 || detalleServicios.length > 0)" class="mt-4">
+          <h3>Plazos de Pago</h3>
+          <table class="table table-bordered text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>Nro Cuota</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let plazo of plazaPagoTabla">
+                <td>{{ plazo.nroCuota }}</td>
+                <td>{{ plazo.fechaInicio | date:'dd/MM/yyyy' }}</td>
+                <td>{{ plazo.fechaFin | date:'dd/MM/yyyy' }}</td>
+                <td>{{ plazo.monto === 0 ? '-' : ('S/. ' + (plazo.monto | number:'1.2-2')) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="(detalleProductos.length > 0 || detalleServicios.length > 0) && ((facturaData.tipoPago === 'Contado' && (detalleProductos.length > 0 || detalleServicios.length > 0)) || (facturaData.tipoPago === 'Credito' && plazoPagoData.length > 0))" class="d-flex justify-content-end mt-4">
+          <button mat-raised-button style="background-color: #00CED1; color: white;" class="px-4 py-2"
+            (click)="guardarInformacion()">
+            Agregar Factura
+          </button>
         </div>
       </div>
     </div>

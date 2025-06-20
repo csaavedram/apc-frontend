@@ -459,11 +459,10 @@ export class AddCotizacionComponent {
           );
         });
 
-        if(cotizacionPayload.tipoPago === 'Contado') {
+        if(cotizacionPayload.tipoPago === 'Credito') {
           const totalPorPlazo = this.calcularTotal() / this.nroPlazos;
           this.plazoPagoData.forEach((plazoPago, index) => {
             const payload = {
-              plazoPagoId: index + 1,
               cantidad: totalPorPlazo,
               facturaId: null,
               cotizacion: {
@@ -472,7 +471,7 @@ export class AddCotizacionComponent {
               fechaInicio: plazoPago.fechaInicio,
               fechaFin: plazoPago.fechaFin,
               estado: 'Pendiente',
-              nroCuota: plazoPago.nroCuota,
+              nroCuota: index + 1,
             };
 
             this.paymentTermService.agregarPlazoPago(payload).subscribe(

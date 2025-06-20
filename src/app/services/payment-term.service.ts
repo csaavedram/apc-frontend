@@ -25,11 +25,23 @@ export class PaymentTermService {
     return this.http.patch(`${baserUrl}/plazospago/${plazoPagoId}`, data);
   }
 
+  public actualizarNotaCreditoEnPlazoPago(plazoPagoId: any, data: any) {
+    return this.http.patch(`${baserUrl}/plazospago/${plazoPagoId}/notaCredito`, data);
+  }
+
   public actualizarPlazoPago(data: any) {
     return this.http.put(`${baserUrl}/plazospago/`, data);
   }
 
   public eliminarPlazoPago(plazoPagoId: any) {
     return this.http.delete(`${baserUrl}/plazospago/${plazoPagoId}`);
+  }
+
+  public obtenerPlazosPagoPorNotaCredito(notaCreditoId: any) {
+    return this.http.get(`${baserUrl}/plazospago/notaCredito/${notaCreditoId}`);
+  }
+
+  public cambiarEstadoAPagado(plazoPagoId: any) {
+    return this.http.patch(`${baserUrl}/plazospago/${plazoPagoId}/estado/pagado`, null);
   }
 }
