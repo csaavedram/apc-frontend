@@ -320,6 +320,21 @@
               name="observacionesEditar"
               rows="3"></textarea>
           </div>
+          <div class="form-group">
+            <label for="cantidadEditar">Cantidad</label>
+            <input 
+              type="number" 
+              id="cantidadEditar"
+              class="form-control" 
+              [(ngModel)]="serieEditando.cantidad"
+              name="cantidadEditar"
+              min="1"
+              [readonly]="!esLote(serieEditando)"
+              required>
+            <small *ngIf="!esLote(serieEditando)" class="form-text text-muted">
+              Solo editable para lotes
+            </small>
+          </div>
         </form>
       </div>
       <div class="modal-footer">

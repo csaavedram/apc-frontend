@@ -130,9 +130,20 @@ export class ProductoSeriesComponent implements OnInit {
 
   editarSerie(serie: any): void {
     this.serieEditando = { ...serie };
+    // Asegurarse que la cantidad esté presente y sea editable
+    if (typeof this.serieEditando.cantidad === 'undefined' || this.serieEditando.cantidad === null) {
+      this.serieEditando.cantidad = 1;
+    }
+    // Corregir formato de fecha para input type="date"
     if (this.serieEditando.fechaVencimiento) {
+      // Si ya es formato yyyy-MM-dd, dejar igual
       const fecha = new Date(this.serieEditando.fechaVencimiento);
-      this.serieEditando.fechaVencimiento = fecha.toISOString().split('T')[0];
+      const yyyy = fecha.getFullYear();
+      const mm = (fecha.getMonth() + 1).toString().padStart(2, '0');
+      const dd = fecha.getDate().toString().padStart(2, '0');
+      this.serieEditando.fechaVencimiento = `${yyyy}-${mm}-${dd}`;
+    } else {
+      this.serieEditando.fechaVencimiento = '';
     }
     this.showEditarModal = true;
   }
@@ -220,11 +231,13 @@ export class ProductoSeriesComponent implements OnInit {
       numeroSerie: this.serieEditando.numeroSerie,
       observaciones: this.serieEditando.observaciones,
       estado: this.serieEditando.estado,
+      cantidad: this.serieEditando.cantidad,
       producto: { productoId: this.productoId }
     };
 
-    if (this.serieEditando.fechaVencimiento) {
-      serieData.fechaVencimiento = new Date(this.serieEditando.fechaVencimiento);
+    // Enviar fecha en formato yyyy-MM-dd solo si está definida y no vacía
+    if (this.serieEditando.fechaVencimiento && this.serieEditando.fechaVencimiento !== '') {
+      serieData.fechaVencimiento = this.serieEditando.fechaVencimiento;
     }
 
     this.productoSerieService.actualizarProductoSerie(this.serieEditando.productoSerieId, serieData).subscribe(
@@ -259,6 +272,11 @@ export class ProductoSeriesComponent implements OnInit {
           });
         }      );
     }
+  }
+
+  // Determina si la serie es un lote (cantidad > 1)
+  esLote(serie: any): boolean {
+    return serie && Number(serie.cantidad) > 1;
   }
 
   // Métodos auxiliares para el template
