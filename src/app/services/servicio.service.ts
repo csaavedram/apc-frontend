@@ -24,8 +24,11 @@ export class ServicioService {
   public obtenerServicio(servicioId:any){
     return this.http.get(`${baserUrl}/servicios/${servicioId}`);
   }
-  
-  public actualizarServicio(servicio:any){
+    public actualizarServicio(servicio:any){
     return this.http.put(`${baserUrl}/servicios/`, servicio);
+  }
+
+  public obtenerServicioConDetalles(servicioId: any) {
+    return this.http.get(`${baserUrl}/servicios/${servicioId}/con-detalles`);
   }
 }

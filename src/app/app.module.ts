@@ -16,6 +16,7 @@ import {MatListModule} from '@angular/material/list';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 
@@ -37,6 +38,8 @@ import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatStepperModule} from '@angular/material/stepper';
 import {MatNativeDateModule} from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 
 import { CarruselComponent } from './components/carrusel/carrusel.component';
@@ -166,10 +169,10 @@ import { ToastrModule } from 'ngx-toastr';
     exports: [MatToolbarModule, MatButtonModule, MatIconModule, MatExpansionModule],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,
-        BrowserAnimationsModule,
-        MatButtonModule,
+        BrowserAnimationsModule,        MatButtonModule,
         MatFormFieldModule,
         MatInputModule,
+        MatCheckboxModule,
         FormsModule,
         MatSnackBarModule,
         MatCardModule,
@@ -181,11 +184,12 @@ import { ToastrModule } from 'ngx-toastr';
         MatDividerModule,
         MatSlideToggleModule,
         MatSelectModule,
-        MatDatepickerModule,        MatNativeDateModule,
-        MatStepperModule,
+        MatDatepickerModule,        MatNativeDateModule,        MatStepperModule,
         ReactiveFormsModule,
         MatProgressSpinnerModule,
-        MatDialogModule,        ToastrModule.forRoot({
+        MatDialogModule,
+        MatTabsModule,
+        MatProgressBarModule,ToastrModule.forRoot({
           timeOut: 3000,
           positionClass: 'toast-bottom-right',
           preventDuplicates: true,

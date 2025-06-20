@@ -51,8 +51,7 @@
         <div *ngIf="loading" class="text-center d-flex justify-content-center align-items-center flex-column">
           <mat-spinner diameter="50"></mat-spinner>
           <p class="mt-2">Cargando...</p>
-        </div>
-        <div *ngIf="detalleProductos.length > 0" style="max-height: 300px; overflow-y: auto;">
+        </div>        <div *ngIf="detalleProductos.length > 0" style="max-height: 400px; overflow-y: auto;">
           <h3>Productos</h3>
           <table class="table table-bordered table-striped text-center">
             <thead class="table-dark">
@@ -60,7 +59,8 @@
                 <th>Producto</th>
                 <th>Cantidad</th>
                 <th>Precio Unitario</th>
-                <th style="width: 20%;">Total</th>
+                <th>Números de Serie</th>
+                <th style="width: 15%;">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -68,6 +68,23 @@
                 <td>{{ detalle.nombreProducto }}</td>
                 <td>{{ detalle.cantidad }}</td>
                 <td>S/. {{ detalle.precioUnitario }}</td>
+                <td>
+                  <div *ngIf="detalle.numerosSerieAsignados && detalle.numerosSerieAsignados.length > 0; else sinSeries">
+                    <div class="series-container">
+                      <span *ngFor="let serie of detalle.numerosSerieAsignados; let last = last" 
+                            class="serie-badge"
+                            [title]="'Fecha venta: ' + (serie.fechaVenta | date:'dd/MM/yyyy')">
+                        {{ serie.numeroSerie }}<span *ngIf="!last">, </span>
+                      </span>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                      {{ detalle.numerosSerieAsignados.length }} serie(s) asignada(s)
+                    </small>
+                  </div>
+                  <ng-template #sinSeries>
+                    <span class="text-muted">Sin números de serie</span>
+                  </ng-template>
+                </td>
                 <td>S/. {{ detalle.precioTotal | number:'1.0-2' }}</td>
               </tr>
             </tbody>

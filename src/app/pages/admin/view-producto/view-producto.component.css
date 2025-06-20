@@ -112,6 +112,20 @@ table {
     color: #004aad;
     transform: scale(1.2);
   }
+  .series-icono {
+    display: inline-block;
+    cursor: pointer;
+  }
+  
+  .series-icono i {
+    color: black;
+    transition: color 0.3s, transform 0.3s;
+  }
+  
+  .series-icono:hover i {
+    color: #6c5ce7;
+    transform: scale(1.2);
+  }
   .table-container {
     max-height: 500px;
     

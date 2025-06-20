@@ -25,12 +25,25 @@ export class ActualizarProductoComponent implements OnInit {
   productoOriginal: any;
   categorys: any[] = [];
 
+  // Propiedades para el sistema híbrido de imágenes
+  imagenMethod: number = 1; // Por defecto URL (1), para mantener compatibilidad con productos existentes
+  selectedFile: File | null = null;
+  imagenUrl: string = '';
+  uploadProgress: number = 0;
+  imagePreview: string | null = null;
   ngOnInit(): void {
     this.productoId = this.route.snapshot.params['productoId'];
     this.productoService.obtenerProducto(this.productoId).subscribe(
       (data) => {
         this.producto = data;
         this.productoOriginal = { ...this.producto }; // Hacemos una copia de los datos del producto para poder hacer una validación de cambio.
+        
+        // Inicializar el sistema de imágenes
+        if (this.producto.imagen) {
+          this.imagenUrl = this.producto.imagen;
+          this.imagenMethod = 1; // URL por defecto
+        }
+        
         console.log(this.producto)
         console.log(this.productoOriginal)
       },
@@ -52,13 +65,11 @@ export class ActualizarProductoComponent implements OnInit {
   }
   volverAProductos() {
     this.router.navigate(['/admin/productos']); 
-  }
-  public actualizarDatos(){
+  }  public async actualizarDatos(){
     // Normalizamos espacios en blanco en las cadenas y eliminar espacios al inicio y al final
     this.producto.nombreProducto = this.normalizarEspacios(this.producto.nombreProducto);
     this.producto.sku = this.normalizarEspacios(this.producto.sku);
     this.producto.descripcion = this.normalizarEspacios(this.producto.descripcion);
-    this.producto.imagen = this.normalizarEspacios(this.producto.imagen);
   
     console.log(this.producto);
   
@@ -105,6 +116,17 @@ export class ActualizarProductoComponent implements OnInit {
     const precioRegex = /^\d+(\.\d{1,2})?$/;
     if (!precioRegex.test(this.producto.precio)) {
       this.snack.open('El precio debe tener como máximo dos decimales', '', {
+        duration: 3000
+      });
+      return;
+    }
+
+    // Preparar imagen
+    try {
+      const nuevaImagenUrl = await this.prepareImageUrl();
+      this.producto.imagen = nuevaImagenUrl;
+    } catch (error: any) {
+      this.snack.open(error.message || 'Error al procesar la imagen', '', {
         duration: 3000
       });
       return;
@@ -175,8 +197,99 @@ export class ActualizarProductoComponent implements OnInit {
         (error) =>{
           Swal.fire('Error en el sistema', 'No se ha podido actualizar la información del producto', 'error');
           console.log(error);
-        }
-      );
+        }      );
+    }
+  }
+
+  // Métodos para el sistema híbrido de imágenes
+  onImageMethodChange(event: any) {
+    this.imagenMethod = event.index;
+    if (this.imagenMethod === 1) {
+      // Si cambió a URL, sincronizar con la imagen actual del producto
+      this.imagenUrl = this.producto.imagen || '';
+    }
+    this.resetImageData(false);
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      this.createImagePreview(file);
+    }
+  }
+
+  createImagePreview(file: File) {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.imagePreview = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  getImagePreview(): string | null {
+    if (this.imagenMethod === 0) {
+      // Método archivo
+      return this.imagePreview;
+    } else {
+      // Método URL
+      return this.imagenUrl.trim() ? this.imagenUrl : null;
+    }
+  }
+
+  resetImageData(resetUrl: boolean = true) {
+    this.selectedFile = null;
+    if (resetUrl) {
+      this.imagenUrl = '';
+    }
+    this.uploadProgress = 0;
+    this.imagePreview = null;
+  }
+
+  async uploadFile(): Promise<string> {
+    if (!this.selectedFile) {
+      throw new Error('No hay archivo seleccionado');
+    }
+
+    this.uploadProgress = 0;
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+
+    try {
+      // Subir la imagen al backend
+      const response = await fetch('http://localhost:8080/uploads/imagen', {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) {
+        throw new Error('Error al subir la imagen');
+      }
+      const imageUrl = await response.text();
+      this.uploadProgress = 100;
+      return imageUrl;
+    } catch (error) {
+      this.uploadProgress = 0;
+      throw error;
+    }
+  }
+
+  async prepareImageUrl(): Promise<string> {
+    if (this.imagenMethod === 0) {
+      // Método archivo
+      if (this.selectedFile) {
+        return await this.uploadFile();
+      } else {
+        // Si no hay archivo seleccionado, mantener la imagen actual
+        return this.producto.imagen || '';
+      }
+    } else {
+      // Método URL
+      if (this.imagenUrl.trim()) {
+        return this.imagenUrl.trim();
+      } else {
+        // Si no hay URL, mantener la imagen actual
+        return this.producto.imagen || '';
+      }
     }
   }
 }

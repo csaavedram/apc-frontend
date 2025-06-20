@@ -27,8 +27,7 @@
             <td>{{ e.sku }}</td>
             <td>{{ e.descripcion }}</td>
             <td>{{ e.precio | currency:'S/. ':'symbol':'1.2-2' }}</td>
-            <td>{{ e.stock }}</td>
-            <td>
+            <td>{{ e.stock }}</td>            <td>
                 <div style="padding-left: 5px; padding-right: 5px;" class="detalle-icono">
                     <i [routerLink]="'/admin/detalleproducto/'+e.productoId" class="fas fa-info-circle"></i>
                 </div>
@@ -38,9 +37,12 @@
                 <div style="padding-left: 5px; padding-right: 5px;" class="editar-icono" >
                     <i [routerLink]="'/admin/agregar-stock/'+e.productoId" class="fas fa-add"></i>
                 </div>
-                <!-- <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="eliminarProducto(e.productoId)">
+                <div style="padding-left: 5px; padding-right: 5px;" class="series-icono" >
+                    <i [routerLink]="'/admin/producto-series/'+e.productoId" class="fas fa-barcode" title="Gestionar Series"></i>
+                </div>
+                <div style="padding-left: 5px; padding-right: 5px;" class="eliminar-icono" (click)="eliminarProducto(e.productoId)">
                     <i class="fas fa-trash-alt"></i>
-                </div> -->
+                </div>
             </td>
         </tr>
     </table>

@@ -50,8 +50,7 @@
                         placeholder="Digite el precio del producto"
                         matInput
                     >
-                </mat-form-field>
-                <mat-form-field class="w50izq" appearance="fill">
+                </mat-form-field>                <mat-form-field class="w50izq" appearance="fill">
                     <mat-label>Stock</mat-label>
                     <input
                         [(ngModel)] = "producto.stock"
@@ -61,16 +60,74 @@
                         matInput disabled
                     >
                 </mat-form-field>
-                <mat-form-field class="w50der" appearance="fill">
-                    <mat-label>URL Imagen</mat-label>
-                    <input
-                        [(ngModel)] = "producto.imagen"
-                        type="text"
-                        name="imagen"
-                        placeholder="Digite el url de la imagen"
-                        matInput
-                    >
-                </mat-form-field>
+
+                <!-- Imagen del producto con sistema híbrido -->
+                <div class="w100" style="margin: 16px 0;">
+                    <h4>Imagen del producto</h4>
+                    
+                    <!-- Tabs para seleccionar método -->
+                    <mat-tab-group [(selectedIndex)]="imagenMethod" (selectedTabChange)="onImageMethodChange($event)">
+                        <mat-tab label="Subir archivo">
+                            <div style="padding: 20px 0;">
+                                <input 
+                                    type="file" 
+                                    #fileInput
+                                    (change)="onFileSelected($event)"
+                                    accept="image/*"
+                                    style="display: none;">
+                                
+                                <button 
+                                    type="button"
+                                    mat-raised-button 
+                                    color="accent"
+                                    (click)="fileInput.click()">
+                                    <mat-icon>cloud_upload</mat-icon>
+                                    Cambiar imagen
+                                </button>
+                                
+                                <div *ngIf="selectedFile" class="mt-2">
+                                    <p><strong>Archivo seleccionado:</strong> {{ selectedFile.name }}</p>
+                                    <p><strong>Tamaño:</strong> {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+                                </div>
+                                
+                                <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="mt-2">
+                                    <mat-progress-bar mode="determinate" [value]="uploadProgress"></mat-progress-bar>
+                                    <p>Subiendo: {{ uploadProgress }}%</p>
+                                </div>
+                            </div>
+                        </mat-tab>
+                        
+                        <mat-tab label="URL externa">
+                            <div style="padding: 20px 0;">
+                                <mat-form-field class="w100" appearance="fill">
+                                    <mat-label>URL de imagen del producto</mat-label>
+                                    <input
+                                        [(ngModel)]="imagenUrl"
+                                        type="text"
+                                        name="imagenUrl"
+                                        placeholder="https://ejemplo.com/imagen.jpg"
+                                        matInput>
+                                </mat-form-field>
+                            </div>
+                        </mat-tab>
+                    </mat-tab-group>
+                    
+                    <!-- Vista previa de la imagen -->
+                    <div *ngIf="getImagePreview()" class="mt-3">
+                        <h4>Vista previa:</h4>
+                        <img 
+                            [src]="getImagePreview()" 
+                            alt="Vista previa"
+                            style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 8px;">
+                    </div>
+                </div><!-- Campo para indicar si el producto es perecible -->
+                <div class="w100" style="margin: 16px 0;">
+                    <mat-checkbox 
+                        [(ngModel)]="producto.esPerecible"
+                        name="esPerecible">
+                        Este producto es perecible (tiene fecha de vencimiento)
+                    </mat-checkbox>
+                </div>
                 <mat-form-field appearance="fill" class="w-100">
                     <mat-label>Seleccione la Categoria</mat-label>
                     <mat-select 
