@@ -38,13 +38,20 @@
             <div class="stat-card">
               <h4>Total Series</h4>
               <span class="stat-number">{{ series.length }}</span>
+            </div>            <div class="stat-card">
+              <h4>Disponibles</h4>
+              <span class="stat-number text-success">{{ getTotalUnidadesDisponibles() }}</span>
+              <small class="text-muted">unidades</small>
             </div>
             <div class="stat-card">
-              <h4>Disponibles</h4>
-              <span class="stat-number text-success">{{ seriesDisponibles.length }}</span>
-            </div>            <div class="stat-card">
               <h4>Vendidas</h4>
               <span class="stat-number text-primary">{{ getSeriesVendidas() }}</span>
+              <small class="text-muted">unidades</small>
+            </div>
+            <div class="stat-card">
+              <h4>Lotes Agotados</h4>
+              <span class="stat-number text-info">{{ getSeriesCompletamenteVendidas() }}</span>
+              <small class="text-muted">lotes/series</small>
             </div>
             <div class="stat-card">
               <h4>Vencidas</h4>
@@ -60,6 +67,7 @@
                   <th>Número de Serie</th>
                   <th>Estado</th>
                   <th>Cantidad</th>
+                  <th>Info de Ventas</th>
                   <th>Fecha Vencimiento</th>
                   <th>Fecha Creación</th>
                   <th>Fecha Venta</th>
@@ -76,9 +84,23 @@
                     <span class="badge" [ngClass]="getEstadoClass(serie.estado)">
                       {{ serie.estado }}
                     </span>
+                  </td>                  <td>
+                    <strong>{{ serie.cantidad }}</strong>
                   </td>
                   <td>
-                    <strong>{{ serie.cantidad }}</strong>
+                    <div *ngIf="serie.cantidadOriginal && serie.cantidadVendida > 0" class="ventas-info">
+                      <small class="text-muted">Original: {{ serie.cantidadOriginal }}</small><br>
+                      <small class="text-info">Vendido: {{ serie.cantidadVendida }}</small><br>
+                      <small class="text-success">Disponible: {{ serie.cantidad }}</small>
+                      <div class="progress mt-1" style="height: 5px;">
+                        <div class="progress-bar bg-info" 
+                             [style.width.%]="(serie.cantidadVendida / serie.cantidadOriginal) * 100">
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="!serie.cantidadOriginal || serie.cantidadVendida === 0" class="text-muted">
+                      <small>Sin ventas</small>
+                    </div>
                   </td>
                   <td>
                     <span *ngIf="serie.fechaVencimiento" 

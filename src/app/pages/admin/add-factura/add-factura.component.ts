@@ -167,7 +167,7 @@ export class AddFacturaComponent {
                       productoId: detalle.producto.productoId,
                       nombreProducto: detalle.producto.nombreProducto,
                       cantidad: detalle.cantidad,
-                      precioUnitario: detalle.precioNuevo,
+                      precioUnitario: detalle.precioUnitario, // Usar precioUnitario directamente
                       precioTotal: detalle.precioTotal,
                       igv: detalle.igv
                     }));

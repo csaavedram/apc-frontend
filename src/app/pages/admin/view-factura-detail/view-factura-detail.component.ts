@@ -102,23 +102,29 @@ export class ViewFacturaDetailComponent {
         };
 
         this.nombreCliente = this.usuario.tipoUsuario === 'empresa' ? this.usuario.nombre : `${this.usuario.nombre} ${this.usuario.apellido}`;
-        this.ruc = this.usuario.username;
-
-        this.facturaDetailService.listarFacturaDetailsPorFactura(factura.facturaId).subscribe(
+        this.ruc = this.usuario.username;        this.facturaDetailService.listarFacturaDetailsPorFactura(factura.facturaId).subscribe(
           (detalles: any) => {
             this.allDetails = detalles;
-            console.log('Detalles con series:', this.allDetails);
-
-            this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
+            console.log('🔍 Detalles recibidos del backend:', this.allDetails);
+            
+            // Log específico para números de serie
+            detalles.forEach((detalle: any, index: number) => {
+              if (detalle.producto !== null) {
+                console.log(`📦 Detalle ${index + 1}:`);
+                console.log(`   - Producto: ${detalle.producto.nombreProducto}`);
+                console.log(`   - numerosSerie (string): "${detalle.numerosSerie}"`);
+                console.log(`   - numerosSerieAsignados (array):`, detalle.numerosSerieAsignados);
+              }
+            });this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
               cotizacionDetalleId: detalle.cotizacionDetalleId,
               productoId: detalle.producto.productoId,
               nombreProducto: detalle.producto.nombreProducto,
               cantidad: detalle.cantidad,
               precioUnitario: detalle.precioUnitario,
-              precioNuevo: detalle.precioNuevo,
               precioTotal: detalle.precioTotal,
               igv: detalle.igv,
-              numerosSerieAsignados: [] // Array vacío por defecto
+              numerosSerie: detalle.numerosSerie || 'Sin números de serie', // Usar el campo string del backend
+              numerosSerieAsignados: [] // Mantener por compatibilidad si se usa en el template
             }));
 
             this.detalleServicios = detalles.filter((detalle: any) => detalle.tipoServicio !== null).map((detalle: any) => ({

@@ -75,21 +75,29 @@ export class AtenderPedidoComponent implements OnInit {
     this.ordersService.obtenerOrder(this.orderId).subscribe(
       (data) => {
         this.orders = data;
-        console.log(this.orders);
-
-        combineLatest([this.orderDetailsService.listarOrdersDetailsByOrder(this.orderId)]).subscribe(
+        console.log(this.orders);        combineLatest([this.orderDetailsService.listarOrdersDetailsByOrder(this.orderId)]).subscribe(
           ([data]: [any]) => {
             this.orderDetails = data.map((detalle: any) => ({
               ...detalle,
-              newPrice: null,
+              newPrice: null, // Inicializar como null, se llenará cuando el usuario edite
             }));
 
+            console.log('📦 OrderDetails cargados:', this.orderDetails);
+
             this.product = this.orderDetails[0].product;
+            
+            // Calcular total inicial con precios originales
             const totalP = this.orderDetails.reduce(
-              (acc: any, detalle: any) => acc + detalle.totalPrice,
+              (acc: any, detalle: any) => {
+                const precio = detalle.unitPrice; // Usar precio original inicialmente
+                const total = precio * detalle.quantity;
+                console.log(`💰 Inicialización - Precio: ${precio}, Cantidad: ${detalle.quantity}, Total: ${total}`);
+                return acc + total;
+              },
               0
             );
 
+            console.log('📊 Total inicial calculado:', totalP);
             this.quotationData.total = totalP;
             this.userId = this.orderDetails[0].order.user.id;
 
@@ -147,14 +155,35 @@ export class AtenderPedidoComponent implements OnInit {
   getCurrentDate(): string {
     const currentDate = new Date();
     return currentDate.toISOString().split('T')[0];
-  }
-
-  calcularTotalCotizacion(): void {
-    this.quotationData.total = this.orderDetails.reduce((sum: number, detalle: any) => {
-      console.log(detalle);
+  }  calcularTotalCotizacion(): void {
+    console.log('🔄 Iniciando cálculo de total de cotización...');
+    console.log('📦 OrderDetails actuales:', this.orderDetails);
+    
+    this.quotationData.total = this.orderDetails.reduce((sum: number, detalle: any, index: number) => {
+      console.log(`🔍 Procesando detalle ${index + 1}:`, detalle);
+      
+      // En orderDetails, los campos son: unitPrice, quantity, newPrice
+      // Si newPrice existe (precio editado), usarlo; sino, usar unitPrice (precio original)
       const precio = detalle.newPrice || detalle.unitPrice;
-      return sum + precio * detalle.quantity ;
+      const cantidad = detalle.quantity;
+      const total = precio * cantidad;
+      
+      console.log(`💰 Detalle ${index + 1}: newPrice=${detalle.newPrice}, unitPrice=${detalle.unitPrice}, precio usado=${precio}, cantidad=${cantidad}, total=${total}`);
+      
+      // Verificar si algún valor es NaN
+      if (isNaN(precio) || isNaN(cantidad) || isNaN(total)) {
+        console.warn(`⚠️ Valores NaN detectados en detalle ${index + 1}:`, { precio, cantidad, total });
+      }
+      
+      return sum + (isNaN(total) ? 0 : total);
     }, 0);
+    
+    console.log('📊 Total final de cotización:', this.quotationData.total);
+    
+    if (isNaN(this.quotationData.total)) {
+      console.error('❌ El total final es NaN');
+      this.quotationData.total = 0;
+    }
   }
 
   EnviarCotizaYDetalles(): void {
@@ -170,20 +199,23 @@ export class AtenderPedidoComponent implements OnInit {
           order: { orderId: this.orderId },
         };
 
-        this.ordenCotizacionService.agregarOrdenCotizacion(ordenCotizacionData).subscribe(() => {});
-
-        const detallesCotizacion = this.orderDetails.map((detalle: any) => ({
-          cantidad: detalle.quantity,
-          precioTotal: detalle.totalPrice,
-          precioUnitario: detalle.unitPrice,
-          precioNuevo: detalle.newPrice,
-          tipoServicio: null,
-          producto: {
-            productoId: detalle.product.productoId,
-          },
-          cotizacion: { cotizacionId: this.quotationData.quotationId },
-          createdAt: this.getCurrentDate(),
-        }));
+        this.ordenCotizacionService.agregarOrdenCotizacion(ordenCotizacionData).subscribe(() => {});        const detallesCotizacion = this.orderDetails.map((detalle: any) => {
+          // Usar newPrice si existe (precio editado), sino unitPrice (precio original)
+          const precioUnitario = detalle.newPrice || detalle.unitPrice;
+          const precioTotal = precioUnitario * detalle.quantity; // Calcular total con precio correcto
+          
+          return {
+            cantidad: detalle.quantity,
+            precioTotal: precioTotal,          
+            precioUnitario: precioUnitario,
+            tipoServicio: null,
+            producto: {
+              productoId: detalle.product.productoId,
+            },
+            cotizacion: { cotizacionId: this.quotationData.quotationId },
+            createdAt: this.getCurrentDate(),
+          };
+        });
 
 
 
@@ -191,13 +223,35 @@ export class AtenderPedidoComponent implements OnInit {
           this.quotationDetailsService.agregarQuotationDetail(detalleCotizacion).subscribe(
             () => {
               this.quotationData.total = detallesCotizacion.reduce(
-                (sum: number, detalle: any) => sum + (detalle.precioNuevo || detalle.unitPrice) * detalle.cantidad,
+                (sum: number, detalle: any) => sum + detalle.precioUnitario * detalle.cantidad,
                 0
-              );
-
-              const data = { preciocli: this.quotationData.total };
-              console.log('Actualizando orden con datos:', data);
-              this.ordersService.atenderOrder(this.orders.orderId, data).subscribe(() => {
+              );              const data = { 
+                preciocli: this.quotationData.total,
+                totalPrice: this.quotationData.total // Actualizar también el totalPrice con el precio correcto
+              };
+              console.log('Actualizando orden con datos:', data);              this.ordersService.atenderOrder(this.orders.orderId, data).subscribe(() => {
+                  // Actualizar los orderDetails con los precios cotizados
+                this.orderDetails.forEach((detalle: any) => {
+                  const precioUnitarioCotizado = detalle.newPrice || detalle.unitPrice; // Usar newPrice si existe, sino unitPrice
+                  const precioTotalCotizado = precioUnitarioCotizado * detalle.quantity;
+                  
+                  const orderDetailActualizado = {
+                    ordersdetailsId: detalle.ordersdetailsId,
+                    quantity: detalle.quantity,
+                    unitPrice: precioUnitarioCotizado, // Usar precio cotizado como precio unitario
+                    totalPrice: precioTotalCotizado, // Usar precio total cotizado
+                    order: { orderId: this.orders.orderId },
+                    product: { productoId: detalle.product.productoId },
+                    createdAt: detalle.createdAt
+                  };
+                  
+                  console.log('Actualizando orderDetail:', orderDetailActualizado);
+                  this.orderDetailsService.actualizarOrderDetail(orderDetailActualizado).subscribe(
+                    () => console.log('✅ OrderDetail actualizado correctamente'),
+                    (error) => console.error('❌ Error al actualizar orderDetail:', error)
+                  );
+                });
+                
                 const totalPorPlazo = this.quotationData.total / this.nroPlazos;
 
                 const plazosPago = Array.isArray(this.plazoPagoData)

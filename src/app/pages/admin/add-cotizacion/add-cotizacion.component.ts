@@ -195,8 +195,7 @@ export class AddCotizacionComponent {
     this.skuChanged = true;
     this.selectedProduct = { ...productoEncontrado };
   }
-
-  agregarDetalleCotizacion(newPrice: number, cantidad: number): void {
+  agregarDetalleCotizacion(precioUnitario: number, cantidad: number): void {
     if (!this.selectedProduct) {
       this.snack.open('Debe buscar un producto válido antes de agregar un detalle', '', {
         duration: 3000,
@@ -205,8 +204,8 @@ export class AddCotizacionComponent {
       return;
     }
 
-    if (!newPrice || isNaN(newPrice)) {
-      this.snack.open('Debe ingresar un nuevo precio válido', '', {
+    if (!precioUnitario || isNaN(precioUnitario)) {
+      this.snack.open('Debe ingresar un precio unitario válido', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
       });
@@ -237,8 +236,8 @@ export class AddCotizacionComponent {
       return;
     }
 
-    if (newPrice < this.selectedProduct.precio) {
-      this.snack.open('El nuevo precio no puede ser menor que el precio unitario', '', {
+    if (precioUnitario < 0) {
+      this.snack.open('El precio unitario no puede ser menor a 0', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
       });
@@ -252,9 +251,9 @@ export class AddCotizacionComponent {
     if (existingProductIndex !== -1) {
       const existingProduct = this.detalleProductos[existingProductIndex];
 
-      if (existingProduct.newPrice !== newPrice) {
+      if (existingProduct.precioUnitario !== precioUnitario) {
         this.snack.open(
-          `El precio ingresado (${newPrice}) es diferente al registrado anteriormente (${existingProduct.newPrice}). Debe ser igual.`,
+          `El precio unitario ingresado (${precioUnitario}) es diferente al registrado anteriormente (${existingProduct.precioUnitario}). Debe ser igual.`,
           '',
           {
             duration: 3000,
@@ -275,7 +274,7 @@ export class AddCotizacionComponent {
       }
 
       existingProduct.cantidad = newTotalQuantity;
-      existingProduct.totalPrice = existingProduct.newPrice * newTotalQuantity;
+      existingProduct.totalPrice = existingProduct.precioUnitario * newTotalQuantity;
       existingProduct.igv = existingProduct.totalPrice * 0.18;
 
       this.snack.open('Cantidad actualizada correctamente', '', {
@@ -283,17 +282,22 @@ export class AddCotizacionComponent {
         panelClass: ['snackbar-success']
       });
     } else {
-      const igv = newPrice * cantidad * 0.18;
-
-      const detalle = {
+      const totalPrice = precioUnitario * cantidad;
+      const igv = totalPrice * 0.18;      const detalle = {
         productoId: this.selectedProduct.productoId,
         nombreProducto: this.selectedProduct.nombreProducto,
         cantidad,
-        unitPrice: this.selectedProduct.precio,
-        newPrice,
-        totalPrice: newPrice * cantidad,
+        precioReferencia: this.selectedProduct.precio, // Keep reference price for info
+        precioUnitario, // This is the quoted price
+        totalPrice,
         igv,
       };
+
+      console.log('🔍 DEBUG - Creando detalle con:');
+      console.log('💰 Precio de referencia (original):', this.selectedProduct.precio);
+      console.log('💰 Precio unitario (cotizado):', precioUnitario);
+      console.log('💰 Precio total calculado:', totalPrice);
+      console.log('📦 Detalle completo:', detalle);
 
       this.detalleProductos.push(detalle);
 
@@ -347,8 +351,18 @@ export class AddCotizacionComponent {
   volverACategorias() {
     this.router.navigate(['/admin/cotizaciones']);
   }
-
   guardarInformacion(): void {
+    console.log('🔍 DEBUG - Estado actual de detalleProductos antes de guardar:');
+    this.detalleProductos.forEach((detalle, index) => {
+      console.log(`Detalle ${index + 1}:`, {
+        producto: detalle.nombreProducto,
+        cantidad: detalle.cantidad,
+        precioReferencia: detalle.precioReferencia,
+        precioUnitario: detalle.precioUnitario,
+        totalPrice: detalle.totalPrice
+      });
+    });
+
     if (this.usuario.id === '') {
       this.snack.open('Debe buscar un cliente o empresa por RUC antes de guardar la cotización', '', {
         duration: 3000,
@@ -419,32 +433,31 @@ export class AddCotizacionComponent {
 
     this.quotationService.agregarQuotation(cotizacionPayload).subscribe(
       (quotation: any) => {
-        const cotizacionId = quotation.cotizacionId;
-
-        this.detalleProductos.forEach((detalle) => {
+        const cotizacionId = quotation.cotizacionId;        this.detalleProductos.forEach((detalle) => {
           const detalleProductoPayload = {
             cantidad: detalle.cantidad,
-            precioTotal: detalle.totalPrice,
-            precioUnitario: detalle.unitPrice,
-            precioNuevo: detalle.newPrice,
+            precioTotal: detalle.totalPrice, // Precio total calculado con precio cotizado
+            precioUnitario: detalle.precioUnitario, // Precio cotizado/editado
+            // NO enviar precioNuevo para forzar que use precioUnitario
             tipoServicio: null,
             producto: { productoId: detalle.productoId },
             cotizacion: { cotizacionId: cotizacionId },
             createdAt: new Date()
           };
 
+          console.log('� Enviando al backend:', detalleProductoPayload);
+          
           this.quotationDetailsService.agregarQuotationDetail(detalleProductoPayload).subscribe(
-            () => console.log('Detalle de producto guardado'),
-            (error) => console.error('Error al guardar detalle de producto:', error)
+            () => console.log('✅ Detalle de producto guardado'),
+            (error) => console.error('❌ Error al guardar detalle de producto:', error)
           );
         });
 
         this.detalleServicios.forEach((detalle) => {
           const detalleServicioPayload = {
-            cantidad: 1,
-            precioTotal: detalle.price,
+            cantidad: 1,            precioTotal: detalle.price,
             precioUnitario: detalle.price,
-            precioNuevo: null,
+            // NO enviar precioNuevo
             tipoServicio: detalle.serviceType,
             productoId: null,
             cotizacion: {
@@ -549,15 +562,14 @@ export class AddCotizacionComponent {
   get nombreCompleto(): string {
     return `${this.usuario.nombre} ${this.usuario.apellido}`.trim();
   }
-
   calcularOpGravadas(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.82, 0); // 82% of new price for products
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad * 0.82, 0); // 82% of quoted price for products
     const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.price * 0.82, 0); // 82% of total price for services
     return totalProductos + totalServicios;
   }
 
   calcularIgv(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad * 0.18, 0); // 18% of new price for products
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad * 0.18, 0); // 18% of quoted price for products
     const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.price * 0.18, 0); // 18% of total price for services
     return totalProductos + totalServicios;
   }
@@ -601,7 +613,6 @@ export class AddCotizacionComponent {
     this.usuarioInput = '';
     this.filteredSuggestions = [];
   }
-
   actualizarCantidad(index: number, nuevaCantidad: number): void {
     const detalle = this.detalleProductos[index];
     const producto = this.productos.find((p) => p.productoId === detalle.productoId);
@@ -633,7 +644,7 @@ export class AddCotizacionComponent {
     }
 
     detalle.cantidad = nuevaCantidad;
-    detalle.totalPrice = detalle.newPrice * nuevaCantidad;
+    detalle.totalPrice = detalle.precioUnitario * nuevaCantidad; // Use quoted price
     detalle.igv = detalle.totalPrice * 0.18;
 
     this.snack.open('Cantidad actualizada correctamente', '', {
@@ -667,9 +678,8 @@ export class AddCotizacionComponent {
             fechaInicio: plazo.fechaInicio,
             fechaFin: plazo.fechaFin,
             monto: 0
-          }));
-        } else {
-          const totalPorPlazo = (this.detalleProductos.reduce((sum, detalle) => sum + detalle.newPrice * detalle.cantidad, 0) +
+          }));        } else {
+          const totalPorPlazo = (this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0) +
                                 this.detalleServicios.reduce((sum, detalle) => sum + detalle.price, 0)) / this.nroPlazos;
           this.plazaPagoTabla = this.plazoPagoData.map((plazo, index) => ({
             nroCuota: index + 1,

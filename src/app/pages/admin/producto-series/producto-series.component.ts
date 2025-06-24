@@ -15,6 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductoSerieService } from '../../../services/producto-serie.service';
 import { ProductoService } from '../../../services/producto.service';
+import { InventarioService } from '../../../services/inventario.service';
 
 @Component({
   selector: 'app-producto-series',
@@ -62,12 +63,12 @@ export class ProductoSeriesComponent implements OnInit {
 
   // Modal para editar serie
   showEditarModal = false;
-  serieEditando: any = {};
-  constructor(
+  serieEditando: any = {};  constructor(
     private route: ActivatedRoute,
     private router: Router,
     private productoSerieService: ProductoSerieService,
     private productoService: ProductoService,
+    private inventarioService: InventarioService,
     private snack: MatSnackBar
   ) { }
 
@@ -158,21 +159,27 @@ export class ProductoSeriesComponent implements OnInit {
         duration: 3000
       });
       return;
-    }
-
-    const serieData: any = {
+    }    const serieData: any = {
       numeroSerie: this.nuevaSerie.numeroSerie.trim(),
       observaciones: this.nuevaSerie.observaciones,
       cantidad: 1, // Serie individual siempre es 1
+      cantidadOriginal: 1, // Inicializar cantidadOriginal para nuevas series
+      cantidadVendida: 0, // Inicializar cantidadVendida en 0
       producto: { productoId: this.productoId }
     };
 
     if (this.nuevaSerie.fechaVencimiento) {
       serieData.fechaVencimiento = new Date(this.nuevaSerie.fechaVencimiento);
-    }
-
-    this.productoSerieService.agregarProductoSerie(serieData).subscribe(
-      (response) => {        this.snack.open('Número de serie agregado correctamente', '', {
+    }    this.productoSerieService.agregarProductoSerie(serieData).subscribe(
+      (response) => {        // Registrar movimiento de inventario
+        this.registrarMovimientoInventario(
+          1, 
+          'Ingreso', 
+          `Serie individual agregada: ${this.nuevaSerie.numeroSerie}`,
+          this.nuevaSerie.numeroSerie
+        );
+        
+        this.snack.open('Número de serie agregado correctamente', '', {
           duration: 3000
         });
         this.cerrarModalAgregar();
@@ -199,18 +206,24 @@ export class ProductoSeriesComponent implements OnInit {
         duration: 3000
       });
       return;
-    }
-
-    const lote = {
+    }    const lote = {
       numeroSerie: this.loteData.numeroSerie,
       producto: { productoId: this.productoId },
       cantidad: this.loteData.cantidad,
+      cantidadOriginal: this.loteData.cantidad, // Inicializar cantidadOriginal para nuevos lotes
+      cantidadVendida: 0, // Inicializar cantidadVendida en 0
       fechaVencimiento: this.loteData.fechaVencimiento ? new Date(this.loteData.fechaVencimiento) : null,
       observaciones: this.loteData.observaciones || ''
-    };
-
-    this.productoSerieService.agregarProductoSerie(lote).subscribe(
-      (response) => {        this.snack.open(`Se creó el lote con cantidad ${this.loteData.cantidad}`, '', {
+    };this.productoSerieService.agregarProductoSerie(lote).subscribe(
+      (response) => {        // Registrar movimiento de inventario
+        this.registrarMovimientoInventario(
+          this.loteData.cantidad, 
+          'Ingreso', 
+          `Lote agregado: ${this.loteData.numeroSerie} (${this.loteData.cantidad} unidades)`,
+          this.loteData.numeroSerie
+        );
+        
+        this.snack.open(`Se creó el lote con cantidad ${this.loteData.cantidad}`, '', {
           duration: 3000
         });
         this.cargarSeries();
@@ -225,8 +238,13 @@ export class ProductoSeriesComponent implements OnInit {
       }
     );
   }
-
   actualizarSerie(): void {
+    // Encontrar la serie original para comparar la cantidad
+    const serieOriginal = this.series.find(s => s.productoSerieId === this.serieEditando.productoSerieId);
+    const cantidadOriginal = serieOriginal ? serieOriginal.cantidad : 0;
+    const nuevaCantidad = this.serieEditando.cantidad;
+    const diferenciaCantidad = nuevaCantidad - cantidadOriginal;
+
     const serieData: any = {
       numeroSerie: this.serieEditando.numeroSerie,
       observaciones: this.serieEditando.observaciones,
@@ -241,12 +259,21 @@ export class ProductoSeriesComponent implements OnInit {
     }
 
     this.productoSerieService.actualizarProductoSerie(this.serieEditando.productoSerieId, serieData).subscribe(
-      (response) => {
+      (response) => {        // Registrar movimiento de inventario solo si la cantidad cambió
+        if (diferenciaCantidad !== 0) {
+          const tipoMovimiento = diferenciaCantidad > 0 ? 'Ingreso' : 'Salida';
+          const cantidadMovimiento = Math.abs(diferenciaCantidad);
+          const descripcion = `Ajuste de cantidad en ${this.serieEditando.numeroSerie}: ${cantidadOriginal} → ${nuevaCantidad}`;
+          
+          this.registrarMovimientoInventario(cantidadMovimiento, tipoMovimiento, descripcion, this.serieEditando.numeroSerie);
+        }
+        
         this.snack.open('Número de serie actualizado correctamente', '', {
           duration: 3000
         });
         this.cerrarModalEditar();
         this.cargarSeries();
+        this.cargarProducto(); // Recargar producto para actualizar stock
       },
       (error) => {
         console.log(error);
@@ -257,9 +284,16 @@ export class ProductoSeriesComponent implements OnInit {
     );
   }
   eliminarSerie(serie: any): void {
-    if (confirm(`¿Está seguro de eliminar el número de serie ${serie.numeroSerie}?`)) {
-      this.productoSerieService.eliminarProductoSerie(serie.productoSerieId).subscribe(
-        (response) => {          this.snack.open('Número de serie eliminado correctamente', '', {
+    if (confirm(`¿Está seguro de eliminar el número de serie ${serie.numeroSerie}?`)) {      this.productoSerieService.eliminarProductoSerie(serie.productoSerieId).subscribe(
+        (response) => {          // Registrar movimiento de inventario como salida
+          this.registrarMovimientoInventario(
+            serie.cantidad, 
+            'Salida', 
+            `Serie/Lote eliminado: ${serie.numeroSerie} (${serie.cantidad} unidades)`,
+            serie.numeroSerie
+          );
+          
+          this.snack.open('Número de serie eliminado correctamente', '', {
             duration: 3000
           });
           this.cargarSeries();
@@ -272,16 +306,52 @@ export class ProductoSeriesComponent implements OnInit {
           });
         }      );
     }
+  }  // Método para registrar movimiento de inventario
+  private registrarMovimientoInventario(cantidad: number, tipo: string, descripcion: string, numeroSerie?: string): void {
+    const movimientoInventario = {
+      producto: { productoId: this.productoId },
+      cantidad: cantidad,
+      tipo: tipo, // "Ingreso" o "Salida"
+      numeroSerie: numeroSerie || null, // Agregar el número de serie
+      dateCreated: new Date() // Fecha de creación del movimiento
+    };
+
+    this.inventarioService.agregarProductoInventario(movimientoInventario).subscribe(
+      (response) => {
+        console.log('Movimiento de inventario registrado:', response);
+      },
+      (error) => {
+        console.error('Error al registrar movimiento de inventario:', error);
+        // No mostramos error al usuario ya que es un proceso secundario
+      }
+    );
   }
 
   // Determina si la serie es un lote (cantidad > 1)
   esLote(serie: any): boolean {
     return serie && Number(serie.cantidad) > 1;
   }
-
   // Métodos auxiliares para el template
   getSeriesVendidas(): number {
+    // Contar el total de unidades vendidas (no solo series completamente agotadas)
+    return this.series.reduce((total, serie) => {
+      return total + (serie.cantidadVendida || 0);
+    }, 0);
+  }
+
+  getSeriesCompletamenteVendidas(): number {
+    // Contar series que están completamente agotadas
     return this.series.filter(s => s.estado === 'VENDIDO').length;
+  }
+
+  getTotalUnidadesDisponibles(): number {
+    // Contar el total de unidades disponibles
+    return this.series.reduce((total, serie) => {
+      if (serie.estado === 'DISPONIBLE') {
+        return total + (serie.cantidad || 0);
+      }
+      return total;
+    }, 0);
   }
 
   getSeriesVencidas(): number {

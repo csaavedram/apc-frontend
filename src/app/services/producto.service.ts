@@ -24,9 +24,16 @@ export class ProductoService {
   public obtenerProducto(productoId:any){
     return this.http.get(`${baserUrl}/productos/${productoId}`);
   }
-  
-  public actualizarProducto(producto:any){
+    public actualizarProducto(producto:any){
     return this.http.put(`${baserUrl}/productos/`, producto);
+  }
+
+  public restarStock(productoId: any, cantidad: number) {
+    return this.http.put(`${baserUrl}/productos/${productoId}/restar-stock`, { cantidad });
+  }
+
+  public aumentarStock(productoId: any, cantidad: number) {
+    return this.http.put(`${baserUrl}/productos/${productoId}/aumentar-stock`, { cantidad });
   }
 
 }

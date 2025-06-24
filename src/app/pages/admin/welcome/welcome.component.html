@@ -1,125 +1,130 @@
-<mat-card>
-  
-    <h1 class="container">Bienvenido al panel de administrador</h1>
+<mat-card>  <div class="dashboard-header">    
     <div class="dashboard-tabs">
-  <span 
-    class="dashboard-tab" 
-    [ngClass]="{'active-tab': tabSeleccionado === 'mes'}"
-    (click)="tabSeleccionado = 'mes'"
-  >
-    Ultimo mes
-  </span>
-  <span>|</span>
-  <span 
-    class="dashboard-tab" 
-    [ngClass]="{'active-tab': tabSeleccionado === '6meses'}"
-    (click)="tabSeleccionado = '6meses'"
-    
-    >
-    Ultimos 6 meses
-  </span>
-  <span>|</span>
-  <span 
-    class="dashboard-tab" 
-    [ngClass]="{'active-tab': tabSeleccionado === 'anio'}"
-    (click)="tabSeleccionado = 'anio'">
-    Ultimo año
-  </span>
-</div>
-<div class="seleccione">
-  <div class="mesesyanios">
-    <mat-form-field class="selectorr">
-    <mat-label >Buscar Ganancia por mes</mat-label>
-      <mat-select [(ngModel)]="selectedValue" name="mes" (selectionChange)="actualizarGraficoTipoPago()"required>
-         <mat-option *ngFor="let mes of meses" [value]="mes.value">{{ mes.viewValue }}</mat-option>
-        <mat-option>
-
-        </mat-option>
-      </mat-select>
-  </mat-form-field>
-  
-  <mat-form-field class="selectorr">
-    <mat-label>Seleccionar año</mat-label>
-    <mat-select [(ngModel)]="selectedYear" (selectionChange)="actualizarGraficoTipoPago()">
-      <mat-option *ngFor="let anio of anios" [value]="anio">{{ anio }}</mat-option>
-    </mat-select>
-</mat-form-field>
-</div>
-</div>
-  <div class='featured'>
-    <div class='featuredItem'>
-      
-     <span class='featuredTitle'>GANANCIA</span>
-  <!-- Mostrar GANANCIA mensual -->
-  <ng-container *ngIf="tabSeleccionado === 'mes'">
-    <div class='featuredMoneyContainer'>
-    <div class='featuredMoney'>Monto: {{ getGananciaActual() | currency:'PEN ' }}</div>
-    <div class='featuredMoneyRate'>
-      {{ getDiferenciaGanancia() >= 0 ? '+' : '' }}{{ getDiferenciaGanancia() | number:'1.0-2' }} Mes antes
-    </div>
-    </div>
-    <span class='featuredSub'>en comparación a otra fecha</span>
-  </ng-container>
-
-  <!-- Mostrar GANANCIA en rango -->
-  <ng-container *ngIf="tabSeleccionado !== 'mes'">
-    <div class='featuredMoney'>Monto: {{ getGananciaPorRango() | currency:'PEN ' }}</div>
-  
-    <span class='featuredSub'>
-      en {{ tabSeleccionado === '6meses' ? 'los últimos 6 meses' : 'el último año' }}
-    </span>
-  </ng-container>
-  
-
-  </div>
-    
-    <div class='featuredItem'>
-      <div class='featuredTitle'>TOP PRODUCTOS VENDIDOS</div>
-      <div class='featuredMoney' *ngFor="let prod of getProductosVendidos()">
-        {{ prod.nombreProducto }} - {{ prod.cantidad }}
+      <div class="tabs-container">
+        <span 
+          class="dashboard-tab" 
+          [ngClass]="{'active-tab': tabSeleccionado === 'mes'}"
+          (click)="tabSeleccionado = 'mes'"
+        >
+          Último mes
+        </span>
+        
+        <span class="separator">•</span>
+        
+        <span 
+          class="dashboard-tab" 
+          [ngClass]="{'active-tab': tabSeleccionado === '6meses'}"
+          (click)="tabSeleccionado = '6meses'"
+        >
+          Últimos 6 meses
+        </span>
+        
+        <span class="separator">•</span>
+        
+        <span 
+          class="dashboard-tab" 
+          [ngClass]="{'active-tab': tabSeleccionado === 'anio'}"
+          (click)="tabSeleccionado = 'anio'"
+        >
+          Último año
+        </span>
       </div>
-      <span class='featuredSub'>de todos nuestro productos</span>
-    </div> 
-  
+    </div>
+    
+    <!-- Filtros compactos que aparecen solo cuando son necesarios
+    <div class="filtros-compactos" *ngIf="tabSeleccionado === 'mes' || tabSeleccionado === 'anio'">
+      <div class="filtro-inline" *ngIf="tabSeleccionado === 'mes'">
+        <mat-form-field class="selector-compacto" appearance="outline">
+          <mat-label>Mes</mat-label>
+          <mat-select [(ngModel)]="selectedValue" (selectionChange)="actualizarGraficoTipoPago()">
+            <mat-option *ngFor="let mes of meses" [value]="mes.value">{{ mes.viewValue }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      
+      <div class="filtro-inline" *ngIf="tabSeleccionado === 'anio'">
+        <mat-form-field class="selector-compacto" appearance="outline">
+          <mat-label>Año</mat-label>
+          <mat-select [(ngModel)]="selectedYear" (selectionChange)="actualizarGraficoTipoPago()">
+            <mat-option *ngFor="let anio of anios" [value]="anio">{{ anio }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>-->
   </div>
+<div class='featured'>    <div class='featuredItem'>
+      <div class="featured-header">
+        <span class='featuredTitle'>INGRESOS TOTALES</span>
+        <div class='featuredMoneyRate' *ngIf="tabSeleccionado === 'mes'">
+          {{ getDiferenciaGanancia() >= 0 ? '+' : '' }}{{ getDiferenciaGanancia() | number:'1.0-2' }} vs período anterior
+        </div>
+      </div>
+      <!-- Mostrar GANANCIA mensual -->
+      <ng-container *ngIf="tabSeleccionado === 'mes'">
+        <div class='featuredMoneyContainer'>
+          <div class='featuredMoney'>{{ getGananciaActual() | currency:'PEN ' }}</div>
+        </div>
+        <span class='featuredSub'>Comparación con el período anterior</span>
+      </ng-container>
 
-  <div class='featured'>
+      <!-- Mostrar GANANCIA en rango -->
+      <ng-container *ngIf="tabSeleccionado !== 'mes'">
+        <div class='featuredMoney'>{{ getGananciaPorRango() | currency:'PEN ' }}</div>
+        <span class='featuredSub'>
+          Total en {{ tabSeleccionado === '6meses' ? 'los últimos 6 meses' : 'el último año' }}
+        </span>
+      </ng-container>
+    </div>
+    
+    <div class='featuredItem'><div class='featuredTitle'>PRODUCTOS MÁS VENDIDOS</div>
+      
+      <ng-container *ngIf="hayProductosVendidos(); else noProductos">
+        <div class='featuredMoney' *ngFor="let prod of getProductosVendidos(); let i = index">
+          {{ i + 1 }}. {{ prod.nombreProducto }} - {{ prod.cantidad }} unidades
+        </div>
+      </ng-container>
+      
+      <ng-template #noProductos>
+        <div class='featuredMoney' style="color: #718096; font-style: italic;">
+          No hay datos de productos disponibles
+        </div>
+      </ng-template>
+      
+      <span class='featuredSub'>Los más demandados en el inventario</span>
+    </div>
+  </div>  <div class='featured'>
     <div class='featuredItem'>
-     <span class='featuredTitle'>FACTURAS MÁS CARAS</span>
-     
+      <span class='featuredTitle'>FACTURAS DE MAYOR VALOR</span>
       <div class='featuredMoney' *ngFor="let f of getFacturasMasCaras()">
         {{ f.codigo }} - {{ f.total | currency:'PEN' }}
       </div>
-      <span class='featuredSub'>en comparacion con el mes pasado</span>
+      <span class='featuredSub'>Las transacciones de mayor importe</span>
     </div> 
-    
-    <div class='featuredItem'>
-      <span class='featuredTitle'>CANTIDAD DE FACTURAS</span>
+      <div class='featuredItem'>
+      <div class="featured-header">
+        <span class='featuredTitle'>TOTAL DE FACTURAS</span>
+        <div class='featuredMoneyRate' *ngIf="tabSeleccionado === 'mes'">
+          {{ getDiferenciaCantidadFacturas() >= 0 ? '+' : '' }}{{ getDiferenciaCantidadFacturas() }} vs período anterior
+        </div>
+      </div>
       <!-- Mensual -->
-      
-    <ng-container *ngIf="tabSeleccionado === 'mes'">
-      <div class='featuredMoneyContainer'>
-      <div class='featuredMoney'>Facturas: {{ getCantidadFacturasActual() }}</div>
-      <div class='featuredMoneyRate'>
-        {{ getDiferenciaCantidadFacturas() >= 0 ? '+' : '' }}{{ getDiferenciaCantidadFacturas() }} Mes antes
-      </div>
-      </div>
-      <span class='featuredSub'>en comparación con el mes pasado</span>
-    </ng-container>
+      <ng-container *ngIf="tabSeleccionado === 'mes'">
+        <div class='featuredMoneyContainer'>
+          <div class='featuredMoney'>{{ getCantidadFacturasActual() }} facturas</div>
+        </div>
+        <span class='featuredSub'>Evolución de la facturación</span>
+      </ng-container>
 
-    <!-- Rango -->
-    <ng-container *ngIf="tabSeleccionado !== 'mes'">
-      <div class='featuredMoney'>Facturas: {{ getCantidadFacturasPorRango() }}</div>
-      <span class='featuredSub'>
-        en {{ tabSeleccionado === '6meses' ? 'los últimos 6 meses' : 'el último año' }}
-      </span>
-    </ng-container>
-    
-  </div>
-  </div>
-
-  <div class="contenedor-flex">
-    <div class="elemento-35">
+      <!-- Rango -->
+      <ng-container *ngIf="tabSeleccionado !== 'mes'">
+        <div class='featuredMoney'>{{ getCantidadFacturasPorRango() }} facturas</div>
+        <span class='featuredSub'>
+          Total en {{ tabSeleccionado === '6meses' ? 'los últimos 6 meses' : 'el último año' }}
+        </span>
+      </ng-container>
+    </div>
+  </div>  <div class="contenedor-flex">
+    <div class="elemento-30">
       <div class="calendar-container">
         <h2>{{ getCurrentMonthAndYear() }}</h2>
         <table>
@@ -146,25 +151,24 @@
         </table>
       </div>
     </div>
-    <div class="elemento-65">
+    <div class="elemento-70">
       <div class='widgetLg'>
-        <h3 class='widgetLgTitle'>Listado de Pedidos</h3>
+        <h3 class='widgetLgTitle'>Registro de Pedidos Recientes</h3>
         <div class="tabla-scroll">
-        <table class='widgetLgTable'>
-          <tr class='widgetLgTr'>
-            <th class='widgetLgTh'>Cliente</th>
-            <th class='widgetLgTh'>Fecha Emision</th>
-            <th class='widgetLgTh'>N° de Pedido</th>
-            <th class='widgetLgTh'>Estado</th>
-          </tr>
-          <tr class='widgetLgTr'*ngFor="let tabla of getTablita()">
-            <td>{{tabla.cliente}}</td>
-            <td>{{tabla.fecha}}</td>
-            <td>{{tabla.codigo}}</td>
-            <td>{{tabla.estado}}</td>
+          <table class='widgetLgTable'>
+            <tr class='widgetLgTr'>
+              <th class='widgetLgTh'>Cliente</th>
+              <th class='widgetLgTh'>Fecha de Emisión</th>
+              <th class='widgetLgTh'>N° de Pedido</th>
+              <th class='widgetLgTh'>Estado</th>
             </tr>
-          
-        </table>
+            <tr class='widgetLgTr' *ngFor="let tabla of getTablita()">
+              <td>{{tabla.cliente}}</td>
+              <td>{{tabla.fecha}}</td>
+              <td>{{tabla.codigo}}</td>
+              <td>{{tabla.estado}}</td>
+            </tr>
+          </table>
         </div>
       </div>
     </div>

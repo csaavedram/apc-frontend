@@ -75,4 +75,14 @@ export class ProductoSerieService {
   public marcarSeriesVencidas(): Observable<any> {
     return this.httpClient.post(`${baserUrl}/producto-serie/marcar-vencidas`, {});
   }
+  
+  // Métodos para procesar ventas
+  public procesarVentaProducto(productoId: any, cantidad: number): Observable<any> {
+    return this.httpClient.post(`${baserUrl}/producto-serie/producto/${productoId}/procesar-venta`, 
+      { cantidad: cantidad });
+  }
+  
+  public procesarVentaMultiple(productos: any[]): Observable<any> {
+    return this.httpClient.post(`${baserUrl}/producto-serie/procesar-venta-multiple`, productos);
+  }
 }

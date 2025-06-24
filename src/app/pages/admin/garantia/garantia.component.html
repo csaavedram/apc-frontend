@@ -1,0 +1,179 @@
+<div class="container-fluid p-4">
+  <mat-card class="p-4">
+    <mat-card-header class="mb-4">
+      <mat-card-title>
+        <mat-icon class="me-2">verified_user</mat-icon>
+        Búsqueda de Garantía
+      </mat-card-title>
+      <mat-card-subtitle>
+        Busque información de garantía ingresando el número de serie/lote del producto
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Formulario de búsqueda -->
+      <div class="row mb-4">
+        <div class="col-md-8">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Número de Serie/Lote</mat-label>
+            <input matInput 
+                   [(ngModel)]="numeroSerieBusqueda" 
+                   placeholder="Ej: LOTEA01, BPA1024, etc."
+                   (keyup.enter)="buscarGarantia()">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+        <div class="col-md-4 d-flex align-items-center gap-2">
+          <button mat-raised-button 
+                  color="primary" 
+                  (click)="buscarGarantia()"
+                  [disabled]="loading">
+            <mat-icon>search</mat-icon>
+            Buscar
+          </button>
+          <button mat-button 
+                  (click)="limpiarBusqueda()"
+                  [disabled]="loading">
+            <mat-icon>clear</mat-icon>
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading spinner -->
+      <div *ngIf="loading" class="text-center py-4">
+        <mat-spinner></mat-spinner>
+        <p class="mt-2">Buscando información de garantía...</p>
+      </div>
+
+      <!-- Resultados de la búsqueda -->
+      <div *ngIf="resultadoBusqueda && !loading">
+        <mat-card class="mb-4" [ngClass]="{'border-success': resultadoBusqueda.garantiaValida, 'border-warning': !resultadoBusqueda.garantiaValida}">
+          <mat-card-header>
+            <mat-card-title class="d-flex align-items-center">
+              <mat-icon [color]="resultadoBusqueda.garantiaValida ? 'primary' : 'warn'" class="me-2">
+                {{ resultadoBusqueda.garantiaValida ? 'check_circle' : 'warning' }}
+              </mat-icon>
+              Estado de Garantía: 
+              <span [class]="resultadoBusqueda.garantiaValida ? 'text-success ms-2' : 'text-warning ms-2'">
+                {{ resultadoBusqueda.garantiaValida ? 'VÁLIDA' : 'VENCIDA' }}
+              </span>
+            </mat-card-title>            <mat-card-subtitle *ngIf="resultadoBusqueda.garantiaValida">
+              Días restantes: {{ obtenerDiasGarantiaRestantes(resultadoBusqueda.fechaEmision) }} días
+            </mat-card-subtitle>
+          </mat-card-header>
+        </mat-card>
+
+        <div class="row">
+          <!-- Información del Producto -->
+          <div class="col-md-6 mb-4">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon class="me-2">inventory</mat-icon>
+                  Información del Producto
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>                <table class="table table-sm">
+                  <tr>
+                    <td><strong>Número de Serie/Lote:</strong></td>
+                    <td>{{ resultadoBusqueda.numeroSerie }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Producto:</strong></td>
+                    <td>{{ resultadoBusqueda.productoNombre || 'N/A' }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Estado:</strong></td>
+                    <td>
+                      <span class="badge bg-success">VENDIDO</span>
+                    </td>
+                  </tr>
+                </table>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Información de la Venta -->
+          <div class="col-md-6 mb-4">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon class="me-2">receipt</mat-icon>
+                  Información de la Venta
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>                <table class="table table-sm">
+                  <tr>
+                    <td><strong>Factura N°:</strong></td>
+                    <td>{{ resultadoBusqueda.codigoFactura || 'N/A' }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Fecha de Venta:</strong></td>
+                    <td>{{ resultadoBusqueda.fechaEmision | date:'dd/MM/yyyy' }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Cantidad en este detalle:</strong></td>
+                    <td>{{ resultadoBusqueda.cantidad }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Total del detalle:</strong></td>
+                    <td>S/. {{ resultadoBusqueda.precioTotal | number:'1.2-2' }}</td>
+                  </tr>
+                </table>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Información del Cliente -->
+          <div class="col-md-12 mb-4">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon class="me-2">person</mat-icon>
+                  Información del Cliente
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>                <div class="row">
+                  <div class="col-md-6">
+                    <table class="table table-sm">
+                      <tr>
+                        <td><strong>Nombre:</strong></td>
+                        <td>{{ resultadoBusqueda.clienteNombre || 'null null' }}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Tipo:</strong></td>
+                        <td>Cliente</td>
+                      </tr>
+                    </table>
+                  </div>                  <div class="col-md-6">
+                    <table class="table table-sm">
+                      <tr>
+                        <td><strong>RUC/DNI:</strong></td>
+                        <td>{{ resultadoBusqueda.clienteRucDni || 'N/A' }}</td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="text-center mt-4">
+          <button mat-raised-button color="primary" (click)="verFactura()">
+            <mat-icon>visibility</mat-icon>
+            Ver Factura Completa
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensaje cuando no hay resultados -->
+      <div *ngIf="!loading && !resultadoBusqueda && numeroSerieBusqueda" class="text-center py-4">
+        <mat-icon class="text-muted" style="font-size: 48px; height: 48px; width: 48px;">search_off</mat-icon>
+        <p class="text-muted mt-2">No se encontraron resultados para "{{ numeroSerieBusqueda }}"</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

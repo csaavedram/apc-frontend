@@ -174,15 +174,12 @@ export class ActualizarCotizacionComponent {
         // List quotation details
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(this.cotizacionId).subscribe(
           (detalles: any) => {
-            console.log('Detalles obtenidos:', detalles);
-
-            this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
+            console.log('Detalles obtenidos:', detalles);            this.detalleProductos = detalles.filter((detalle: any) => detalle.producto !== null).map((detalle: any) => ({
               cotizacionDetalleId: detalle.cotizacionDetalleId,
               productoId: detalle.producto.productoId,
               nombreProducto: detalle.producto.nombreProducto,
               cantidad: detalle.cantidad,
-              precioUnitario: detalle.precioUnitario,
-              precioNuevo: detalle.precioNuevo,
+              precioUnitario: detalle.precioUnitario, // Este ya es el precio editado/cotizado
               precioTotal: detalle.precioTotal,
               igv: detalle.igv
             }));
@@ -320,8 +317,7 @@ export class ActualizarCotizacionComponent {
     this.skuChanged = true;
     this.selectedProduct = { ...productoEncontrado };
   }
-
-  agregarDetalleCotizacion(precioNuevo: number, cantidad: number): void {
+  agregarDetalleCotizacion(precioUnitario: number, cantidad: number): void {
     if (!this.selectedProduct) {
       this.snack.open('Debe buscar un producto válido antes de agregar un detalle', '', {
         duration: 3000,
@@ -330,8 +326,8 @@ export class ActualizarCotizacionComponent {
       return;
     }
 
-    if (!precioNuevo || isNaN(precioNuevo)) {
-      this.snack.open('Debe ingresar un nuevo precio válido', '', {
+    if (!precioUnitario || isNaN(precioUnitario)) {
+      this.snack.open('Debe ingresar un precio unitario válido', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
       });
@@ -362,8 +358,8 @@ export class ActualizarCotizacionComponent {
       return;
     }
 
-    if (precioNuevo < this.selectedProduct.precio) {
-      this.snack.open('El nuevo precio no puede ser menor que el precio unitario', '', {
+    if (precioUnitario < this.selectedProduct.precio) {
+      this.snack.open('El precio unitario no puede ser menor que el precio original del producto', '', {
         duration: 3000,
         panelClass: ['snackbar-error']
       });
@@ -377,9 +373,9 @@ export class ActualizarCotizacionComponent {
     if (existingProductIndex !== -1) {
       const existingProduct = this.detalleProductos[existingProductIndex];
 
-      if (existingProduct.precioNuevo !== precioNuevo) {
+      if (existingProduct.precioUnitario !== precioUnitario) {
         this.snack.open(
-          `El precio ingresado (${precioNuevo}) es diferente al registrado anteriormente (${existingProduct.precioNuevo}). Debe ser igual.`,
+          `El precio ingresado (${precioUnitario}) es diferente al registrado anteriormente (${existingProduct.precioUnitario}). Debe ser igual.`,
           '',
           {
             duration: 3000,
@@ -400,23 +396,22 @@ export class ActualizarCotizacionComponent {
       }
 
       existingProduct.cantidad = newTotalQuantity;
-      existingProduct.precioTotal = existingProduct.precioNuevo * newTotalQuantity;
-      existingProduct.igv = existingProduct.precioNuevo * newTotalQuantity * 0.18; // Correct IGV calculation
+      existingProduct.precioTotal = existingProduct.precioUnitario * newTotalQuantity;
+      existingProduct.igv = existingProduct.precioUnitario * newTotalQuantity * 0.18; // Correct IGV calculation
 
       this.snack.open('Cantidad actualizada correctamente', '', {
         duration: 3000,
         panelClass: ['snackbar-success']
       });
     } else {
-      const igv = precioNuevo * 0.18; // Correctly calculate IGV as 18% of the new price
+      const igv = precioUnitario * 0.18; // Correctly calculate IGV as 18% of the unit price
 
       const detalle = {
         productoId: this.selectedProduct.productoId,
         nombreProducto: this.selectedProduct.nombreProducto,
         cantidad,
-        precioUnitario: this.selectedProduct.precio,
-        precioNuevo,
-        precioTotal: precioNuevo * cantidad, // Multiply by quantity for total
+        precioUnitario: precioUnitario, // Usar precio cotizado como precio unitario
+        precioTotal: precioUnitario * cantidad, // Multiply by quantity for total
         igv: igv * cantidad // Multiply by quantity for total IGV
       };
 
@@ -462,10 +457,8 @@ export class ActualizarCotizacionComponent {
       });
       detalle.cantidad = producto.stock; // Reset to maximum valid quantity
       return;
-    }
-
-    detalle.cantidad = nuevaCantidad;
-    detalle.precioTotal = detalle.precioNuevo * nuevaCantidad;
+    }    detalle.cantidad = nuevaCantidad;
+    detalle.precioTotal = detalle.precioUnitario * nuevaCantidad;
     detalle.igv = detalle.precioTotal * 0.18;
 
     this.snack.open('Cantidad actualizada correctamente', '', {
@@ -586,13 +579,11 @@ export class ActualizarCotizacionComponent {
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(this.cotizacionId).subscribe(
           (originalDetails: any) => {
             const originalProductDetails = originalDetails.filter((d: any) => d.producto !== null);
-            const originalServiceDetails = originalDetails.filter((d: any) => d.tipoServicio !== null);
-
-            // Handle product details
+            const originalServiceDetails = originalDetails.filter((d: any) => d.tipoServicio !== null);            // Handle product details
             this.syncDetails(
               originalProductDetails,
               this.detalleProductos,
-              'precioNuevo',
+              'precioUnitario',
               (detail) => this.quotationDetailsService.agregarQuotationDetail(detail),
               (detail) => this.quotationDetailsService.actualizarQuotationDetail(detail),
               (detailId) => this.quotationDetailsService.eliminarQuotationDetail(detailId)
@@ -661,14 +652,11 @@ export class ActualizarCotizacionComponent {
       const original = originalMap.get(mapKey);
 
       if (original) {
-        if (JSON.stringify(original) !== JSON.stringify(current)) {
-
-          const updatePayload = {
+        if (JSON.stringify(original) !== JSON.stringify(current)) {          const updatePayload = {
             cotizacionDetalleId: original.cotizacionDetalleId,
             cantidad: current.cantidad || (current.tipoServicio ? 1 : null),
             precioTotal: current.precioTotal,
             precioUnitario: current.precioUnitario,
-            precioNuevo: current.precioNuevo,
             producto: current.productoId ? { productoId: current.productoId } : null,
             tipoServicio: current.tipoServicio || null,
             cotizacion: { cotizacionId: this.cotizacionId },
@@ -682,12 +670,10 @@ export class ActualizarCotizacionComponent {
         }
         originalMap.delete(mapKey);
       } else {
-        console.log(`Adding new detail: ${mapKey}`);
-        const addPayload = {
+        console.log(`Adding new detail: ${mapKey}`);        const addPayload = {
           cantidad: current.cantidad || (current.tipoServicio ? 1 : null),
           precioTotal: current.precioTotal,
           precioUnitario: current.precioUnitario,
-          precioNuevo: current.precioNuevo,
           producto: current.productoId ? { productoId: current.productoId } : null,
           tipoServicio: current.tipoServicio || null,
           cotizacion: { cotizacionId: this.cotizacionId },
@@ -852,22 +838,20 @@ export class ActualizarCotizacionComponent {
       Swal.fire('No encontrado', 'No se encontró un usuario con la razón social ingresada', 'error');
     }
   }
-
   calcularOpGravadas(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad * 0.82, 0); // 82% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.82, 0); // 82% of total price for services
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad * 0.82, 0); // 82% of unit price for products
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.82, 0); // 82% of unit price for services
     return totalProductos + totalServicios;
   }
-
   calcularIgv(): number {
-    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad * 0.18, 0); // 18% of new price for products
-    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.18, 0); // 18% of total price for services
+    const totalProductos = this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad * 0.18, 0); // 18% of unit price for products
+    const totalServicios = this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario * 0.18, 0); // 18% of unit price for services
     return totalProductos + totalServicios;
   }
 
   calcularTotal(): number {
-    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad, 0) +
-           this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0); // Total is the sum of all new prices
+    return this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0) +
+           this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0); // Total is the sum of all unit prices
   }
 
   onTipoBusquedaChange(): void {
@@ -957,9 +941,8 @@ export class ActualizarCotizacionComponent {
           fechaFin: plazo.fechaFin,
           monto: 0
         }));
-      } else {
-        const totalPorPlazo = (this.detalleProductos.length > 0
-          ? this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioNuevo * detalle.cantidad, 0)
+      } else {        const totalPorPlazo = (this.detalleProductos.length > 0
+          ? this.detalleProductos.reduce((sum, detalle) => sum + detalle.precioUnitario * detalle.cantidad, 0)
           : 0) +
           (this.detalleServicios.length > 0
             ? this.detalleServicios.reduce((sum, detalle) => sum + detalle.precioUnitario, 0)

@@ -67,20 +67,10 @@
               <tr *ngFor="let detalle of detalleProductos; let i = index">
                 <td>{{ detalle.nombreProducto }}</td>
                 <td>{{ detalle.cantidad }}</td>
-                <td>S/. {{ detalle.precioUnitario }}</td>
-                <td>
-                  <div *ngIf="detalle.numerosSerieAsignados && detalle.numerosSerieAsignados.length > 0; else sinSeries">
-                    <div class="series-container">
-                      <span *ngFor="let serie of detalle.numerosSerieAsignados; let last = last" 
-                            class="serie-badge"
-                            [title]="'Fecha venta: ' + (serie.fechaVenta | date:'dd/MM/yyyy')">
-                        {{ serie.numeroSerie }}<span *ngIf="!last">, </span>
-                      </span>
-                    </div>
-                    <small class="text-muted d-block mt-1">
-                      {{ detalle.numerosSerieAsignados.length }} serie(s) asignada(s)
-                    </small>
-                  </div>
+                <td>S/. {{ detalle.precioUnitario }}</td>                <td>
+                  <span *ngIf="detalle.numerosSerie && detalle.numerosSerie.trim() !== '' && detalle.numerosSerie !== 'Sin números de serie'; else sinSeries" class="serie-badge">
+                    {{ detalle.numerosSerie }}
+                  </span>
                   <ng-template #sinSeries>
                     <span class="text-muted">Sin números de serie</span>
                   </ng-template>

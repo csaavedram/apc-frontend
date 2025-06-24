@@ -9,12 +9,12 @@
             <input type="text" [(ngModel)]="searchTerm1" class="search-bar-input" placeholder="Buscar por producto" />
             <i class="fas fa-search search-icon"></i>
         </div>
-    </div>
-    <table class="table-container">
+    </div>    <table class="table-container">
         <tr>
             <th>N°</th>
             <th>Producto</th>
             <th>SKU</th>
+            <th>Serie/Lote</th>
             <th>Cantidad</th>
             <th>Tipo de Movimiento</th>
             <th>Fecha</th>
@@ -23,6 +23,7 @@
             <td>{{ (currentPage1 - 1) * rowsPerPage1 + i + 1 }}</td>
             <td>{{ e.producto.nombreProducto }}</td>
             <td>{{ e.producto.sku }}</td>
+            <td>{{ e.numeroSerie || 'N/A' }}</td>
             <td>{{ e.cantidad }}</td>
             <td>{{ e.tipo }}</td>
             <td>{{ e.dateCreated | date:'dd-MM-yyyy HH:mm:ss'}}</td>

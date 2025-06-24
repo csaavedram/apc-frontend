@@ -88,3 +88,9 @@ app-footer {
   text-align: center;
   color: white;
 }
+
+  .page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 91.7vh; /* Altura mínima de toda la pantalla */
+  }

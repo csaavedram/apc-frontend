@@ -20,7 +20,7 @@ export class AddProductoComponent implements OnInit {
     sku: '',
     dateCreated: '',
     status: 0,
-    stock: '',
+    stock: 0,
     esPerecible: false,
     categoria: {
       categoriaId: ''
@@ -73,25 +73,11 @@ export class AddProductoComponent implements OnInit {
       return;
     }
 
-    if (this.productoData.stock.trim() === '' || this.productoData.stock == null) {
-      this.toastr.error('El stock inicial es requerido', 'Error');
-      return;
-    }
-
-    if (parseFloat(this.productoData.stock) <= 0) {
-      this.toastr.error('El stock debe ser un número mayor que cero', 'Error');
-      return;
-    }
-
     if (parseFloat(this.productoData.precio) <= 0) {
       this.toastr.error('El precio debe ser un número mayor que cero', 'Error');
       return;
     }
-    const stockRegex = /^\d+$/;
-    if (!stockRegex.test(this.productoData.stock)) {
-      this.toastr.error('El stock debe ser un número entero', 'Error');
-      return;
-    }
+
     const precioRegex = /^\d+(\.\d{1,2})?$/;
     if (!precioRegex.test(this.productoData.precio)) {
       this.toastr.error('El precio debe tener como máximo dos decimales', 'Error');
@@ -132,7 +118,7 @@ export class AddProductoComponent implements OnInit {
                 sku: '',
                 dateCreated: '',
                 status: 0,
-                stock: '',
+                stock: 0,
                 esPerecible: false,
                 categoria: {
                   categoriaId: ''

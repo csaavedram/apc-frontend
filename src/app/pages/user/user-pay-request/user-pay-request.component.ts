@@ -138,9 +138,8 @@ export class UserPayRequestComponent {
       return 'this.hourMinutes no está definido o es undefined';
     }
   }
-
   totalCart() {
-    return this.order.preciocli
+    return this.order.totalPrice || this.order.preciocli; // Usar totalPrice primero, fallback a preciocli
   }
 
   subtotal() {

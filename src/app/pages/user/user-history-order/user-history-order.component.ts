@@ -237,10 +237,6 @@ export class UserHistoryOrderComponent implements OnInit {
                 }));
 
                 movimientos.forEach((movimiento: any) => {
-                  this.inventarioService.agregarProductoInventario(movimiento).subscribe(
-                    () => console.log('Movimiento registrado:', movimiento),
-                    (error: any) => console.error('Error al registrar movimiento:', error)
-                  );
                 });
 
                 this.ordenCotizacionService.obtenerOrdenCotizacionPorOrderId(orderId).subscribe(

@@ -195,7 +195,7 @@ export class EnvioComponent implements OnInit {
             }
           );
 
-          element.stock = element.stock - this.orderDetailsData.quantity;
+          element.stock = element.stock;
 
           this.productoService.actualizarProducto(element).subscribe(
             (data: any) => {},

@@ -62,31 +62,32 @@ export class WelcomeComponent{
   ) {
     this.generarCalendario();
   }
-
   ngOnInit(): void {
-    this.listarFacturas();
-    this.listarDetallesFacturas();
-  }
-
-  // --- 📦 Servicios ---
-
-  listarFacturas() {
-    this.facturaService.listarFacturas().subscribe(
-      (facturas: any) => {
-        this.facturas = facturas;
-        this.facturasFiltradas = facturas;
-        this.cargarAniosDesdeFechas(facturas);
+    // Cargar datos de forma secuencial para asegurar que estén disponibles
+    this.cargarDatos();
+  }  cargarDatos(): void {
+    // Usar forkJoin para cargar ambos datos al mismo tiempo
+    forkJoin({
+      facturas: this.facturaService.listarFacturas(),
+      detalles: this.facturaDetailsService.listarFacturaDetailsParaDashboard() // Usar el nuevo endpoint
+    }).subscribe({
+      next: (data: any) => {
+        this.facturas = data.facturas || [];
+        this.detallesFacturas = data.detalles || [];
+        this.facturasFiltradas = this.facturas;
+        
+        console.log('Facturas cargadas:', this.facturas.length);
+        console.log('Detalles cargados:', this.detallesFacturas.length);
+        
+        this.cargarAniosDesdeFechas(this.facturas);
         this.fetchUsuarios();
+        this.actualizarGraficoTipoPago();
       },
-      error => Swal.fire('Error', 'Error al cargar los datos', 'error')
-    );
-  }
-
-  listarDetallesFacturas() {
-    this.facturaDetailsService.listarFacturaDetailsAll().subscribe(
-      (detalles: any) => this.detallesFacturas = detalles,
-      error => Swal.fire('Error', 'Error al cargar los datos', 'error')
-    );
+      error: (error) => {
+        console.error('Error al cargar datos:', error);
+        Swal.fire('Error', 'Error al cargar los datos del dashboard', 'error');
+      }
+    });
   }
 
   fetchUsuarios(): void {
@@ -215,22 +216,37 @@ export class WelcomeComponent{
     return [...this.facturas]
       .sort((a, b) => Number(b.total) - Number(a.total))
       .slice(0, 2);
-  }
+  }  getProductosVendidos() {
+    // Verificar que tenemos datos
+    if (!this.detallesFacturas || this.detallesFacturas.length === 0) {
+      console.log('No hay detalles de facturas disponibles');
+      return [];
+    }
 
-  getProductosVendidos() {
+    console.log('Detalles facturas:', this.detallesFacturas); // Debug
+    
     const productos: { [nombre: string]: number } = {};
 
     this.detallesFacturas.forEach(detalle => {
-      const nombre = detalle.producto?.nombreProducto;
-      if (nombre) {
-        productos[nombre] = (productos[nombre] || 0) + detalle.cantidad;
+      // Con el DTO, el nombre del producto viene directamente
+      let nombreProducto = detalle.nombreProducto || '';
+      let cantidad = Number(detalle.cantidad) || 0;
+
+      if (nombreProducto && cantidad > 0) {
+        productos[nombreProducto] = (productos[nombreProducto] || 0) + cantidad;
       }
     });
 
-    return Object.entries(productos).map(([nombreProducto, cantidad]) => ({
-      nombreProducto,
-      cantidad
-    }));
+    console.log('Productos procesados:', productos); // Debug
+
+    // Convertir a array, ordenar por cantidad descendente y tomar los top 5
+    return Object.entries(productos)
+      .map(([nombreProducto, cantidad]) => ({
+        nombreProducto,
+        cantidad
+      }))
+      .sort((a, b) => b.cantidad - a.cantidad)
+      .slice(0, 5); // Mostrar solo los top 5
   }
 
   getTablita() {
@@ -279,4 +295,41 @@ getGananciaPorRango(): number {
 getCantidadFacturasPorRango(): number {
   return this.filtrarFacturasPorRango().length;
 }
+
+// --- 📦 Servicios ---
+
+  listarFacturas() {
+    this.facturaService.listarFacturas().subscribe(
+      (facturas: any) => {
+        this.facturas = facturas;
+        this.facturasFiltradas = facturas;
+        this.cargarAniosDesdeFechas(facturas);
+        this.fetchUsuarios();
+      },
+      error => Swal.fire('Error', 'Error al cargar los datos', 'error')
+    );
+  }
+
+  listarDetallesFacturas() {
+    this.facturaDetailsService.listarFacturaDetailsAll().subscribe(
+      (detalles: any) => this.detallesFacturas = detalles,
+      error => Swal.fire('Error', 'Error al cargar los datos', 'error')
+    );
+  }
+
+  // Método para verificar si tenemos productos para mostrar
+  hayProductosVendidos(): boolean {
+    return this.getProductosVendidos().length > 0;
+  }
+
+  // Método alternativo para debug
+  debugDetallesFacturas(): void {
+    console.log('=== DEBUG DETALLES FACTURAS ===');
+    console.log('Cantidad de detalles:', this.detallesFacturas.length);
+    if (this.detallesFacturas.length > 0) {
+      console.log('Primer detalle:', this.detallesFacturas[0]);
+      console.log('Estructura del producto:', this.detallesFacturas[0]?.producto);
+    }
+    console.log('Productos calculados:', this.getProductosVendidos());
+  }
 }

@@ -118,6 +118,19 @@
   color: #6c757d !important;
 }
 
+.ventas-info {
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+.ventas-info .progress {
+  margin-top: 3px;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
 @media (max-width: 768px) {
   .stats-row {
     flex-direction: column;

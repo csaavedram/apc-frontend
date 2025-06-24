@@ -196,6 +196,7 @@ export class PdfService {
         };
         const userDetails = {
           id: cotizacionData.user.id,
+          username: cotizacionData.user.username,
           nombre: cotizacionData.user.nombre,
           apellido: cotizacionData.user.apellido,
           ruc: cotizacionData.user.ruc,
@@ -203,14 +204,13 @@ export class PdfService {
         };
         const razonsocial = cotizacionData.user.username;
         const fullName = `${userDetails.nombre} ${userDetails.apellido}`;
-        const ruc = cotizacionData.user.ruc;
+        const ruc = cotizacionData.user.username;
         this.quotationDetailsService.listarQuotationsDetailsByQuotation(cotizacionId).subscribe(
-          (quotationDetailsData: any) => {
-            const cotizacionesDe = quotationDetailsData.map(
+          (quotationDetailsData: any) => {            const cotizacionesDe = quotationDetailsData.map(
               (item: any, index: number) => {
-                // Calculate total price as precioNuevo * cantidad
-                const precioUnitario = item.producto === null ? parseFloat(item.precioUnitario) : parseFloat(item.precioNuevo);
-                const precioTotal = precioUnitario * item.cantidad;
+                // Usar precioUnitario directamente, que ya contiene el precio cotizado
+                const precioUnitario = parseFloat(item.precioUnitario);
+                const precioTotal = parseFloat(item.precioTotal); // Usar el precioTotal ya calculado
 
                 return [
                   index + 1,
@@ -241,7 +241,7 @@ export class PdfService {
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             if (userDetails.tipoUsuario == 'cliente_empresa') {
-              doc.text(`${razonsocial.toUpperCase()}`, 10, 50);
+              doc.text(`${ruc.toUpperCase()}`, 10, 50);
             }
             else{
               doc.text(`Presente: ${fullName}`, 10, 60);
@@ -424,9 +424,7 @@ export class PdfService {
         10,
         y
       );
-      y += 10;
-
-      const detallesTabla = facturaDetails.map((item: any, index: number) => [
+      y += 10;      const detallesTabla = facturaDetails.map((item: any, index: number) => [
         index + 1,
         item.producto?.nombreProducto || item.tipoServicio,
         item.cantidad,
